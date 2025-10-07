@@ -30,17 +30,17 @@ export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 overflow-hidden">
-              <img
+                <img
                 src={avatarUrl || getDefaultAvatar(user.role)}
-                alt={fullName}
-                className="h-12 w-12 rounded-full object-cover"
-                onError={(e) => {
+                  alt={fullName}
+                  className="h-12 w-12 rounded-full object-cover"
+                  onError={(e) => {
                   // If image fails to load, show initials
-                  e.currentTarget.style.display = "none";
-                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = "flex";
-                }}
-              />
+                    e.currentTarget.style.display = "none";
+                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = "flex";
+                  }}
+                />
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-brand-600 font-semibold text-sm hidden">
                 {getUserInitials()}
               </div>

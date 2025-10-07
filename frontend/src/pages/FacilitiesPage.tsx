@@ -13,19 +13,19 @@ export function FacilitiesPage() {
     if (!facilities) return [];
     
     if (!query.trim()) return facilities;
-    
-    const keyword = query.trim().toLowerCase();
+
+      const keyword = query.trim().toLowerCase();
     return facilities.filter((facility) => {
-      const address = [
-        facility.address_prefecture,
-        facility.address_city,
-        facility.address_building,
-      ].filter(Boolean).join("");
-      const haystack = `${facility.name ?? ""}${address}${
-        facility.facility_number ?? ""
-      }`.toLowerCase();
-      return haystack.includes(keyword);
-    });
+        const address = [
+          facility.address_prefecture,
+          facility.address_city,
+          facility.address_building,
+        ].filter(Boolean).join("");
+        const haystack = `${facility.name ?? ""}${address}${
+          facility.facility_number ?? ""
+        }`.toLowerCase();
+        return haystack.includes(keyword);
+      });
   }, [facilities, query]);
 
   const handleFacilityClick = (facilityId: string) => {
@@ -56,17 +56,17 @@ export function FacilitiesPage() {
 
       {/* Search */}
       <Card>
-        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
           <label className="relative flex-1">
-            <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
-            <input
-              type="search"
-              value={query}
+              <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
+              <input
+                type="search"
+                value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="施設名、住所、コードで検索..."
               className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-10 pr-4 text-sm text-slate-700 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
-            />
-          </label>
+              />
+            </label>
         </div>
       </Card>
 
@@ -84,7 +84,7 @@ export function FacilitiesPage() {
                 facility.address_city,
                 facility.address_building,
               ].filter(Boolean).join(" ");
-
+              
               return (
                 <div
                   key={facility.facility_id}
@@ -108,7 +108,7 @@ export function FacilitiesPage() {
                       <p className="text-xs text-slate-400 mt-1">
                         コード: {facility.facility_number}
                       </p>
-                    )}
+            )}
                   </div>
                   <div className="text-sm text-slate-400 group-hover:text-brand-600 transition">
                     →
@@ -117,7 +117,7 @@ export function FacilitiesPage() {
               );
             })
           )}
-        </div>
+          </div>
       </Card>
     </div>
   );

@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import userRoutes from "./routes/user.routes";
+import authRoutes from "./routes/auth.routes";
 import facilityRoutes from "./routes/facility.routes";
 import residentRoutes from "./routes/resident.routes";
 import vitalRoutes from "./routes/vital.routes";
@@ -18,6 +19,7 @@ app.use(cors());
 app.use(express.json());
 
 // Register routes
+app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/facilities", facilityRoutes);
 app.use("/api/residents", residentRoutes);

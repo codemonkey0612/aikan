@@ -8,6 +8,9 @@ import shiftRoutes from "./routes/shift.routes";
 import visitRoutes from "./routes/visit.routes";
 import salaryRoutes from "./routes/salary.routes";
 import notificationRoutes from "./routes/notification.routes";
+import { errorHandler } from "./middlewares/error.middleware";
+
+
 
 const app = express();
 
@@ -23,5 +26,11 @@ app.use("/api/shifts", shiftRoutes);
 app.use("/api/visits", visitRoutes);
 app.use("/api/salaries", salaryRoutes);
 app.use("/api/notifications", notificationRoutes);
+
+app.get("/api/health", (req, res) => {
+  res.json({ message: "API is running" });
+});
+
+app.use(errorHandler);
 
 export default app;

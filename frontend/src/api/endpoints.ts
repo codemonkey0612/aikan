@@ -45,18 +45,18 @@ export const AuthAPI = {
     role: User["role"];
     password: string;
   }) =>
-    apiClient.post<AuthResponse>("/api/auth/register", payload).then((res) => res.data),
+    apiClient.post<AuthResponse>("/auth/register", payload).then((res) => res.data),
   login: (payload: { email: string; password: string }) =>
-    apiClient.post<AuthResponse>("/api/auth/login", payload).then((res) => res.data),
-  me: () => apiClient.get<User>("/api/auth/me").then((res) => res.data),
+    apiClient.post<AuthResponse>("/auth/login", payload).then((res) => res.data),
+  me: () => apiClient.get<User>("/auth/me").then((res) => res.data),
 };
 
-export const UsersAPI = createCrudApi<User>("/api/users");
-export const FacilitiesAPI = createCrudApi<Facility>("/api/facilities");
-export const ResidentsAPI = createCrudApi<Resident>("/api/residents");
-export const VitalsAPI = createCrudApi<VitalRecord>("/api/vitals");
-export const ShiftsAPI = createCrudApi<Shift>("/api/shifts");
-export const VisitsAPI = createCrudApi<Visit>("/api/visits");
-export const SalariesAPI = createCrudApi<Salary>("/api/salaries");
-export const NotificationsAPI = createCrudApi<Notification>("/api/notifications");
+export const UsersAPI = createCrudApi<User>("/users");
+export const FacilitiesAPI = createCrudApi<Facility>("/facilities");
+export const ResidentsAPI = createCrudApi<Resident>("/residents");
+export const VitalsAPI = createCrudApi<VitalRecord>("/vitals");
+export const ShiftsAPI = createCrudApi<Shift>("/shifts");
+export const VisitsAPI = createCrudApi<Visit>("/visits");
+export const SalariesAPI = createCrudApi<Salary>("/salaries");
+export const NotificationsAPI = createCrudApi<Notification>("/notifications");
 

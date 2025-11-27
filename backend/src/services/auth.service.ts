@@ -75,6 +75,9 @@ export const login = async (email: string, password: string) => {
 
 export const getProfile = async (userId: number) => {
   const user = await UserService.getUserById(userId);
+  if (!user) {
+    throw httpError("User not found", 404);
+  }
   return sanitizeUser(user);
 };
 

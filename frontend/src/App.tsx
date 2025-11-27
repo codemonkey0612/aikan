@@ -13,6 +13,7 @@ import { VisitsPage } from "./pages/VisitsPage";
 import { SalariesPage } from "./pages/SalariesPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { LoginPage } from "./pages/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage";
 import { useAuth } from "./hooks/useAuth";
 
 const client = new QueryClient();
@@ -55,6 +56,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

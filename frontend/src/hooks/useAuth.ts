@@ -66,10 +66,16 @@ export const useAuth = (): UseAuthResult => {
     async (email: string, password: string) => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
+        if (!email || !password) {
+          throw new Error("メールアドレスとパスワードを入力してください");
+        }
         const response = await AuthAPI.login({ email, password });
         return applyAuthResponse(response);
       } catch (error: any) {
-        const message = error?.response?.data?.message ?? error?.message ?? "Unable to login";
+        const message =
+          error?.response?.data?.message ??
+          error?.message ??
+          "ログインに失敗しました。メールアドレスとパスワードを確認してください";
         setState({ user: null, loading: false, error: message });
         throw error;
       }
@@ -88,10 +94,19 @@ export const useAuth = (): UseAuthResult => {
     }) => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
+        if (!payload.email || !payload.password) {
+          throw new Error("メールアドレスとパスワードは必須です");
+        }
+        if (payload.password.length < 6) {
+          throw new Error("パスワードは6文字以上である必要があります");
+        }
         const response = await AuthAPI.register(payload);
         return applyAuthResponse(response);
       } catch (error: any) {
-        const message = error?.response?.data?.message ?? error?.message ?? "Unable to register";
+        const message =
+          error?.response?.data?.message ??
+          error?.message ??
+          "登録に失敗しました。入力内容を確認してください";
         setState({ user: null, loading: false, error: message });
         throw error;
       }

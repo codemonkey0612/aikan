@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 export function LoginPage() {
@@ -74,6 +74,16 @@ export function LoginPage() {
           >
             {submitting ? "送信中..." : "ログイン"}
           </button>
+
+          <p className="text-center text-sm text-slate-500">
+            アカウントをお持ちでないですか？{" "}
+            <Link
+              to="/register"
+              className="font-medium text-brand-600 hover:text-brand-500"
+            >
+              管理者登録
+            </Link>
+          </p>
         </form>
       </div>
     </div>

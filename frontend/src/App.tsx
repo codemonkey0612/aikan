@@ -5,6 +5,7 @@ import { OverviewPage } from "./pages/OverviewPage";
 import { UsersPage } from "./pages/UsersPage";
 import { FacilitiesPage } from "./pages/FacilitiesPage";
 import { ResidentsPage } from "./pages/ResidentsPage";
+import { ResidentDetailPage } from "./pages/ResidentDetailPage";
 import { VitalsPage } from "./pages/VitalsPage";
 import { ShiftsPage } from "./pages/ShiftsPage";
 import { VisitsPage } from "./pages/VisitsPage";
@@ -23,6 +24,7 @@ function App() {
             <Route path="users" element={<UsersPage />} />
             <Route path="facilities" element={<FacilitiesPage />} />
             <Route path="residents" element={<ResidentsPage />} />
+            <Route path="residents/:id" element={<ResidentDetailPage />} />
             <Route path="vitals" element={<VitalsPage />} />
             <Route path="shifts" element={<ShiftsPage />} />
             <Route path="visits" element={<VisitsPage />} />

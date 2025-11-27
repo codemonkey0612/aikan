@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useResidents } from "../hooks/useResidents";
 import { Card } from "../components/ui/Card";
 import {
@@ -28,6 +29,7 @@ export function ResidentsPage() {
               <TableHeaderCell>氏名</TableHeaderCell>
               <TableHeaderCell>施設</TableHeaderCell>
               <TableHeaderCell>ステータス</TableHeaderCell>
+              <TableHeaderCell />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -41,10 +43,23 @@ export function ResidentsPage() {
             {data?.map((resident) => (
               <TableRow key={resident.id}>
                 <TableCell>
-                  {resident.first_name} {resident.last_name}
+                  <Link
+                    to={`/residents/${resident.id}`}
+                    className="text-brand-600 underline-offset-4 hover:underline"
+                  >
+                    {resident.first_name} {resident.last_name}
+                  </Link>
                 </TableCell>
                 <TableCell>#{resident.facility_id}</TableCell>
                 <TableCell>{resident.status ?? "N/A"}</TableCell>
+                <TableCell className="text-right">
+                  <Link
+                    to={`/residents/${resident.id}`}
+                    className="text-sm font-medium text-brand-600 hover:underline"
+                  >
+                    詳細
+                  </Link>
+                </TableCell>
               </TableRow>
             ))}
             {!isLoading && !data?.length && (

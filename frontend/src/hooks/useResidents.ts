@@ -15,6 +15,15 @@ export function useResidents(facilityId?: number) {
   });
 }
 
+export function useResident(id?: number) {
+  return useQuery<Resident | null>({
+    queryKey: ["resident", id],
+    queryFn: () =>
+      id ? api.getResidentById(id).then((res) => res.data) : null,
+    enabled: !!id,
+  });
+}
+
 export function useCreateResident() {
   const client = useQueryClient();
 

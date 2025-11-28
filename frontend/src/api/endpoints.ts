@@ -1,6 +1,7 @@
 import { apiClient } from "./client";
 import type { ApiIdentifier } from "./client";
 import type {
+  AlcoholCheck,
   Attendance,
   AuthResponse,
   CarePlan,
@@ -263,5 +264,11 @@ export const FilesAPI = {
     apiClient.get<File[]>(`/files/category/${category}`).then((res) => res.data),
   remove: (id: number) =>
     apiClient.delete(`/files/${id}`).then(() => undefined),
+};
+
+export const AlcoholChecksAPI = {
+  ...createCrudApi<AlcoholCheck>("/alcohol-checks"),
+  getMy: () =>
+    apiClient.get<AlcoholCheck[]>("/alcohol-checks/my").then((res) => res.data),
 };
 

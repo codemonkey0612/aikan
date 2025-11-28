@@ -26,6 +26,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "notifications:write",
     "files:read",
     "files:write",
+    "alcohol_checks:read",
+    "alcohol_checks:write",
   ],
   FACILITY_MANAGER: [
     "facilities:read",
@@ -41,6 +43,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "notifications:read",
     "files:read",
     "files:write",
+    "alcohol_checks:read",
+    "alcohol_checks:write",
   ],
   NURSE: [
     "residents:read",
@@ -52,6 +56,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "notifications:read",
     "files:read",
     "files:write",
+    "alcohol_checks:read",
+    "alcohol_checks:write",
   ],
   STAFF: [
     "residents:read",

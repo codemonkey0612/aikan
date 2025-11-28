@@ -281,3 +281,24 @@ export interface File {
   uploaded_by: Nullable<number>;
   created_at: string;
 }
+
+export interface AlcoholCheck {
+  id: number;
+  user_id: number;
+  resident_id: Nullable<number>;
+  breath_alcohol_concentration: number; // mg/L
+  checked_at: string;
+  device_image_path: Nullable<string>;
+  notes: Nullable<string>;
+  checked_by: Nullable<number>;
+  created_at: string;
+  updated_at: string;
+  // Joined fields
+  user_first_name?: Nullable<string>;
+  user_last_name?: Nullable<string>;
+  user_email?: Nullable<string>;
+  resident_first_name?: Nullable<string>;
+  resident_last_name?: Nullable<string>;
+  checked_by_first_name?: Nullable<string>;
+  checked_by_last_name?: Nullable<string>;
+}

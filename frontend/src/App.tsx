@@ -15,6 +15,7 @@ import { NotificationsPage } from "./pages/NotificationsPage";
 import { AttendancePage } from "./pages/AttendancePage";
 import { CarePlanPage } from "./pages/CarePlanPage";
 import { ProfilePage } from "./pages/ProfilePage";
+import { AlcoholCheckPage } from "./pages/AlcoholCheckPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { useAuth } from "./hooks/useAuth";
@@ -77,6 +78,14 @@ function App() {
               element={
                 <RequireRole allowedRoles={["ADMIN", "FACILITY_MANAGER", "NURSE"]}>
                   <AttendancePage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="alcohol-checks"
+              element={
+                <RequireRole allowedRoles={["ADMIN", "FACILITY_MANAGER", "NURSE"]}>
+                  <AlcoholCheckPage />
                 </RequireRole>
               }
             />

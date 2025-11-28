@@ -25,6 +25,7 @@ const WEEK_DAYS = ["日", "月", "火", "水", "木", "金", "土"];
 const formatKey = (date: Date) => date.toISOString().slice(0, 10);
 
 export function ShiftsPage() {
+  const { user } = useAuth();
   const [page, setPage] = useState(1);
   const limit = 20;
   const { data, isLoading } = useShifts({ page, limit });
@@ -198,7 +199,7 @@ export function ShiftsPage() {
                 </TableCell>
               </TableRow>
             )}
-            {data?.data.map((shift) => (
+            {data?.data && data.data.length > 0 && data.data.map((shift) => (
               <TableRow key={shift.id}>
                 <TableCell>#{shift.user_id}</TableCell>
                 <TableCell>#{shift.facility_id}</TableCell>
@@ -206,7 +207,7 @@ export function ShiftsPage() {
                 <TableCell>{shift.shift_type ?? "N/A"}</TableCell>
               </TableRow>
             ))}
-            {!isLoading && !data?.data.length && (
+            {!isLoading && (!data?.data || data.data.length === 0) && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-slate-400">
                   シフトがまだ登録されていません。

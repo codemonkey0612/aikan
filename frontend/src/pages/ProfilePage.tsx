@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
 import { useProfile, useUpdateProfile, useChangePassword } from "../hooks/useProfile";
 import { useAuth } from "../hooks/useAuth";
+import { useAvatar } from "../hooks/useAvatar";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card } from "../components/ui/Card";
 import { UserCircleIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+import { FileUpload } from "../components/files/FileUpload";
+import { FileList } from "../components/files/FileList";
 
 export function ProfilePage() {
   const { refreshProfile } = useAuth();
   const { data: profile, isLoading } = useProfile();
+  const { data: avatarUrl, refetch: refetchAvatar } = useAvatar(profile?.id);
+  const queryClient = useQueryClient();
   const updateProfileMutation = useUpdateProfile();
   const changePasswordMutation = useChangePassword();
 
@@ -24,6 +30,17 @@ export function ProfilePage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [successMessage, setSuccessMessage] = useState<string>("");
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  const getUserDisplayName = () => {
+    if (!profile) return "ユーザー";
+    if (profile.first_name && profile.last_name) {
+      return `${profile.last_name} ${profile.first_name}`;
+    }
+    if (profile.first_name) return profile.first_name;
+    if (profile.last_name) return profile.last_name;
+    return profile.email || "ユーザー";
+  };
 
   // プロフィールデータをフォームに設定
   useEffect(() => {
@@ -159,6 +176,113 @@ export function ProfilePage() {
       {/* プロフィール編集タブ */}
       {activeTab === "profile" && (
         <Card title="プロフィール情報">
+          {/* アバター表示（クリック可能） */}
+          {profile && (
+            <div className="mb-6 flex items-center gap-4 border-b border-slate-200 pb-6">
+              <label
+                htmlFor="avatar-upload-input"
+                className={`relative cursor-pointer group ${isUploadingAvatar ? "opacity-50 cursor-wait" : ""}`}
+                title="クリックしてアバターを変更"
+              >
+                <input
+                  id="avatar-upload-input"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={isUploadingAvatar}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    // ファイルサイズチェック（10MB）
+                    if (file.size > 10 * 1024 * 1024) {
+                      alert("ファイルサイズが大きすぎます。最大10MBまでです。");
+                      e.target.value = "";
+                      return;
+                    }
+
+                    // ファイルタイプチェック
+                    if (!file.type.startsWith("image/")) {
+                      alert("画像ファイルを選択してください。");
+                      e.target.value = "";
+                      return;
+                    }
+
+                    setIsUploadingAvatar(true);
+                    try {
+                      const { FilesAPI } = await import("../api/endpoints");
+                      await FilesAPI.upload(file, "PROFILE_AVATAR", "user", profile.id);
+
+                      // アバターを再取得
+                      await queryClient.invalidateQueries({
+                        queryKey: ["avatar", profile.id],
+                      });
+                      await queryClient.invalidateQueries({
+                        queryKey: ["files", "entity", "user", profile.id],
+                      });
+                      await refetchAvatar();
+                      
+                      setSuccessMessage("アバターを更新しました");
+                      setTimeout(() => setSuccessMessage(""), 3000);
+                    } catch (error: any) {
+                      console.error("Avatar upload error:", error);
+                      const errorMessage = error?.response?.data?.message || error?.message || "アバターのアップロードに失敗しました";
+                      alert(errorMessage);
+                      setErrors({ general: errorMessage });
+                    } finally {
+                      setIsUploadingAvatar(false);
+                      // 入力フィールドをリセット
+                      e.target.value = "";
+                    }
+                  }}
+                />
+                <div className="relative">
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt={getUserDisplayName()}
+                      className="h-20 w-20 rounded-full object-cover border-2 border-slate-200 transition group-hover:opacity-80"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.style.display = "flex";
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className={`h-20 w-20 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 font-semibold text-2xl border-2 border-slate-200 transition group-hover:opacity-80 ${
+                      avatarUrl ? "hidden" : ""
+                    }`}
+                  >
+                    {profile?.first_name && profile?.last_name
+                      ? `${profile.last_name.charAt(0)}${profile.first_name.charAt(0)}`.toUpperCase()
+                      : profile?.email
+                      ? profile.email.charAt(0).toUpperCase()
+                      : "U"}
+                  </div>
+                  {/* ホバー時のオーバーレイ */}
+                  <div className="absolute inset-0 rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-40 transition flex items-center justify-center">
+                    <span className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition">
+                      {isUploadingAvatar ? "アップロード中..." : "変更"}
+                    </span>
+                  </div>
+                  {isUploadingAvatar && (
+                    <div className="absolute inset-0 rounded-full bg-black bg-opacity-50 flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                    </div>
+                  )}
+                </div>
+              </label>
+              <div>
+                <p className="text-sm font-medium text-slate-900">
+                  {profile?.first_name} {profile?.last_name}
+                </p>
+                <p className="text-xs text-slate-500">{profile?.email}</p>
+                <p className="mt-1 text-xs text-slate-400">アバターをクリックして変更</p>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleProfileSubmit} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div>
@@ -341,6 +465,29 @@ export function ProfilePage() {
               </button>
             </div>
           </form>
+        </Card>
+      )}
+
+      {/* プロフィール画像 */}
+      {profile && (
+        <Card title="プロフィール画像の変更">
+          <div className="space-y-4">
+            <FileUpload
+              category="PROFILE_AVATAR"
+              entity_type="user"
+              entity_id={profile.id}
+              accept="image/*"
+              onUploadSuccess={() => {
+                // アバターを再取得するためにクエリを無効化
+                window.location.reload();
+              }}
+            />
+            <FileList
+              category="PROFILE_AVATAR"
+              entity_type="user"
+              entity_id={profile.id}
+            />
+          </div>
         </Card>
       )}
     </div>

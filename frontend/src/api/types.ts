@@ -264,3 +264,20 @@ export interface VitalAlertTrigger {
   acknowledged_at: Nullable<string>;
   notes: Nullable<string>;
 }
+
+export type FileCategory = "RESIDENT_IMAGE" | "PROFILE_AVATAR" | "SHIFT_REPORT" | "SALARY_STATEMENT" | "CARE_NOTE_ATTACHMENT";
+
+export interface File {
+  id: number;
+  file_name: string;
+  original_name: string;
+  file_path: string;
+  file_type: string;
+  file_size: number;
+  mime_type: Nullable<string>;
+  category: FileCategory;
+  entity_type: string;
+  entity_id: number;
+  uploaded_by: Nullable<number>;
+  created_at: string;
+}

@@ -24,6 +24,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "salaries:write",
     "notifications:read",
     "notifications:write",
+    "files:read",
+    "files:write",
   ],
   FACILITY_MANAGER: [
     "facilities:read",
@@ -37,6 +39,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "visits:read",
     "visits:write",
     "notifications:read",
+    "files:read",
+    "files:write",
   ],
   NURSE: [
     "residents:read",
@@ -46,12 +50,15 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "visits:read",
     "visits:write",
     "notifications:read",
+    "files:read",
+    "files:write",
   ],
   STAFF: [
     "residents:read",
     "vitals:read",
     "shifts:read",
     "notifications:read",
+    "files:read",
   ],
 };
 

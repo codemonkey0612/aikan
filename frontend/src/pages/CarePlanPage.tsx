@@ -9,6 +9,8 @@ import { Card } from "../components/ui/Card";
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from "../components/ui/Table";
 import { ExclamationTriangleIcon, PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import type { CarePlan, VitalAlert } from "../api/types";
+import { FileUpload } from "../components/files/FileUpload";
+import { FileList } from "../components/files/FileList";
 
 export function CarePlanPage() {
   const { id } = useParams<{ id: string }>();
@@ -397,6 +399,23 @@ export function CarePlanPage() {
               </div>
             </Card>
           )}
+
+          {/* ケアノート添付ファイル */}
+          <Card title="ケアノート添付ファイル">
+            <div className="space-y-4">
+              <FileUpload
+                category="CARE_NOTE_ATTACHMENT"
+                entity_type="resident"
+                entity_id={residentId}
+                accept=".pdf,.doc,.docx,image/*"
+              />
+              <FileList
+                category="CARE_NOTE_ATTACHMENT"
+                entity_type="resident"
+                entity_id={residentId}
+              />
+            </div>
+          </Card>
         </div>
       )}
 

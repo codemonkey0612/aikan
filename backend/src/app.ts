@@ -16,6 +16,7 @@ import diagnosisRoutes from "./routes/diagnosis.routes";
 import carePlanRoutes from "./routes/carePlan.routes";
 import medicationNoteRoutes from "./routes/medicationNote.routes";
 import vitalAlertRoutes from "./routes/vitalAlert.routes";
+import fileRoutes from "./routes/file.routes";
 import { errorHandler } from "./middlewares/error.middleware";
 const openapiDocument = yaml.load("./openapi.yaml");
 
@@ -47,6 +48,7 @@ app.use("/api/diagnoses", diagnosisRoutes);
 app.use("/api/care-plans", carePlanRoutes);
 app.use("/api/medication-notes", medicationNoteRoutes);
 app.use("/api/vital-alerts", vitalAlertRoutes);
+app.use("/api/files", fileRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({ message: "API is running" });

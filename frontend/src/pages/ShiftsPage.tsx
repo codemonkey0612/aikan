@@ -16,6 +16,9 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import { Pagination } from "../components/ui/Pagination";
+import { FileUpload } from "../components/files/FileUpload";
+import { FileList } from "../components/files/FileList";
+import { useAuth } from "../hooks/useAuth";
 
 const WEEK_DAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -225,6 +228,25 @@ export function ShiftsPage() {
           </div>
         )}
       </Card>
+
+      {/* シフトPDFレポート */}
+      {user && (
+        <Card title="シフトPDFレポート">
+          <div className="space-y-4">
+            <FileUpload
+              category="SHIFT_REPORT"
+              entity_type="user"
+              entity_id={user.id}
+              accept=".pdf"
+            />
+            <FileList
+              category="SHIFT_REPORT"
+              entity_type="user"
+              entity_id={user.id}
+            />
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

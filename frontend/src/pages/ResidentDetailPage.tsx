@@ -17,6 +17,8 @@ import {
   TableHeaderCell,
   TableRow,
 } from "../components/ui/Table";
+import { FileUpload } from "../components/files/FileUpload";
+import { FileList } from "../components/files/FileList";
 
 export function ResidentDetailPage() {
   const params = useParams<{ id: string }>();
@@ -164,6 +166,24 @@ export function ResidentDetailPage() {
         <p className="text-center text-sm text-slate-400">
           入居者情報が見つかりませんでした。
         </p>
+      )}
+
+      {residentId && (
+        <Card title="画像">
+          <div className="space-y-4">
+            <FileUpload
+              category="RESIDENT_IMAGE"
+              entity_type="resident"
+              entity_id={residentId}
+              accept="image/*"
+            />
+            <FileList
+              category="RESIDENT_IMAGE"
+              entity_type="resident"
+              entity_id={residentId}
+            />
+          </div>
+        </Card>
       )}
     </div>
   );

@@ -1,5 +1,8 @@
 import { useSalaries } from "../hooks/useSalaries";
+import { useAuth } from "../hooks/useAuth";
 import { Card } from "../components/ui/Card";
+import { FileUpload } from "../components/files/FileUpload";
+import { FileList } from "../components/files/FileList";
 import {
   Table,
   TableBody,
@@ -10,6 +13,7 @@ import {
 } from "../components/ui/Table";
 
 export function SalariesPage() {
+  const { user } = useAuth();
   const { data, isLoading } = useSalaries();
 
   return (
@@ -59,6 +63,25 @@ export function SalariesPage() {
           </TableBody>
         </Table>
       </Card>
+
+      {/* 給与明細 */}
+      {user && (
+        <Card title="給与明細">
+          <div className="space-y-4">
+            <FileUpload
+              category="SALARY_STATEMENT"
+              entity_type="user"
+              entity_id={user.id}
+              accept=".pdf"
+            />
+            <FileList
+              category="SALARY_STATEMENT"
+              entity_type="user"
+              entity_id={user.id}
+            />
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { useAvatar } from "../../hooks/useAvatar";
 import { UserCircleIcon, ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
 
 export function UserMenu() {
@@ -8,6 +9,7 @@ export function UserMenu() {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { data: avatarUrl } = useAvatar(user?.id);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -65,7 +67,23 @@ export function UserMenu() {
         onClick={() => setIsMenuOpen(!isMenuOpen)}
         className="flex w-full items-center gap-3 rounded-lg p-2 transition hover:bg-slate-50"
       >
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100 text-brand-600 font-semibold">
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt={getUserDisplayName()}
+            className="h-10 w-10 rounded-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+              const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = "flex";
+            }}
+          />
+        ) : null}
+        <div
+          className={`flex h-10 w-10 items-center justify-center rounded-full bg-brand-100 text-brand-600 font-semibold ${
+            avatarUrl ? "hidden" : ""
+          }`}
+        >
           {getUserInitials()}
         </div>
         <div className="flex-1 text-left">

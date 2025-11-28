@@ -10,6 +10,8 @@ import type {
   CheckOutResponse,
   Diagnosis,
   Facility,
+  File,
+  FileCategory,
   GeneratePinRequest,
   GeneratePinResponse,
   MedicationNote,
@@ -237,5 +239,29 @@ export const VitalAlertsAPI = {
   },
   acknowledgeTrigger: (id: number, notes?: string) =>
     apiClient.post<VitalAlertTrigger>(`/vital-alerts/triggers/${id}/acknowledge`, { notes }).then((res) => res.data),
+};
+
+export const FilesAPI = {
+  upload: (file: File, category: FileCategory, entity_type: string, entity_id: number) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("category", category);
+    formData.append("entity_type", entity_type);
+    formData.append("entity_id", String(entity_id));
+    // Content-Typeは自動設定されるため、明示的に設定しない
+    return apiClient.post<File>("/files/upload", formData).then((res) => res.data);
+  },
+  get: (id: number) => {
+    return apiClient.get(`/files/${id}`, { responseType: "blob" }).then((res) => {
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      return url;
+    });
+  },
+  getByEntity: (entity_type: string, entity_id: number) =>
+    apiClient.get<File[]>(`/files/entity/${entity_type}/${entity_id}`).then((res) => res.data),
+  getByCategory: (category: FileCategory) =>
+    apiClient.get<File[]>(`/files/category/${category}`).then((res) => res.data),
+  remove: (id: number) =>
+    apiClient.delete(`/files/${id}`).then(() => undefined),
 };
 

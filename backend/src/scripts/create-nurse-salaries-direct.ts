@@ -1,12 +1,18 @@
 import { db } from "../config/db";
-import { readFileSync } from "fs";
-import { join } from "path";
 
 async function createNurseSalariesTable() {
   try {
-    // テーブル作成（基本構造のみ、制約は後から追加）
-    await db.query("CREATE TABLE IF NOT EXISTS nurse_salaries (id BIGINT PRIMARY KEY AUTO_INCREMENT, user_id BIGINT NOT NULL, year_month VARCHAR(7) NOT NULL, amount INT, created_at DATETIME)");
+    const sql = `CREATE TABLE IF NOT EXISTS nurse_salaries (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  year_month CHAR(7) NOT NULL,
+  amount INT,
+  created_at DATETIME,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  UNIQUE (user_id, year_month)
+)`;
     
+    await db.query(sql);
     console.log("✓ nurse_salaries table created successfully");
     await db.end();
     process.exit(0);
@@ -18,7 +24,7 @@ async function createNurseSalariesTable() {
     } else {
       console.error("❌ Error creating nurse_salaries table:", error.message);
       if (error.sql) {
-        console.error("SQL:", error.sql.substring(0, 300));
+        console.error("SQL:", error.sql);
       }
       await db.end();
       process.exit(1);
@@ -27,4 +33,3 @@ async function createNurseSalariesTable() {
 }
 
 createNurseSalariesTable();
-

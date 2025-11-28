@@ -1,9 +1,36 @@
 import { Request, Response } from "express";
 import * as VisitService from "../services/visit.service";
+import { calculatePagination } from "../validations/pagination.validation";
 
 export const getAllVisits = async (req: Request, res: Response) => {
-  const visits = await VisitService.getAllVisits();
-  res.json(visits);
+  // クエリパラメータからページネーション情報を取得
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 20;
+  const sortBy = (req.query.sortBy as string) || "visited_at";
+  const sortOrder = (req.query.sortOrder as "asc" | "desc") || "desc";
+
+  // フィルター
+  const filters = {
+    shift_id: req.query.shift_id ? Number(req.query.shift_id) : undefined,
+    resident_id: req.query.resident_id ? Number(req.query.resident_id) : undefined,
+    visited_from: req.query.visited_from as string | undefined,
+    visited_to: req.query.visited_to as string | undefined,
+  };
+
+  const { data, total } = await VisitService.getVisitsPaginated(
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+    filters
+  );
+
+  const pagination = calculatePagination(page, limit, total);
+
+  res.json({
+    data,
+    pagination,
+  });
 };
 
 export const getVisitById = async (req: Request, res: Response) => {

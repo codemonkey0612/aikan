@@ -94,3 +94,22 @@ export interface AuthResponse {
   user: User;
 }
 
+/**
+ * ページネーション情報
+ */
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+/**
+ * ページネーション対応のAPIレスポンス
+ */
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: PaginationInfo;
+}

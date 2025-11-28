@@ -23,7 +23,8 @@
     "mysql2": "^3.15.3",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^13.0.0",
-    "yamljs": "^0.3.0"
+    "yamljs": "^0.3.0",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

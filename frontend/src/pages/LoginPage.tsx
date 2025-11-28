@@ -1,12 +1,14 @@
 import { type FormEvent, useState } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { loginSchema } from "../validations/auth.validation";
 
 export function LoginPage() {
   const { user, login, loading, error } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -14,6 +16,20 @@ export function LoginPage() {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    setValidationErrors({});
+
+    // Zodバリデーション
+    const result = loginSchema.safeParse({ email, password });
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        const path = issue.path[0] as string;
+        errors[path] = issue.message;
+      });
+      setValidationErrors(errors);
+      return;
+    }
+
     setSubmitting(true);
     try {
       await login(email, password);
@@ -43,22 +59,48 @@ export function LoginPage() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (validationErrors.email) {
+                  setValidationErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.email;
+                    return next;
+                  });
+                }
+              }}
+              className={`mt-1 w-full rounded-xl border px-3 py-2 text-sm ${
+                validationErrors.email ? "border-rose-500" : "border-slate-200"
+              }`}
               placeholder="nurse@example.com"
-              required
             />
+            {validationErrors.email && (
+              <p className="mt-1 text-xs text-rose-600">{validationErrors.email}</p>
+            )}
           </label>
           <label className="block text-sm font-medium text-slate-700">
             パスワード
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (validationErrors.password) {
+                  setValidationErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.password;
+                    return next;
+                  });
+                }
+              }}
+              className={`mt-1 w-full rounded-xl border px-3 py-2 text-sm ${
+                validationErrors.password ? "border-rose-500" : "border-slate-200"
+              }`}
               placeholder="********"
-              required
             />
+            {validationErrors.password && (
+              <p className="mt-1 text-xs text-rose-600">{validationErrors.password}</p>
+            )}
           </label>
 
           {(error || loading) && (

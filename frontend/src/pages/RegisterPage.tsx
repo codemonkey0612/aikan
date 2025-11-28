@@ -2,6 +2,7 @@ import { type FormEvent, useState } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import type { User } from "../api/types";
+import { registerSchema } from "../validations/auth.validation";
 
 export function RegisterPage() {
   const { user, register, loading, error } = useAuth();
@@ -23,6 +24,7 @@ export function RegisterPage() {
     confirmPassword: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   if (user) {
     return <Navigate to="/" replace />;
@@ -30,14 +32,23 @@ export function RegisterPage() {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    
-    if (formData.password !== formData.confirmPassword) {
+    setValidationErrors({});
+
+    // Zodバリデーション
+    const result = registerSchema.safeParse(formData);
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.issues.forEach((issue) => {
+        const path = issue.path.join(".");
+        errors[path] = issue.message;
+      });
+      setValidationErrors(errors);
       return;
     }
 
     setSubmitting(true);
     try {
-      const { confirmPassword, ...payload } = formData;
+      const { confirmPassword, ...payload } = result.data;
       await register(payload);
     } finally {
       setSubmitting(false);
@@ -66,26 +77,48 @@ export function RegisterPage() {
               <input
                 type="text"
                 value={formData.last_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, last_name: e.target.value })
-                }
-                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                onChange={(e) => {
+                  setFormData({ ...formData, last_name: e.target.value });
+                  if (validationErrors.last_name) {
+                    setValidationErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.last_name;
+                      return next;
+                    });
+                  }
+                }}
+                className={`mt-1 w-full rounded-xl border px-3 py-2 text-sm ${
+                  validationErrors.last_name ? "border-rose-500" : "border-slate-200"
+                }`}
                 placeholder="姓"
-                required
               />
+              {validationErrors.last_name && (
+                <p className="mt-1 text-xs text-rose-600">{validationErrors.last_name}</p>
+              )}
             </label>
             <label className="block text-sm font-medium text-slate-700">
             名
               <input
                 type="text"
                 value={formData.first_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, first_name: e.target.value })
-                }
-                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                onChange={(e) => {
+                  setFormData({ ...formData, first_name: e.target.value });
+                  if (validationErrors.first_name) {
+                    setValidationErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.first_name;
+                      return next;
+                    });
+                  }
+                }}
+                className={`mt-1 w-full rounded-xl border px-3 py-2 text-sm ${
+                  validationErrors.first_name ? "border-rose-500" : "border-slate-200"
+                }`}
                 placeholder="名"
-                required
               />
+              {validationErrors.first_name && (
+                <p className="mt-1 text-xs text-rose-600">{validationErrors.first_name}</p>
+              )}
             </label>
           </div>
 
@@ -94,13 +127,24 @@ export function RegisterPage() {
             <input
               type="email"
               value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+              onChange={(e) => {
+                setFormData({ ...formData, email: e.target.value });
+                if (validationErrors.email) {
+                  setValidationErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.email;
+                    return next;
+                  });
+                }
+              }}
+              className={`mt-1 w-full rounded-xl border px-3 py-2 text-sm ${
+                validationErrors.email ? "border-rose-500" : "border-slate-200"
+              }`}
               placeholder="nurse@gmail.com"
-              required
             />
+            {validationErrors.email && (
+              <p className="mt-1 text-xs text-rose-600">{validationErrors.email}</p>
+            )}
           </label>
 
           <label className="block text-sm font-medium text-slate-700">
@@ -108,12 +152,24 @@ export function RegisterPage() {
             <input
               type="tel"
               value={formData.phone}
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+              onChange={(e) => {
+                setFormData({ ...formData, phone: e.target.value });
+                if (validationErrors.phone) {
+                  setValidationErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.phone;
+                    return next;
+                  });
+                }
+              }}
+              className={`mt-1 w-full rounded-xl border px-3 py-2 text-sm ${
+                validationErrors.phone ? "border-rose-500" : "border-slate-200"
+              }`}
               placeholder="090-0000-0000"
             />
+            {validationErrors.phone && (
+              <p className="mt-1 text-xs text-rose-600">{validationErrors.phone}</p>
+            )}
           </label>
 
           <label className="block text-sm font-medium text-slate-700">
@@ -138,14 +194,24 @@ export function RegisterPage() {
             <input
               type="password"
               value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+              onChange={(e) => {
+                setFormData({ ...formData, password: e.target.value });
+                if (validationErrors.password) {
+                  setValidationErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.password;
+                    return next;
+                  });
+                }
+              }}
+              className={`mt-1 w-full rounded-xl border px-3 py-2 text-sm ${
+                validationErrors.password ? "border-rose-500" : "border-slate-200"
+              }`}
               placeholder="********"
-              required
-              minLength={6}
             />
+            {validationErrors.password && (
+              <p className="mt-1 text-xs text-rose-600">{validationErrors.password}</p>
+            )}
           </label>
 
           <label className="block text-sm font-medium text-slate-700">
@@ -153,23 +219,25 @@ export function RegisterPage() {
             <input
               type="password"
               value={formData.confirmPassword}
-              onChange={(e) =>
-                setFormData({ ...formData, confirmPassword: e.target.value })
-              }
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+              onChange={(e) => {
+                setFormData({ ...formData, confirmPassword: e.target.value });
+                if (validationErrors.confirmPassword) {
+                  setValidationErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.confirmPassword;
+                    return next;
+                  });
+                }
+              }}
+              className={`mt-1 w-full rounded-xl border px-3 py-2 text-sm ${
+                validationErrors.confirmPassword ? "border-rose-500" : "border-slate-200"
+              }`}
               placeholder="********"
-              required
-              minLength={6}
             />
-          </label>
-
-          {formData.password &&
-            formData.confirmPassword &&
-            formData.password !== formData.confirmPassword && (
-              <p className="text-sm text-rose-600">
-                パスワードが一致しません
-              </p>
+            {validationErrors.confirmPassword && (
+              <p className="mt-1 text-xs text-rose-600">{validationErrors.confirmPassword}</p>
             )}
+          </label>
 
           {(error || loading) && (
             <p className="text-sm text-rose-600">
@@ -179,7 +247,7 @@ export function RegisterPage() {
 
           <button
             type="submit"
-            disabled={submitting || formData.password !== formData.confirmPassword}
+            disabled={submitting}
             className="w-full rounded-xl bg-brand-600 py-2 text-sm font-semibold text-white transition hover:bg-brand-500 disabled:opacity-60"
           >
             {submitting ? "登録中..." : "登録"}

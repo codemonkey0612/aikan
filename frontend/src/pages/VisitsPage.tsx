@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useVisits } from "../hooks/useVisits";
 import { Card } from "../components/ui/Card";
 import {
@@ -8,9 +9,12 @@ import {
   TableHeaderCell,
   TableRow,
 } from "../components/ui/Table";
+import { Pagination } from "../components/ui/Pagination";
 
 export function VisitsPage() {
-  const { data, isLoading } = useVisits();
+  const [page, setPage] = useState(1);
+  const limit = 20;
+  const { data, isLoading } = useVisits({ page, limit });
 
   return (
     <div className="space-y-6">
@@ -38,7 +42,7 @@ export function VisitsPage() {
                 </TableCell>
               </TableRow>
             )}
-            {data?.map((visit) => (
+            {data?.data.map((visit) => (
               <TableRow key={visit.id}>
                 <TableCell>#{visit.shift_id}</TableCell>
                 <TableCell>
@@ -47,7 +51,7 @@ export function VisitsPage() {
                 <TableCell>{visit.visited_at}</TableCell>
               </TableRow>
             ))}
-            {!isLoading && !data?.length && (
+            {!isLoading && !data?.data.length && (
               <TableRow>
                 <TableCell colSpan={3} className="text-center text-slate-400">
                   訪問記録がまだありません。
@@ -56,6 +60,18 @@ export function VisitsPage() {
             )}
           </TableBody>
         </Table>
+        {data?.pagination && data.pagination.totalPages > 1 && (
+          <div className="mt-4 border-t border-slate-200 pt-4">
+            <Pagination
+              page={data.pagination.page}
+              totalPages={data.pagination.totalPages}
+              onPageChange={setPage}
+            />
+            <p className="mt-2 text-center text-sm text-slate-500">
+              {data.pagination.total}件中 {((page - 1) * limit + 1)}-{Math.min(page * limit, data.pagination.total)}件を表示
+            </p>
+          </div>
+        )}
       </Card>
     </div>
   );

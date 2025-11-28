@@ -22,6 +22,62 @@ export const getAllVitals = async () => {
   return rows;
 };
 
+/**
+ * ページネーション対応でバイタルを取得
+ */
+export const getVitalsPaginated = async (
+  page: number = 1,
+  limit: number = 20,
+  sortBy: string = "created_at",
+  sortOrder: "asc" | "desc" = "desc",
+  filters?: {
+    resident_id?: number;
+    measured_from?: string;
+    measured_to?: string;
+    created_by?: number;
+  }
+) => {
+  const offset = (page - 1) * limit;
+  const validSortColumns = ["id", "resident_id", "measured_at", "created_at"];
+  const sortColumn = validSortColumns.includes(sortBy) ? sortBy : "created_at";
+  const order = sortOrder.toUpperCase() as "ASC" | "DESC";
+
+  let whereClause = "1=1";
+  const queryParams: any[] = [];
+
+  if (filters?.resident_id) {
+    whereClause += " AND resident_id = ?";
+    queryParams.push(filters.resident_id);
+  }
+  if (filters?.measured_from) {
+    whereClause += " AND measured_at >= ?";
+    queryParams.push(filters.measured_from);
+  }
+  if (filters?.measured_to) {
+    whereClause += " AND measured_at <= ?";
+    queryParams.push(filters.measured_to);
+  }
+  if (filters?.created_by) {
+    whereClause += " AND created_by = ?";
+    queryParams.push(filters.created_by);
+  }
+
+  // データ取得
+  const [rows] = await db.query<VitalRow[]>(
+    `SELECT * FROM vital_records WHERE ${whereClause} ORDER BY ${sortColumn} ${order} LIMIT ? OFFSET ?`,
+    [...queryParams, limit, offset]
+  );
+
+  // 総件数取得
+  const [countRows] = await db.query<RowDataPacket[]>(
+    `SELECT COUNT(*) as count FROM vital_records WHERE ${whereClause}`,
+    queryParams
+  );
+  const total = (countRows[0] as { count: number })?.count ?? 0;
+
+  return { data: rows, total };
+};
+
 export const getVitalById = async (id: number) => {
   const [rows] = await db.query<VitalRow[]>(
     "SELECT * FROM vital_records WHERE id = ?",

@@ -10,3 +10,16 @@ export const updateShift = (
 ) => ShiftModel.updateShift(id, data);
 export const deleteShift = (id: number) => ShiftModel.deleteShift(id);
 
+export const getShiftsPaginated = (
+  page: number,
+  limit: number,
+  sortBy: string,
+  sortOrder: "asc" | "desc",
+  filters?: {
+    user_id?: number;
+    facility_id?: number;
+    date_from?: string;
+    date_to?: string;
+  }
+) => ShiftModel.getShiftsPaginated(page, limit, sortBy, sortOrder, filters);
+

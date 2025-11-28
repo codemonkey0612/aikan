@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useShifts } from "../hooks/useShifts";
+import type { Shift } from "../api/types";
 import { Card } from "../components/ui/Card";
 import {
   Table,
@@ -14,13 +15,16 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
+import { Pagination } from "../components/ui/Pagination";
 
 const WEEK_DAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
 const formatKey = (date: Date) => date.toISOString().slice(0, 10);
 
 export function ShiftsPage() {
-  const { data, isLoading } = useShifts();
+  const [page, setPage] = useState(1);
+  const limit = 20;
+  const { data, isLoading } = useShifts({ page, limit });
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
     now.setDate(1);
@@ -58,9 +62,9 @@ export function ShiftsPage() {
   }, [currentMonth]);
 
   const shiftByDate = useMemo(() => {
-    const map = new Map<string, typeof data>();
-    if (!data) return map;
-    data.forEach((shift) => {
+    const map = new Map<string, Shift[]>();
+    if (!data?.data) return map;
+    data.data.forEach((shift) => {
       if (!shift.date) return;
       const key = formatKey(new Date(shift.date));
       const list = map.get(key) ?? [];
@@ -191,7 +195,7 @@ export function ShiftsPage() {
                 </TableCell>
               </TableRow>
             )}
-            {data?.map((shift) => (
+            {data?.data.map((shift) => (
               <TableRow key={shift.id}>
                 <TableCell>#{shift.user_id}</TableCell>
                 <TableCell>#{shift.facility_id}</TableCell>
@@ -199,7 +203,7 @@ export function ShiftsPage() {
                 <TableCell>{shift.shift_type ?? "N/A"}</TableCell>
               </TableRow>
             ))}
-            {!isLoading && !data?.length && (
+            {!isLoading && !data?.data.length && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-slate-400">
                   シフトがまだ登録されていません。
@@ -208,6 +212,18 @@ export function ShiftsPage() {
             )}
           </TableBody>
         </Table>
+        {data?.pagination && data.pagination.totalPages > 1 && (
+          <div className="mt-4 border-t border-slate-200 pt-4">
+            <Pagination
+              page={data.pagination.page}
+              totalPages={data.pagination.totalPages}
+              onPageChange={setPage}
+            />
+            <p className="mt-2 text-center text-sm text-slate-500">
+              {data.pagination.total}件中 {((page - 1) * limit + 1)}-{Math.min(page * limit, data.pagination.total)}件を表示
+            </p>
+          </div>
+        )}
       </Card>
     </div>
   );

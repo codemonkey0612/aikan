@@ -10,3 +10,16 @@ export const updateVisit = (
 ) => VisitModel.updateVisit(id, data);
 export const deleteVisit = (id: number) => VisitModel.deleteVisit(id);
 
+export const getVisitsPaginated = (
+  page: number,
+  limit: number,
+  sortBy: string,
+  sortOrder: "asc" | "desc",
+  filters?: {
+    shift_id?: number;
+    resident_id?: number;
+    visited_from?: string;
+    visited_to?: string;
+  }
+) => VisitModel.getVisitsPaginated(page, limit, sortBy, sortOrder, filters);
+

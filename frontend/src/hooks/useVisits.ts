@@ -1,15 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import * as api from "../api/visits";
-import type { Visit } from "../api/types";
+import { VisitsAPI } from "../api/endpoints";
+import type { PaginatedResponse, Visit } from "../api/types";
 
 const VISITS_QUERY_KEY = ["visits"] as const;
-const getVisitsQueryKey = (params?: Record<string, unknown>) =>
+const getVisitsQueryKey = (params?: UseVisitsParams) =>
   ["visits", params ?? null] as const;
 
-export function useVisits(params?: Record<string, unknown>) {
-  return useQuery<Visit[]>({
+export interface UseVisitsParams {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  shift_id?: number;
+  resident_id?: number;
+  visited_from?: string;
+  visited_to?: string;
+}
+
+export function useVisits(params?: UseVisitsParams) {
+  return useQuery<PaginatedResponse<Visit>>({
     queryKey: getVisitsQueryKey(params),
-    queryFn: () => api.getVisits(params).then((res) => res.data),
+    queryFn: () => VisitsAPI.listPaginated(params),
   });
 }
 
@@ -17,8 +28,7 @@ export function useCreateVisit() {
   const client = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Partial<Visit>) =>
-      api.createVisit(data).then((res) => res.data),
+    mutationFn: (data: Partial<Visit>) => VisitsAPI.create(data),
     onSuccess: () =>
       client.invalidateQueries({ queryKey: VISITS_QUERY_KEY }),
   });
@@ -29,7 +39,7 @@ export function useUpdateVisit() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<Visit> }) =>
-      api.updateVisit(id, data).then((res) => res.data),
+      VisitsAPI.update(id, data),
     onSuccess: () =>
       client.invalidateQueries({ queryKey: VISITS_QUERY_KEY }),
   });
@@ -39,7 +49,7 @@ export function useDeleteVisit() {
   const client = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => api.deleteVisit(id),
+    mutationFn: (id: number) => VisitsAPI.remove(id),
     onSuccess: () =>
       client.invalidateQueries({ queryKey: VISITS_QUERY_KEY }),
   });

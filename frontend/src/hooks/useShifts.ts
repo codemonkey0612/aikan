@@ -1,15 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import * as api from "../api/shifts";
-import type { Shift } from "../api/types";
+import { ShiftsAPI } from "../api/endpoints";
+import type { PaginatedResponse, Shift } from "../api/types";
 
 const SHIFTS_QUERY_KEY = ["shifts"] as const;
-const getShiftsQueryKey = (params?: Record<string, unknown>) =>
+const getShiftsQueryKey = (params?: UseShiftsParams) =>
   ["shifts", params ?? null] as const;
 
-export function useShifts(params?: Record<string, unknown>) {
-  return useQuery<Shift[]>({
+export interface UseShiftsParams {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  user_id?: number;
+  facility_id?: number;
+  date_from?: string;
+  date_to?: string;
+}
+
+export function useShifts(params?: UseShiftsParams) {
+  return useQuery<PaginatedResponse<Shift>>({
     queryKey: getShiftsQueryKey(params),
-    queryFn: () => api.getShifts(params).then((res) => res.data),
+    queryFn: () => ShiftsAPI.listPaginated(params),
   });
 }
 
@@ -17,8 +28,7 @@ export function useCreateShift() {
   const client = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Partial<Shift>) =>
-      api.createShift(data).then((res) => res.data),
+    mutationFn: (data: Partial<Shift>) => ShiftsAPI.create(data),
     onSuccess: () =>
       client.invalidateQueries({ queryKey: SHIFTS_QUERY_KEY }),
   });
@@ -29,7 +39,7 @@ export function useUpdateShift() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<Shift> }) =>
-      api.updateShift(id, data).then((res) => res.data),
+      ShiftsAPI.update(id, data),
     onSuccess: () =>
       client.invalidateQueries({ queryKey: SHIFTS_QUERY_KEY }),
   });
@@ -39,7 +49,7 @@ export function useDeleteShift() {
   const client = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => api.deleteShift(id),
+    mutationFn: (id: number) => ShiftsAPI.remove(id),
     onSuccess: () =>
       client.invalidateQueries({ queryKey: SHIFTS_QUERY_KEY }),
   });

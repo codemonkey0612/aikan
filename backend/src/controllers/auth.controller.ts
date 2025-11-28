@@ -5,18 +5,6 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { first_name, last_name, email, phone, role, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({
-        message: "メールアドレスとパスワードは必須です",
-      });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({
-        message: "パスワードは6文字以上である必要があります",
-      });
-    }
-
     const result = await AuthService.register({
       first_name,
       last_name,
@@ -38,13 +26,6 @@ export const register = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({
-        message: "メールアドレスとパスワードは必須です",
-      });
-    }
-
     const result = await AuthService.login(email, password);
     res.json(result);
   } catch (error: any) {
@@ -79,13 +60,6 @@ export const me = async (req: Request, res: Response) => {
 export const refresh = async (req: Request, res: Response) => {
   try {
     const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(400).json({
-        message: "リフレッシュトークンが必要です",
-      });
-    }
-
     const result = await AuthService.refreshAccessToken(refreshToken);
     res.json(result);
   } catch (error: any) {

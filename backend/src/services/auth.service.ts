@@ -121,6 +121,63 @@ export const getProfile = async (userId: number) => {
 };
 
 /**
+ * プロフィール更新
+ */
+export const updateProfile = async (
+  userId: number,
+  data: {
+    first_name?: string | null;
+    last_name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+  }
+) => {
+  const user = await UserService.getUserById(userId);
+  if (!user) {
+    throw httpError("User not found", 404);
+  }
+
+  // メールアドレスが変更される場合、重複チェック
+  if (data.email && data.email !== user.email) {
+    const existing = await UserService.getUserByEmail(data.email);
+    if (existing && existing.id !== userId) {
+      throw httpError("このメールアドレスは既に使用されています", 400);
+    }
+  }
+
+  const updated = await UserService.updateUser(userId, data);
+  return sanitizeUser(updated);
+};
+
+/**
+ * パスワード変更
+ */
+export const changePassword = async (
+  userId: number,
+  currentPassword: string,
+  newPassword: string
+) => {
+  const user = await UserService.getUserById(userId);
+  if (!user || !user.password_hash) {
+    throw httpError("User not found", 404);
+  }
+
+  // 現在のパスワードを検証
+  const valid = await bcrypt.compare(currentPassword, user.password_hash);
+  if (!valid) {
+    throw httpError("現在のパスワードが正しくありません", 401);
+  }
+
+  // 新しいパスワードをハッシュ化
+  const password_hash = await bcrypt.hash(newPassword, 10);
+
+  // パスワードを更新
+  await UserService.updateUser(userId, { password_hash });
+
+  return { message: "パスワードが変更されました" };
+};
+
+/**
  * リフレッシュトークンを使用して新しいアクセストークンを取得（トークンローテーション）
  */
 export const refreshAccessToken = async (refreshTokenString: string) => {

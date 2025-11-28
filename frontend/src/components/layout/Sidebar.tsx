@@ -14,6 +14,7 @@ import {
 import clsx from "clsx";
 import { useAuth } from "../../hooks/useAuth";
 import { hasAnyPermission } from "../../utils/rbac";
+import { UserMenu } from "./UserMenu";
 
 interface NavItem {
   label: string;
@@ -46,8 +47,8 @@ export function Sidebar() {
   });
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 border-r border-slate-200 bg-white pt-16">
-      <div className="px-4 py-6">
+    <aside className="fixed left-0 top-0 flex h-full w-64 flex-col border-r border-slate-200 bg-white pt-16">
+      <div className="flex-1 overflow-y-auto px-4 py-6">
         <nav className="space-y-1">
           {navItems.map((item) => (
             <NavLink
@@ -67,6 +68,7 @@ export function Sidebar() {
           ))}
         </nav>
       </div>
+      <UserMenu />
     </aside>
   );
 }

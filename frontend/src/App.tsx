@@ -14,6 +14,7 @@ import { SalariesPage } from "./pages/SalariesPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { AttendancePage } from "./pages/AttendancePage";
 import { CarePlanPage } from "./pages/CarePlanPage";
+import { ProfilePage } from "./pages/ProfilePage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { useAuth } from "./hooks/useAuth";
@@ -79,6 +80,7 @@ function App() {
                 </RequireRole>
               }
             />
+            <Route path="profile" element={<ProfilePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
           <Route path="/login" element={<LoginPage />} />

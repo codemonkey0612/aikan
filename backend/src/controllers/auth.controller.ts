@@ -87,3 +87,42 @@ export const logout = async (req: Request, res: Response) => {
   }
 };
 
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.sub ? Number(req.user.sub) : undefined;
+    if (!userId) {
+      return res.status(401).json({ message: "認証が必要です" });
+    }
+
+    const updated = await AuthService.updateProfile(userId, req.body);
+    res.json(updated);
+  } catch (error: any) {
+    const status = error.status || 500;
+    res.status(status).json({
+      message: error.message || "プロフィールの更新に失敗しました",
+    });
+  }
+};
+
+export const changePassword = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.sub ? Number(req.user.sub) : undefined;
+    if (!userId) {
+      return res.status(401).json({ message: "認証が必要です" });
+    }
+
+    const { current_password, new_password } = req.body;
+    const result = await AuthService.changePassword(
+      userId,
+      current_password,
+      new_password
+    );
+    res.json(result);
+  } catch (error: any) {
+    const status = error.status || 500;
+    res.status(status).json({
+      message: error.message || "パスワードの変更に失敗しました",
+    });
+  }
+};
+

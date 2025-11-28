@@ -67,6 +67,19 @@ export const AuthAPI = {
   logout: (payload: { refreshToken: string }) =>
     apiClient.post<{ message: string }>("/auth/logout", payload).then((res) => res.data),
   me: () => apiClient.get<User>("/auth/me").then((res) => res.data),
+  updateProfile: (payload: {
+    first_name?: string | null;
+    last_name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+  }) =>
+    apiClient.put<User>("/auth/profile", payload).then((res) => res.data),
+  changePassword: (payload: {
+    current_password: string;
+    new_password: string;
+    confirm_password: string;
+  }) =>
+    apiClient.post<{ message: string }>("/auth/change-password", payload).then((res) => res.data),
 };
 
 export const UsersAPI = createCrudApi<User>("/users");

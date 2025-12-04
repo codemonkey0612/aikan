@@ -30,6 +30,7 @@ const allNavItems: NavItem[] = [
   { label: "施設", to: "/facilities", icon: BuildingOffice2Icon, permissions: ["facilities:read"] },
   { label: "入居者", to: "/residents", icon: UserGroupIcon, permissions: ["residents:read"] },
   { label: "バイタル", to: "/vitals", icon: HeartIcon, permissions: ["vitals:read"] },
+  { label: "カレンダー", to: "/calendar", icon: ClockIcon, permissions: ["shifts:read", "visits:read"] },
   { label: "シフト", to: "/shifts", icon: ClockIcon, permissions: ["shifts:read"] },
   { label: "出退勤", to: "/attendance", icon: MapPinIcon, permissions: ["shifts:read"] },
   { label: "訪問", to: "/visits", icon: ClipboardDocumentIcon, permissions: ["visits:read"] },

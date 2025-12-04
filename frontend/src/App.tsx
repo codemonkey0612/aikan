@@ -13,6 +13,7 @@ import { ShiftSchedulePage } from "./pages/ShiftSchedulePage";
 import { ShiftDailyPage } from "./pages/ShiftDailyPage";
 import { ShiftDetailPage } from "./pages/ShiftDetailPage";
 import { VisitsPage } from "./pages/VisitsPage";
+import { CalendarPage } from "./pages/CalendarPage";
 import { SalariesPage } from "./pages/SalariesPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { AttendancePage } from "./pages/AttendancePage";
@@ -69,6 +70,14 @@ function App() {
             <Route path="shifts/schedule" element={<ShiftSchedulePage />} />
             <Route path="shifts/daily/:date" element={<ShiftDailyPage />} />
             <Route path="shifts/:id" element={<ShiftDetailPage />} />
+            <Route
+              path="calendar"
+              element={
+                <RequireRole allowedRoles={["admin", "facility_manager", "nurse"]}>
+                  <CalendarPage />
+                </RequireRole>
+              }
+            />
             <Route path="visits" element={<VisitsPage />} />
             <Route
               path="salaries"

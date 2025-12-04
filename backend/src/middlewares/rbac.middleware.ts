@@ -51,12 +51,12 @@ export const requirePermission = (...permissions: string[]) => {
 };
 
 /**
- * ADMINのみアクセス可能
+ * adminのみアクセス可能
  */
-export const requireAdmin = requireRole("ADMIN");
+export const requireAdmin = requireRole("admin");
 
 /**
- * ADMINまたはFACILITY_MANAGERのみアクセス可能
+ * adminまたはfacility_managerのみアクセス可能
  */
-export const requireAdminOrFacilityManager = requireRole("ADMIN", "FACILITY_MANAGER");
+export const requireAdminOrFacilityManager = requireRole("admin", "facility_manager");
 

@@ -11,7 +11,7 @@ export interface UseVitalsParams {
   limit?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
-  resident_id?: number;
+  resident_id?: string;
   measured_from?: string;
   measured_to?: string;
   created_by?: number;

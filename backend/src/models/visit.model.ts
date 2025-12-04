@@ -4,7 +4,7 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2";
 export interface VisitRow extends RowDataPacket {
   id: number;
   shift_id: number;
-  resident_id: number | null;
+  resident_id: string | null; // VARCHAR(50) - references residents.resident_id
   visited_at: string;
   note: string | null;
 }
@@ -26,7 +26,7 @@ export const getVisitsPaginated = async (
   sortOrder: "asc" | "desc" = "desc",
   filters?: {
     shift_id?: number;
-    resident_id?: number;
+    resident_id?: string; // VARCHAR(50)
     visited_from?: string;
     visited_to?: string;
   }

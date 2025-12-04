@@ -15,8 +15,8 @@ const idParamSchema = z.object({
 
 const createAlcoholCheckSchema = z.object({
   body: z.object({
-    user_id: z.number().int().positive(),
-    resident_id: z.number().int().positive().nullable().optional(),
+    user_id: z.number().int().positive(), // BIGINT UNSIGNED
+    resident_id: z.string().max(50).nullable().optional(), // VARCHAR(50)
     breath_alcohol_concentration: z.number().min(0).max(1000),
     checked_at: z.string().datetime(),
     device_image_path: z.string().nullable().optional(),
@@ -26,7 +26,7 @@ const createAlcoholCheckSchema = z.object({
 
 const updateAlcoholCheckSchema = z.object({
   body: z.object({
-    resident_id: z.number().int().positive().nullable().optional(),
+    resident_id: z.string().max(50).nullable().optional(), // VARCHAR(50)
     breath_alcohol_concentration: z.number().min(0).max(1000).optional(),
     checked_at: z.string().datetime().optional(),
     device_image_path: z.string().nullable().optional(),

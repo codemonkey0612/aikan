@@ -51,7 +51,7 @@ function App() {
             <Route
               path="users"
               element={
-                <RequireRole allowedRoles={["ADMIN"]}>
+                <RequireRole allowedRoles={["admin"]}>
                   <UsersPage />
                 </RequireRole>
               }
@@ -67,7 +67,7 @@ function App() {
             <Route
               path="salaries"
               element={
-                <RequireRole allowedRoles={["ADMIN"]}>
+                <RequireRole allowedRoles={["admin"]}>
                   <SalariesPage />
                 </RequireRole>
               }
@@ -76,7 +76,7 @@ function App() {
             <Route
               path="attendance"
               element={
-                <RequireRole allowedRoles={["ADMIN", "FACILITY_MANAGER", "NURSE"]}>
+                <RequireRole allowedRoles={["admin", "facility_manager", "nurse"]}>
                   <AttendancePage />
                 </RequireRole>
               }
@@ -84,7 +84,7 @@ function App() {
             <Route
               path="alcohol-checks"
               element={
-                <RequireRole allowedRoles={["ADMIN", "FACILITY_MANAGER", "NURSE"]}>
+                <RequireRole allowedRoles={["admin", "facility_manager", "nurse"]}>
                   <AlcoholCheckPage />
                 </RequireRole>
               }

@@ -13,10 +13,10 @@ export const getAllFacilities = () =>
     FACILITIES_TTL
   );
 
-export const getFacilityById = (id: number) =>
+export const getFacilityById = (facility_id: string) =>
   getOrSetCache(
-    CACHE_KEYS.FACILITY(id),
-    () => FacilityModel.getFacilityById(id),
+    CACHE_KEYS.FACILITY(facility_id),
+    () => FacilityModel.getFacilityById(facility_id),
     FACILITY_TTL
   );
 
@@ -28,20 +28,20 @@ export const createFacility = async (data: FacilityModel.CreateFacilityInput) =>
 };
 
 export const updateFacility = async (
-  id: number,
+  facility_id: string,
   data: FacilityModel.UpdateFacilityInput
 ) => {
-  const facility = await FacilityModel.updateFacility(id, data);
+  const facility = await FacilityModel.updateFacility(facility_id, data);
   // 該当施設と施設一覧のキャッシュを無効化
-  await invalidateCache(CACHE_KEYS.FACILITY(id));
+  await invalidateCache(CACHE_KEYS.FACILITY(facility_id));
   await invalidateCache(CACHE_KEYS.FACILITIES);
   return facility;
 };
 
-export const deleteFacility = async (id: number) => {
-  await FacilityModel.deleteFacility(id);
+export const deleteFacility = async (facility_id: string) => {
+  await FacilityModel.deleteFacility(facility_id);
   // 該当施設と施設一覧のキャッシュを無効化
-  await invalidateCache(CACHE_KEYS.FACILITY(id));
+  await invalidateCache(CACHE_KEYS.FACILITY(facility_id));
   await invalidateCache(CACHE_KEYS.FACILITIES);
 };
 

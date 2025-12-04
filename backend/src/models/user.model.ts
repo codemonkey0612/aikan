@@ -1,25 +1,51 @@
 import { db } from "../config/db";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 
+export type UserRole = "admin" | "nurse" | "facility_manager" | "corporate_officer";
+
 export interface UserRow extends RowDataPacket {
-  id: number;
-  role: string;
-  first_name: string | null;
-  last_name: string | null;
-  email: string | null;
-  phone: string | null;
-  password_hash: string | null;
-  active: number;
+  id: number; // BIGINT UNSIGNED in DB, but number in TypeScript is fine
+  role: UserRole;
+  nurse_id: string | null;
+  last_name: string;
+  first_name: string;
+  last_name_kana: string | null;
+  first_name_kana: string | null;
+  postal_code: string | null;
+  address_prefecture: string | null;
+  address_city: string | null;
+  address_building: string | null;
+  latitude_longitude: string | null;
+  email: string;
+  password: string;
+  phone_number: string | null;
+  user_photo_url: string | null;
+  notes: string | null;
+  position: string | null;
+  alcohol_check: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 export interface CreateUserInput {
-  role: string;
-  first_name?: string | null;
-  last_name?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  password_hash?: string | null;
+  role?: UserRole;
+  nurse_id?: string | null;
+  last_name: string;
+  first_name: string;
+  last_name_kana?: string | null;
+  first_name_kana?: string | null;
+  postal_code?: string | null;
+  address_prefecture?: string | null;
+  address_city?: string | null;
+  address_building?: string | null;
+  latitude_longitude?: string | null;
+  email: string;
+  password: string;
+  phone_number?: string | null;
+  user_photo_url?: string | null;
+  notes?: string | null;
+  position?: string | null;
+  alcohol_check?: boolean;
 }
 
 export type UpdateUserInput = Partial<CreateUserInput>;
@@ -46,11 +72,54 @@ export const getUserByEmail = async (email: string) => {
 };
 
 export const createUser = async (data: CreateUserInput) => {
-  const { first_name, last_name, email, phone, role, password_hash } = data;
+  const {
+    role = "nurse",
+    nurse_id,
+    last_name,
+    first_name,
+    last_name_kana,
+    first_name_kana,
+    postal_code,
+    address_prefecture,
+    address_city,
+    address_building,
+    latitude_longitude,
+    email,
+    password,
+    phone_number,
+    user_photo_url,
+    notes,
+    position,
+    alcohol_check = false,
+  } = data;
+  
   const [result] = await db.query<ResultSetHeader>(
-    `INSERT INTO users (first_name, last_name, email, phone, role, password_hash)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [first_name, last_name, email, phone, role, password_hash ?? null]
+    `INSERT INTO users (
+      role, nurse_id, last_name, first_name, last_name_kana, first_name_kana,
+      postal_code, address_prefecture, address_city, address_building,
+      latitude_longitude, email, password, phone_number,
+      user_photo_url, notes, position, alcohol_check
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      role,
+      nurse_id ?? null,
+      last_name,
+      first_name,
+      last_name_kana ?? null,
+      first_name_kana ?? null,
+      postal_code ?? null,
+      address_prefecture ?? null,
+      address_city ?? null,
+      address_building ?? null,
+      latitude_longitude ?? null,
+      email,
+      password,
+      phone_number ?? null,
+      user_photo_url ?? null,
+      notes ?? null,
+      position ?? null,
+      alcohol_check,
+    ]
   );
   return getUserById(result.insertId);
 };

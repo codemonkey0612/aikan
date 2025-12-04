@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 
 const sanitizeUser = (user: UserRow | null) => {
   if (!user) return null;
-  const { password_hash, ...rest } = user;
+  const { password, ...rest } = user;
   return rest;
 };
 
@@ -31,10 +31,10 @@ export const register = async (
     throw httpError("Email already in use", 400);
   }
 
-  const password_hash = await bcrypt.hash(data.password, 10);
+  const hashedPassword = await bcrypt.hash(data.password, 10);
   const user = await UserService.createUser({
     ...data,
-    password_hash,
+    password: hashedPassword,
   });
 
   if (!user) {
@@ -75,11 +75,11 @@ export const login = async (email: string, password: string) => {
 
   const user = await UserService.getUserByEmail(email);
 
-  if (!user || !user.password_hash) {
+  if (!user || !user.password) {
     throw httpError("Invalid credentials", 401);
   }
 
-  const valid = await bcrypt.compare(password, user.password_hash);
+  const valid = await bcrypt.compare(password, user.password);
 
   if (!valid) {
     throw httpError("Invalid credentials", 401);
@@ -129,7 +129,7 @@ export const updateProfile = async (
     first_name?: string | null;
     last_name?: string | null;
     email?: string | null;
-    phone?: string | null;
+    phone_number?: string | null;
   }
 ) => {
   const user = await UserService.getUserById(userId);
@@ -158,21 +158,21 @@ export const changePassword = async (
   newPassword: string
 ) => {
   const user = await UserService.getUserById(userId);
-  if (!user || !user.password_hash) {
+  if (!user || !user.password) {
     throw httpError("User not found", 404);
   }
 
   // 現在のパスワードを検証
-  const valid = await bcrypt.compare(currentPassword, user.password_hash);
+  const valid = await bcrypt.compare(currentPassword, user.password);
   if (!valid) {
     throw httpError("現在のパスワードが正しくありません", 401);
   }
 
   // 新しいパスワードをハッシュ化
-  const password_hash = await bcrypt.hash(newPassword, 10);
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
 
   // パスワードを更新
-  await UserService.updateUser(userId, { password_hash });
+  await UserService.updateUser(userId, { password: hashedPassword });
 
   return { message: "パスワードが変更されました" };
 };

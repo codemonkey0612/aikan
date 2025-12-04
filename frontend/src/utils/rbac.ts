@@ -4,7 +4,7 @@ import type { UserRole } from "../api/types";
  * ロールの権限定義（フロントエンド用）
  */
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
-  ADMIN: [
+  admin: [
     "users:read",
     "users:write",
     "facilities:read",
@@ -24,7 +24,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "alcohol_checks:read",
     "alcohol_checks:write",
   ],
-  FACILITY_MANAGER: [
+  facility_manager: [
     "facilities:read",
     "facilities:write",
     "residents:read",
@@ -39,7 +39,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "alcohol_checks:read",
     "alcohol_checks:write",
   ],
-  NURSE: [
+  nurse: [
     "residents:read",
     "vitals:read",
     "vitals:write",
@@ -50,7 +50,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "alcohol_checks:read",
     "alcohol_checks:write",
   ],
-  STAFF: [
+  corporate_officer: [
+    "facilities:read",
     "residents:read",
     "vitals:read",
     "shifts:read",
@@ -92,10 +93,10 @@ export function hasRole(userRole: UserRole | undefined, allowedRoles: UserRole[]
  */
 export function getRoleLabel(role: UserRole): string {
   const labels: Record<UserRole, string> = {
-    ADMIN: "管理者",
-    FACILITY_MANAGER: "施設管理者",
-    NURSE: "看護師",
-    STAFF: "スタッフ",
+    admin: "管理者",
+    facility_manager: "施設管理者",
+    nurse: "看護師",
+    corporate_officer: "法人担当者",
   };
   return labels[role] || role;
 }

@@ -15,7 +15,7 @@ export const getAllVisits = async (req: Request, res: Response) => {
   // フィルター
   const filters = {
     shift_id: req.query.shift_id ? Number(req.query.shift_id) : undefined,
-    resident_id: req.query.resident_id ? Number(req.query.resident_id) : undefined,
+    resident_id: req.query.resident_id as string | undefined, // VARCHAR(50)
     visited_from: req.query.visited_from as string | undefined,
     visited_to: req.query.visited_to as string | undefined,
   };

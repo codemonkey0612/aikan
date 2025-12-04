@@ -14,8 +14,9 @@ export const getAllShifts = async (req: Request, res: Response) => {
 
   // フィルター
   const filters = {
-    user_id: req.query.user_id ? Number(req.query.user_id) : undefined,
-    facility_id: req.query.facility_id ? Number(req.query.facility_id) : undefined,
+    nurse_id: req.query.nurse_id as string | undefined, // VARCHAR(100)
+    facility_id: req.query.facility_id as string | undefined, // VARCHAR(50)
+    shift_period: req.query.shift_period as string | undefined,
     date_from: req.query.date_from as string | undefined,
     date_to: req.query.date_to as string | undefined,
   };

@@ -5,7 +5,7 @@ export type MedicationStatus = "ACTIVE" | "DISCONTINUED" | "COMPLETED";
 
 export interface MedicationNoteRow extends RowDataPacket {
   id: number;
-  resident_id: number;
+  resident_id: string; // VARCHAR(50) - references residents.resident_id
   medication_name: string;
   dosage: string | null;
   frequency: string | null;
@@ -21,7 +21,7 @@ export interface MedicationNoteRow extends RowDataPacket {
 }
 
 export interface CreateMedicationNoteInput {
-  resident_id: number;
+  resident_id: string; // VARCHAR(50)
   medication_name: string;
   dosage?: string | null;
   frequency?: string | null;
@@ -51,7 +51,7 @@ export const getMedicationNoteById = async (id: number) => {
   return rows[0] ?? null;
 };
 
-export const getMedicationNotesByResident = async (resident_id: number) => {
+export const getMedicationNotesByResident = async (resident_id: string) => {
   const [rows] = await db.query<MedicationNoteRow[]>(
     "SELECT * FROM medication_notes WHERE resident_id = ? ORDER BY start_date DESC, created_at DESC",
     [resident_id]
@@ -60,7 +60,7 @@ export const getMedicationNotesByResident = async (resident_id: number) => {
 };
 
 export const getActiveMedicationNotesByResident = async (
-  resident_id: number
+  resident_id: string
 ) => {
   const [rows] = await db.query<MedicationNoteRow[]>(
     "SELECT * FROM medication_notes WHERE resident_id = ? AND status = 'ACTIVE' ORDER BY start_date DESC",

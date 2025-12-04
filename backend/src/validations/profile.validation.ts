@@ -12,10 +12,10 @@ export const updateProfileSchema = z.object({
     .max(255)
     .optional()
     .nullable(),
-  phone: z
+  phone_number: z
     .string()
     .regex(/^[0-9-]+$/, "電話番号は数字とハイフンのみ使用できます")
-    .max(50)
+    .max(30)
     .optional()
     .nullable(),
 });

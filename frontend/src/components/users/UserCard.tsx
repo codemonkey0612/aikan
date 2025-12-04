@@ -54,12 +54,23 @@ export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
               <p className="text-sm text-slate-500">{displayName}</p>
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700">
-              {user.role}
+              {user.role === "admin" ? "管理者" : 
+               user.role === "nurse" ? "看護師" :
+               user.role === "facility_manager" ? "施設管理者" :
+               user.role === "corporate_officer" ? "法人担当者" : user.role}
             </span>
-            {user.email && (
-              <span className="text-xs text-slate-400">{user.email}</span>
+            {user.nurse_id && (
+              <span className="text-xs text-slate-500">ID: {user.nurse_id}</span>
+            )}
+            {user.position && (
+              <span className="text-xs text-slate-500">{user.position}</span>
+            )}
+            {user.alcohol_check && (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                アルコールチェック
+              </span>
             )}
           </div>
         </div>

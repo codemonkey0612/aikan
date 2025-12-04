@@ -6,14 +6,7 @@ import { registerSchema } from "../../validations/auth.validation";
 interface UserFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: {
-    first_name?: string;
-    last_name?: string;
-    email: string;
-    phone?: string;
-    role: User["role"];
-    password: string;
-  }) => Promise<void>;
+  onSubmit: (data: any) => Promise<void>;
   user?: User | null;
   mode?: "create" | "edit";
 }
@@ -28,9 +21,20 @@ export function UserFormModal({
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
+    first_name_kana: "",
+    last_name_kana: "",
     email: "",
-    phone: "",
-    role: "ADMIN" as User["role"],
+    phone_number: "",
+    postal_code: "",
+    address_prefecture: "",
+    address_city: "",
+    address_building: "",
+    latitude_longitude: "",
+    position: "",
+    nurse_id: "",
+    alcohol_check: false,
+    notes: "",
+    role: "admin" as User["role"],
     password: "",
     confirmPassword: "",
   });
@@ -43,8 +47,19 @@ export function UserFormModal({
         setFormData({
           first_name: user.first_name || "",
           last_name: user.last_name || "",
+          first_name_kana: user.first_name_kana || "",
+          last_name_kana: user.last_name_kana || "",
           email: user.email || "",
-          phone: user.phone || "",
+          phone_number: user.phone_number || "",
+          postal_code: user.postal_code || "",
+          address_prefecture: user.address_prefecture || "",
+          address_city: user.address_city || "",
+          address_building: user.address_building || "",
+          latitude_longitude: user.latitude_longitude || "",
+          position: user.position || "",
+          nurse_id: user.nurse_id || "",
+          alcohol_check: user.alcohol_check || false,
+          notes: user.notes || "",
           role: user.role,
           password: "",
           confirmPassword: "",
@@ -53,9 +68,20 @@ export function UserFormModal({
         setFormData({
           first_name: "",
           last_name: "",
+          first_name_kana: "",
+          last_name_kana: "",
           email: "",
-          phone: "",
-          role: "ADMIN",
+          phone_number: "",
+          postal_code: "",
+          address_prefecture: "",
+          address_city: "",
+          address_building: "",
+          latitude_longitude: "",
+          position: "",
+          nurse_id: "",
+          alcohol_check: false,
+          notes: "",
+          role: "admin",
           password: "",
           confirmPassword: "",
         });
@@ -71,20 +97,40 @@ export function UserFormModal({
     setErrors({});
 
     if (mode === "create") {
-      const result = registerSchema.safeParse(formData);
-      if (!result.success) {
-        const validationErrors: Record<string, string> = {};
-        result.error.issues.forEach((issue) => {
-          const path = issue.path.join(".");
-          validationErrors[path] = issue.message;
-        });
-        setErrors(validationErrors);
+      // Basic validation
+      if (!formData.email) {
+        setErrors({ email: "メールアドレスは必須です" });
+        return;
+      }
+      if (!formData.password || formData.password.length < 6) {
+        setErrors({ password: "パスワードは6文字以上である必要があります" });
+        return;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        setErrors({ confirmPassword: "パスワードが一致しません" });
         return;
       }
 
       setIsSubmitting(true);
       try {
-        const { confirmPassword, ...payload } = result.data;
+        const { confirmPassword, ...formDataWithoutConfirm } = formData;
+        const payload: any = {
+          ...formDataWithoutConfirm,
+          first_name: formData.first_name || null,
+          last_name: formData.last_name || null,
+          first_name_kana: formData.first_name_kana || null,
+          last_name_kana: formData.last_name_kana || null,
+          phone_number: formData.phone_number || null,
+          postal_code: formData.postal_code || null,
+          address_prefecture: formData.address_prefecture || null,
+          address_city: formData.address_city || null,
+          address_building: formData.address_building || null,
+          latitude_longitude: formData.latitude_longitude || null,
+          position: formData.position || null,
+          nurse_id: formData.nurse_id || null,
+          alcohol_check: formData.alcohol_check,
+          notes: formData.notes || null,
+        };
         await onSubmit(payload);
         onClose();
       } catch (error: any) {
@@ -107,8 +153,19 @@ export function UserFormModal({
         const payload: any = {
           first_name: formData.first_name || null,
           last_name: formData.last_name || null,
+          first_name_kana: formData.first_name_kana || null,
+          last_name_kana: formData.last_name_kana || null,
           email: formData.email || null,
-          phone: formData.phone || null,
+          phone_number: formData.phone_number || null,
+          postal_code: formData.postal_code || null,
+          address_prefecture: formData.address_prefecture || null,
+          address_city: formData.address_city || null,
+          address_building: formData.address_building || null,
+          latitude_longitude: formData.latitude_longitude || null,
+          position: formData.position || null,
+          nurse_id: formData.nurse_id || null,
+          alcohol_check: formData.alcohol_check,
+          notes: formData.notes || null,
           role: formData.role,
         };
         if (formData.password) {
@@ -133,8 +190,8 @@ export function UserFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 overflow-y-auto">
+      <div className="w-full max-w-2xl rounded-lg bg-white shadow-xl my-8 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
           <h2 className="text-lg font-semibold text-slate-900">
             {mode === "create" ? "新規ユーザー登録" : "ユーザー編集"}
@@ -221,25 +278,183 @@ export function UserFormModal({
               )}
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700">
+                  姓（カナ）
+                </label>
+                <input
+                  type="text"
+                  value={formData.last_name_kana}
+                  onChange={(e) =>
+                    setFormData({ ...formData, last_name_kana: e.target.value })
+                  }
+                  className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700">
+                  名（カナ）
+                </label>
+                <input
+                  type="text"
+                  value={formData.first_name_kana}
+                  onChange={(e) =>
+                    setFormData({ ...formData, first_name_kana: e.target.value })
+                  }
+                  className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-slate-700">
                 電話番号
               </label>
               <input
                 type="tel"
-                value={formData.phone}
+                value={formData.phone_number}
                 onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
+                  setFormData({ ...formData, phone_number: e.target.value })
                 }
                 className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm ${
-                  errors.phone
+                  errors.phone_number
                     ? "border-rose-500"
                     : "border-slate-300 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 }`}
               />
-              {errors.phone && (
-                <p className="mt-1 text-xs text-rose-600">{errors.phone}</p>
+              {errors.phone_number && (
+                <p className="mt-1 text-xs text-rose-600">{errors.phone_number}</p>
               )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700">
+                郵便番号
+              </label>
+              <input
+                type="text"
+                value={formData.postal_code}
+                onChange={(e) =>
+                  setFormData({ ...formData, postal_code: e.target.value })
+                }
+                placeholder="123-4567"
+                className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700">
+                都道府県
+              </label>
+              <input
+                type="text"
+                value={formData.address_prefecture}
+                onChange={(e) =>
+                  setFormData({ ...formData, address_prefecture: e.target.value })
+                }
+                className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700">
+                市区町村
+              </label>
+              <input
+                type="text"
+                value={formData.address_city}
+                onChange={(e) =>
+                  setFormData({ ...formData, address_city: e.target.value })
+                }
+                className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700">
+                建物名・番地
+              </label>
+              <input
+                type="text"
+                value={formData.address_building}
+                onChange={(e) =>
+                  setFormData({ ...formData, address_building: e.target.value })
+                }
+                className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700">
+                座標（緯度,経度）
+              </label>
+              <input
+                type="text"
+                value={formData.latitude_longitude}
+                onChange={(e) =>
+                  setFormData({ ...formData, latitude_longitude: e.target.value })
+                }
+                placeholder="35.6895,139.6917"
+                className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700">
+                役職
+              </label>
+              <input
+                type="text"
+                value={formData.position}
+                onChange={(e) =>
+                  setFormData({ ...formData, position: e.target.value })
+                }
+                className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700">
+                看護師ID
+              </label>
+              <input
+                type="text"
+                value={formData.nurse_id}
+                onChange={(e) =>
+                  setFormData({ ...formData, nurse_id: e.target.value })
+                }
+                className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="alcohol_check"
+                checked={formData.alcohol_check}
+                onChange={(e) =>
+                  setFormData({ ...formData, alcohol_check: e.target.checked })
+                }
+                className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+              />
+              <label htmlFor="alcohol_check" className="text-sm font-medium text-slate-700">
+                アルコールチェック必須
+              </label>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700">
+                備考
+              </label>
+              <textarea
+                value={formData.notes}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
+                rows={3}
+                className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
             </div>
 
             <div>
@@ -256,10 +471,10 @@ export function UserFormModal({
                 }
                 className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               >
-                <option value="ADMIN">ADMIN</option>
-                <option value="NURSE">NURSE</option>
-                <option value="STAFF">STAFF</option>
-                <option value="FACILITY_MANAGER">FACILITY_MANAGER</option>
+                <option value="admin">管理者</option>
+                <option value="nurse">看護師</option>
+                <option value="facility_manager">施設管理者</option>
+                <option value="corporate_officer">法人担当者</option>
               </select>
             </div>
 

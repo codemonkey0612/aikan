@@ -13,14 +13,14 @@ export const getUserById = async (req: Request, res: Response) => {
 
 export const createUser = async (req: Request, res: Response) => {
   try {
-    // passwordフィールドをpassword_hashに変換
+    // passwordフィールドをハッシュ化
     const { password, ...rest } = req.body;
-    let password_hash: string | null = null;
+    let hashedPassword: string | null = null;
     if (password) {
       const bcrypt = require("bcryptjs");
-      password_hash = await bcrypt.hash(password, 10);
+      hashedPassword = await bcrypt.hash(password, 10);
     }
-    const created = await UserService.createUser({ ...rest, password_hash });
+    const created = await UserService.createUser({ ...rest, password: hashedPassword });
     res.json(created);
   } catch (error: any) {
     const status = error.status || 500;

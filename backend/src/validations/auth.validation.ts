@@ -4,7 +4,7 @@ import type { UserRole } from "../types/roles";
 /**
  * ユーザーロールのバリデーション
  */
-const userRoleSchema = z.enum(["ADMIN", "NURSE", "STAFF", "FACILITY_MANAGER"]);
+const userRoleSchema = z.enum(["admin", "nurse", "facility_manager", "corporate_officer"]);
 
 /**
  * 登録リクエストのバリデーションスキーマ
@@ -17,13 +17,13 @@ export const registerSchema = z.object({
     .min(1, "メールアドレスは必須です")
     .email("有効なメールアドレスを入力してください")
     .max(255, "メールアドレスは255文字以内で入力してください"),
-  phone: z
+  phone_number: z
     .string()
     .regex(/^[0-9-]+$/, "電話番号は数字とハイフンのみ使用できます")
-    .max(20, "電話番号は20文字以内で入力してください")
+    .max(30, "電話番号は30文字以内で入力してください")
     .optional()
     .nullable(),
-  role: userRoleSchema.default("ADMIN"),
+  role: userRoleSchema.default("nurse"),
   password: z
     .string()
     .min(6, "パスワードは6文字以上である必要があります")

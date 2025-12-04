@@ -16,8 +16,9 @@ export const getShiftsPaginated = (
   sortBy: string,
   sortOrder: "asc" | "desc",
   filters?: {
-    user_id?: number;
-    facility_id?: number;
+    nurse_id?: string; // VARCHAR(100)
+    facility_id?: string; // VARCHAR(50)
+    shift_period?: string;
     date_from?: string;
     date_to?: string;
   }

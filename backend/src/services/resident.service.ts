@@ -1,14 +1,14 @@
 import * as ResidentModel from "../models/resident.model";
 
 export const getAllResidents = () => ResidentModel.getAllResidents();
-export const getResidentById = (id: number) =>
-  ResidentModel.getResidentById(id);
-export const createResident = (data: ResidentModel.ResidentInput) =>
+export const getResidentById = (resident_id: string) =>
+  ResidentModel.getResidentById(resident_id);
+export const createResident = (data: ResidentModel.CreateResidentInput) =>
   ResidentModel.createResident(data);
 export const updateResident = (
-  id: number,
-  data: Partial<ResidentModel.ResidentInput>
-) => ResidentModel.updateResident(id, data);
-export const deleteResident = (id: number) =>
-  ResidentModel.deleteResident(id);
+  resident_id: string,
+  data: Partial<ResidentModel.CreateResidentInput>
+) => ResidentModel.updateResident(resident_id, data);
+export const deleteResident = (resident_id: string) =>
+  ResidentModel.deleteResident(resident_id);
 

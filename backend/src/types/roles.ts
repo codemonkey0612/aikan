@@ -1,13 +1,13 @@
 /**
  * ユーザーロール定義
  */
-export type UserRole = "ADMIN" | "NURSE" | "STAFF" | "FACILITY_MANAGER";
+export type UserRole = "admin" | "nurse" | "facility_manager" | "corporate_officer";
 
 /**
  * ロールの権限定義
  */
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
-  ADMIN: [
+  admin: [
     "users:read",
     "users:write",
     "facilities:read",
@@ -29,7 +29,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "alcohol_checks:read",
     "alcohol_checks:write",
   ],
-  FACILITY_MANAGER: [
+  facility_manager: [
     "facilities:read",
     "facilities:write",
     "residents:read",
@@ -46,7 +46,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "alcohol_checks:read",
     "alcohol_checks:write",
   ],
-  NURSE: [
+  nurse: [
     "residents:read",
     "vitals:read",
     "vitals:write",
@@ -59,7 +59,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "alcohol_checks:read",
     "alcohol_checks:write",
   ],
-  STAFF: [
+  corporate_officer: [
     "residents:read",
     "vitals:read",
     "shifts:read",

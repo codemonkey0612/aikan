@@ -11,7 +11,7 @@ export function useDiagnoses() {
   });
 }
 
-export function useDiagnosesByResident(resident_id: number) {
+export function useDiagnosesByResident(resident_id: string) {
   return useQuery<Diagnosis[]>({
     queryKey: [...DIAGNOSES_QUERY_KEY, "resident", resident_id],
     queryFn: () => DiagnosesAPIExtended.getByResident(resident_id),

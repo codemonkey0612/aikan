@@ -99,7 +99,7 @@ export const VitalsAPI = {
     limit?: number;
     sortBy?: string;
     sortOrder?: "asc" | "desc";
-    resident_id?: number;
+    resident_id?: string; // VARCHAR(50)
     measured_from?: string;
     measured_to?: string;
     created_by?: number;
@@ -128,8 +128,8 @@ export const ShiftsAPI = {
     limit?: number;
     sortBy?: string;
     sortOrder?: "asc" | "desc";
-    user_id?: number;
-    facility_id?: number;
+    nurse_id?: string; // VARCHAR(100)
+    facility_id?: string; // VARCHAR(50)
     date_from?: string;
     date_to?: string;
   }) => {
@@ -158,7 +158,7 @@ export const VisitsAPI = {
     sortBy?: string;
     sortOrder?: "asc" | "desc";
     shift_id?: number;
-    resident_id?: number;
+    resident_id?: string; // VARCHAR(50)
     visited_from?: string;
     visited_to?: string;
   }) => {
@@ -201,13 +201,13 @@ export const AttendanceAPI = {
 export const DiagnosesAPI = createCrudApi<Diagnosis>("/diagnoses");
 export const DiagnosesAPIExtended = {
   ...DiagnosesAPI,
-  getByResident: (resident_id: number) =>
+  getByResident: (resident_id: string) =>
     apiClient.get<Diagnosis[]>(`/diagnoses/resident/${resident_id}`).then((res) => res.data),
 };
 
 export const CarePlansAPI = {
   ...createCrudApi<CarePlan>("/care-plans"),
-  getByResident: (resident_id: number) =>
+  getByResident: (resident_id: string) =>
     apiClient.get<CarePlan[]>(`/care-plans/resident/${resident_id}`).then((res) => res.data),
   getItems: (care_plan_id: number) =>
     apiClient.get<CarePlanItem[]>(`/care-plans/${care_plan_id}/items`).then((res) => res.data),
@@ -221,17 +221,17 @@ export const CarePlansAPI = {
 
 export const MedicationNotesAPI = {
   ...createCrudApi<MedicationNote>("/medication-notes"),
-  getByResident: (resident_id: number) =>
+  getByResident: (resident_id: string) =>
     apiClient.get<MedicationNote[]>(`/medication-notes/resident/${resident_id}`).then((res) => res.data),
-  getActiveByResident: (resident_id: number) =>
+  getActiveByResident: (resident_id: string) =>
     apiClient.get<MedicationNote[]>(`/medication-notes/resident/${resident_id}/active`).then((res) => res.data),
 };
 
 export const VitalAlertsAPI = {
   ...createCrudApi<VitalAlert>("/vital-alerts"),
-  getByResident: (resident_id: number) =>
+  getByResident: (resident_id: string) =>
     apiClient.get<VitalAlert[]>(`/vital-alerts/resident/${resident_id}`).then((res) => res.data),
-  getTriggers: (params?: { resident_id?: number; acknowledged?: boolean }) => {
+  getTriggers: (params?: { resident_id?: string; acknowledged?: boolean }) => {
     const queryParams = new URLSearchParams();
     if (params?.resident_id) queryParams.append("resident_id", String(params.resident_id));
     if (params?.acknowledged !== undefined) queryParams.append("acknowledged", String(params.acknowledged));

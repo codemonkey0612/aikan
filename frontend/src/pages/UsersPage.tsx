@@ -87,7 +87,7 @@ export function UsersPage() {
     setEditingUser(null);
   };
 
-  const isAdmin = currentUser?.role === "ADMIN";
+  const isAdmin = currentUser?.role === "admin";
 
   return (
     <div className="space-y-6">
@@ -134,7 +134,7 @@ export function UsersPage() {
                   >
                     すべて
                   </button>
-                  {["ADMIN", "NURSE", "STAFF", "FACILITY_MANAGER"].map((role) => (
+                  {["admin", "nurse", "facility_manager", "corporate_officer"].map((role) => (
                     <button
                       key={role}
                       onClick={() => {
@@ -147,7 +147,7 @@ export function UsersPage() {
                           : "text-slate-700 hover:bg-slate-50"
                       }`}
                     >
-                      {role}
+                      {role.toUpperCase()}
                     </button>
                   ))}
                 </div>

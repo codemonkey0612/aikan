@@ -14,7 +14,7 @@ const idParamSchema = z.object({
 });
 
 const residentIdParamSchema = z.object({
-  resident_id: z.string().regex(/^\d+$/).transform(Number),
+  resident_id: z.string().min(1).max(50), // VARCHAR(50)
 });
 
 router.get("/", requirePermission("vitals:read"), VitalAlertController.getAllVitalAlerts);

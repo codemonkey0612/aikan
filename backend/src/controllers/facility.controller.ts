@@ -8,7 +8,7 @@ export const getAllFacilities = async (req: Request, res: Response) => {
 
 export const getFacilityById = async (req: Request, res: Response) => {
   const facility = await FacilityService.getFacilityById(
-    Number(req.params.id)
+    req.params.id // VARCHAR(50) - no conversion needed
   );
   res.json(facility);
 };
@@ -20,14 +20,14 @@ export const createFacility = async (req: Request, res: Response) => {
 
 export const updateFacility = async (req: Request, res: Response) => {
   const updated = await FacilityService.updateFacility(
-    Number(req.params.id),
+    req.params.id, // VARCHAR(50) - no conversion needed
     req.body
   );
   res.json(updated);
 };
 
 export const deleteFacility = async (req: Request, res: Response) => {
-  await FacilityService.deleteFacility(Number(req.params.id));
+  await FacilityService.deleteFacility(req.params.id); // VARCHAR(50) - no conversion needed
   res.json({ message: "Deleted" });
 };
 

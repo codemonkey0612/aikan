@@ -3,14 +3,14 @@ import * as AuthService from "../services/auth.service";
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { first_name, last_name, email, phone, role, password } = req.body;
+    const { first_name, last_name, email, phone_number, role, password } = req.body;
 
     const result = await AuthService.register({
       first_name,
       last_name,
       email,
-      phone,
-      role: role || "ADMIN",
+      phone_number,
+      role: role || "nurse",
       password,
     });
 

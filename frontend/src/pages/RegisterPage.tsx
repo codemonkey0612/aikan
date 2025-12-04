@@ -19,7 +19,7 @@ export function RegisterPage() {
     last_name: "",
     email: "",
     phone: "",
-    role: "ADMIN",
+    role: "admin",
     password: "",
     confirmPassword: "",
   });
@@ -182,10 +182,10 @@ export function RegisterPage() {
               className="mt-1 block w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
               required
             >
-              <option value="ADMIN">管理者</option>
-              <option value="FACILITY_MANAGER">施設管理者</option>
-              <option value="NURSE">看護師</option>
-              <option value="STAFF">スタッフ</option>
+              <option value="admin">管理者</option>
+              <option value="facility_manager">施設管理者</option>
+              <option value="nurse">看護師</option>
+              <option value="corporate_officer">法人担当者</option>
             </select>
           </label>
 

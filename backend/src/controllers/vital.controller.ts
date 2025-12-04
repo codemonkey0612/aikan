@@ -14,7 +14,7 @@ export const getAllVitals = async (req: Request, res: Response) => {
 
   // フィルター
   const filters = {
-    resident_id: req.query.resident_id ? Number(req.query.resident_id) : undefined,
+    resident_id: req.query.resident_id as string | undefined, // VARCHAR(50)
     measured_from: req.query.measured_from as string | undefined,
     measured_to: req.query.measured_to as string | undefined,
     created_by: req.query.created_by ? Number(req.query.created_by) : undefined,

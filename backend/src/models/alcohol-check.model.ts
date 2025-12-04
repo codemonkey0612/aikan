@@ -3,8 +3,8 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2";
 
 export interface AlcoholCheckRow extends RowDataPacket {
   id: number;
-  user_id: number;
-  resident_id: number | null;
+  user_id: number; // BIGINT UNSIGNED - references users.id
+  resident_id: string | null; // VARCHAR(50) - references residents.resident_id
   breath_alcohol_concentration: number;
   checked_at: string;
   device_image_path: string | null;
@@ -15,8 +15,8 @@ export interface AlcoholCheckRow extends RowDataPacket {
 }
 
 export interface AlcoholCheckInput {
-  user_id: number;
-  resident_id?: number | null;
+  user_id: number; // BIGINT UNSIGNED
+  resident_id?: string | null; // VARCHAR(50)
   breath_alcohol_concentration: number;
   checked_at: string;
   device_image_path?: string | null;
@@ -38,7 +38,7 @@ export const getAllAlcoholChecks = async () => {
            cb.last_name as checked_by_last_name
     FROM alcohol_checks ac
     LEFT JOIN users u ON ac.user_id = u.id
-    LEFT JOIN residents r ON ac.resident_id = r.id
+    LEFT JOIN residents r ON ac.resident_id = r.resident_id
     LEFT JOIN users cb ON ac.checked_by = cb.id
     ORDER BY ac.checked_at DESC
   `);
@@ -57,7 +57,7 @@ export const getAlcoholCheckById = async (id: number) => {
            cb.last_name as checked_by_last_name
     FROM alcohol_checks ac
     LEFT JOIN users u ON ac.user_id = u.id
-    LEFT JOIN residents r ON ac.resident_id = r.id
+    LEFT JOIN residents r ON ac.resident_id = r.resident_id
     LEFT JOIN users cb ON ac.checked_by = cb.id
     WHERE ac.id = ?
   `, [id]);
@@ -76,7 +76,7 @@ export const getAlcoholChecksByUser = async (user_id: number) => {
            cb.last_name as checked_by_last_name
     FROM alcohol_checks ac
     LEFT JOIN users u ON ac.user_id = u.id
-    LEFT JOIN residents r ON ac.resident_id = r.id
+    LEFT JOIN residents r ON ac.resident_id = r.resident_id
     LEFT JOIN users cb ON ac.checked_by = cb.id
     WHERE ac.user_id = ?
     ORDER BY ac.checked_at DESC

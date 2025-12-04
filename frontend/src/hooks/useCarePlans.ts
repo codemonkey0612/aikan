@@ -11,7 +11,7 @@ export function useCarePlans() {
   });
 }
 
-export function useCarePlansByResident(resident_id: number) {
+export function useCarePlansByResident(resident_id: string) {
   return useQuery<CarePlan[]>({
     queryKey: [...CARE_PLANS_QUERY_KEY, "resident", resident_id],
     queryFn: () => CarePlansAPI.getByResident(resident_id),

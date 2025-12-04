@@ -11,7 +11,7 @@ export type AlertSeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
 export interface VitalAlertRow extends RowDataPacket {
   id: number;
-  resident_id: number;
+  resident_id: string; // VARCHAR(50) - references residents.resident_id
   alert_type: VitalAlertType;
   min_value: number | null;
   max_value: number | null;
@@ -35,7 +35,7 @@ export interface VitalAlertTriggerRow extends RowDataPacket {
 }
 
 export interface CreateVitalAlertInput {
-  resident_id: number;
+  resident_id: string; // VARCHAR(50)
   alert_type: VitalAlertType;
   min_value?: number | null;
   max_value?: number | null;
@@ -61,7 +61,7 @@ export const getVitalAlertById = async (id: number) => {
   return rows[0] ?? null;
 };
 
-export const getVitalAlertsByResident = async (resident_id: number) => {
+export const getVitalAlertsByResident = async (resident_id: string) => {
   const [rows] = await db.query<VitalAlertRow[]>(
     "SELECT * FROM vital_alerts WHERE resident_id = ? AND active = 1 ORDER BY alert_type",
     [resident_id]
@@ -132,7 +132,7 @@ export const deleteVitalAlert = async (id: number) => {
 
 // Vital Alert Triggers
 export const getVitalAlertTriggers = async (
-  resident_id?: number,
+  resident_id?: string, // VARCHAR(50)
   acknowledged?: boolean
 ) => {
   let query = "SELECT vat.*, va.resident_id, va.alert_type FROM vital_alert_triggers vat";

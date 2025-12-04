@@ -12,7 +12,7 @@ export interface UseVisitsParams {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   shift_id?: number;
-  resident_id?: number;
+  resident_id?: string;
   visited_from?: string;
   visited_to?: string;
 }

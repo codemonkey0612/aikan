@@ -3,16 +3,34 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2";
 
 export interface ShiftRow extends RowDataPacket {
   id: number;
-  user_id: number;
-  facility_id: number;
-  date: string;
-  start_time: string | null;
-  end_time: string | null;
-  shift_type: string | null;
+  shift_period: string | null;
+  route_no: number | null;
+  facility_id: string | null; // VARCHAR(50)
+  facility_name: string | null;
+  facility_address: string | null;
+  resident_count: number | null;
+  capacity: number | null;
+  required_time: number | null;
+  start_datetime: string; // DATE in DB, but string in TypeScript
+  nurse_id: string | null; // VARCHAR(100)
   created_at: string;
+  updated_at: string;
 }
 
-export type ShiftInput = Omit<ShiftRow, "id" | "created_at">;
+export interface CreateShiftInput {
+  shift_period?: string | null;
+  route_no?: number | null;
+  facility_id?: string | null; // VARCHAR(50)
+  facility_name?: string | null;
+  facility_address?: string | null;
+  resident_count?: number | null;
+  capacity?: number | null;
+  required_time?: number | null;
+  start_datetime: string; // DATE
+  nurse_id?: string | null; // VARCHAR(100)
+}
+
+export type UpdateShiftInput = Partial<CreateShiftInput>;
 
 export const getAllShifts = async () => {
   const [rows] = await db.query<ShiftRow[]>("SELECT * FROM shifts");
@@ -28,34 +46,45 @@ export const getShiftsPaginated = async (
   sortBy: string = "created_at",
   sortOrder: "asc" | "desc" = "desc",
   filters?: {
-    user_id?: number;
-    facility_id?: number;
+    nurse_id?: string; // VARCHAR(100)
+    facility_id?: string; // VARCHAR(50)
+    shift_period?: string;
     date_from?: string;
     date_to?: string;
   }
 ) => {
   const offset = (page - 1) * limit;
-  const validSortColumns = ["id", "user_id", "facility_id", "date", "created_at"];
+  const validSortColumns = [
+    "id",
+    "nurse_id",
+    "facility_id",
+    "start_datetime",
+    "created_at",
+  ];
   const sortColumn = validSortColumns.includes(sortBy) ? sortBy : "created_at";
   const order = sortOrder.toUpperCase() as "ASC" | "DESC";
 
   let whereClause = "1=1";
   const queryParams: any[] = [];
 
-  if (filters?.user_id) {
-    whereClause += " AND user_id = ?";
-    queryParams.push(filters.user_id);
+  if (filters?.nurse_id) {
+    whereClause += " AND nurse_id = ?";
+    queryParams.push(filters.nurse_id);
   }
   if (filters?.facility_id) {
     whereClause += " AND facility_id = ?";
     queryParams.push(filters.facility_id);
   }
+  if (filters?.shift_period) {
+    whereClause += " AND shift_period = ?";
+    queryParams.push(filters.shift_period);
+  }
   if (filters?.date_from) {
-    whereClause += " AND date >= ?";
+    whereClause += " AND start_datetime >= ?";
     queryParams.push(filters.date_from);
   }
   if (filters?.date_to) {
-    whereClause += " AND date <= ?";
+    whereClause += " AND start_datetime <= ?";
     queryParams.push(filters.date_to);
   }
 
@@ -83,21 +112,45 @@ export const getShiftById = async (id: number) => {
   return rows[0] ?? null;
 };
 
-export const createShift = async (data: ShiftInput) => {
-  const { user_id, facility_id, date, start_time, end_time, shift_type } =
-    data;
+export const createShift = async (data: CreateShiftInput) => {
+  const {
+    shift_period,
+    route_no,
+    facility_id,
+    facility_name,
+    facility_address,
+    resident_count,
+    capacity,
+    required_time,
+    start_datetime,
+    nurse_id,
+  } = data;
 
   const [result] = await db.query<ResultSetHeader>(
-    `INSERT INTO shifts (user_id, facility_id, date, start_time, end_time, shift_type)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [user_id, facility_id, date, start_time, end_time, shift_type]
+    `INSERT INTO shifts (
+      shift_period, route_no, facility_id,
+      facility_name, facility_address, resident_count, capacity,
+      required_time, start_datetime, nurse_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      shift_period ?? null,
+      route_no ?? null,
+      facility_id ?? null,
+      facility_name ?? null,
+      facility_address ?? null,
+      resident_count ?? null,
+      capacity ?? null,
+      required_time ?? null,
+      start_datetime,
+      nurse_id ?? null,
+    ]
   );
 
   return getShiftById(result.insertId);
 };
 
-export const updateShift = async (id: number, data: Partial<ShiftInput>) => {
-  const fields = Object.keys(data) as (keyof ShiftInput)[];
+export const updateShift = async (id: number, data: UpdateShiftInput) => {
+  const fields = Object.keys(data) as (keyof UpdateShiftInput)[];
 
   if (!fields.length) {
     return getShiftById(id);

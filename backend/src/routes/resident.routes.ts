@@ -12,7 +12,7 @@ const router = Router();
 router.use(authenticate);
 
 const idParamSchema = z.object({
-  id: z.string().regex(/^\d+$/).transform(Number),
+  id: z.string().min(1).max(50), // VARCHAR(50) - resident_id
 });
 
 // 入居者一覧・詳細: 全ロール閲覧可能

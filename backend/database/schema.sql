@@ -1,411 +1,322 @@
-CREATE DATABASE IF NOT EXISTS aikan_cloud;
+-- ------------------------------------------------------------
+-- 0. CREATE DATABASE
+-- ------------------------------------------------------------
+CREATE DATABASE IF NOT EXISTS aikan_cloud
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
 USE aikan_cloud;
 
--- Corporations
-CREATE TABLE IF NOT EXISTS corporations (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(255) NOT NULL,
-  code VARCHAR(20) UNIQUE,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- ------------------------------------------------------------
+-- 1. users テーブル
+-- ------------------------------------------------------------
+CREATE TABLE users (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    -- 権限
+    role ENUM('admin', 'nurse', 'facility_manager', 'corporate_officer')
+        NOT NULL DEFAULT 'nurse',
 
--- Facilities
-CREATE TABLE IF NOT EXISTS facilities (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  corporation_id BIGINT NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  code VARCHAR(20) UNIQUE,
-  postal_code VARCHAR(20),
-  address VARCHAR(255),
-  lat DECIMAL(10,7),
-  lng DECIMAL(10,7),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (corporation_id) REFERENCES corporations(id)
-);
+    -- 氏名
+    last_name VARCHAR(100) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name_kana VARCHAR(100),
+    first_name_kana VARCHAR(100),
 
--- Users (Nurses, Admins, Facility Staff)
-CREATE TABLE IF NOT EXISTS users (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  role ENUM('ADMIN','NURSE','STAFF') NOT NULL,
-  first_name VARCHAR(100),
-  last_name VARCHAR(100),
-  email VARCHAR(255) UNIQUE,
-  phone VARCHAR(50),
-  password_hash VARCHAR(255),
-  active TINYINT DEFAULT 1,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+    -- 住所
+    postal_code VARCHAR(20),
+    address_prefecture VARCHAR(100),
+    address_city VARCHAR(255),
+    address_building VARCHAR(255),
+    latitude_longitude VARCHAR(50),   -- 統合済み座標 ("35.1,139.5")
 
--- Residents
-CREATE TABLE IF NOT EXISTS residents (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  facility_id BIGINT NOT NULL,
-  first_name VARCHAR(100),
-  last_name VARCHAR(100),
-  gender ENUM('MALE','FEMALE','OTHER'),
-  birth_date DATE,
-  status VARCHAR(50),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (facility_id) REFERENCES facilities(id)
-);
+    -- 連絡先
 
--- Vital records
-CREATE TABLE IF NOT EXISTS vital_records (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  resident_id BIGINT NOT NULL,
-  measured_at DATETIME,
-  systolic_bp INT,
-  diastolic_bp INT,
-  pulse INT,
-  temperature DECIMAL(4,1),
-  spo2 INT,
-  note TEXT,
-  created_by BIGINT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (resident_id) REFERENCES residents(id),
-  FOREIGN KEY (created_by) REFERENCES users(id)
-);
+    phone_number VARCHAR(255),
 
--- Shifts
-CREATE TABLE IF NOT EXISTS shifts (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  user_id BIGINT NOT NULL,
-  facility_id BIGINT NOT NULL,
-  date DATE NOT NULL,
-  start_time TIME,
-  end_time TIME,
-  shift_type VARCHAR(50),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (facility_id) REFERENCES facilities(id)
-);
+    -- プロフィール
+    user_photo_url TEXT,
+    notes TEXT,
 
--- Visits
-CREATE TABLE IF NOT EXISTS visits (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  shift_id BIGINT NOT NULL,
-  resident_id BIGINT,
-  visited_at DATETIME NOT NULL,
-  note TEXT,
-  FOREIGN KEY (shift_id) REFERENCES shifts(id),
-  FOREIGN KEY (resident_id) REFERENCES residents(id)
-);
+    -- CUSTOMER項目 / 役職
+    position VARCHAR(100),
 
--- Joint visits
-CREATE TABLE IF NOT EXISTS joint_visits (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  visit_id BIGINT NOT NULL,
-  user_id BIGINT NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (visit_id) REFERENCES visits(id),
-  FOREIGN KEY (user_id) REFERENCES users(id)
-);
+    -- パスワード
+    password VARCHAR(255) NOT NULL,
 
--- Shift locations (distance)
-CREATE TABLE IF NOT EXISTS shift_locations (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  shift_id BIGINT NOT NULL,
-  from_lat DECIMAL(10,7),
-  from_lng DECIMAL(10,7),
-  to_lat DECIMAL(10,7),
-  to_lng DECIMAL(10,7),
-  distance_km DECIMAL(8,2),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (shift_id) REFERENCES shifts(id)
-);
+    -- アルコールチェック
+    alcohol_check BOOLEAN DEFAULT FALSE,
 
--- Refresh tokens
-CREATE TABLE IF NOT EXISTS refresh_tokens (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  user_id BIGINT NOT NULL,
-  token VARCHAR(255) NOT NULL UNIQUE,
-  expires_at DATETIME NOT NULL,
-  revoked TINYINT(1) NOT NULL DEFAULT 0,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_user_id (user_id),
-  INDEX idx_token (token),
-  INDEX idx_expires_at (expires_at),
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    -- 看護師ID（文字列に変更済み）
+    nurse_id VARCHAR(100),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Files table for managing uploaded files
-CREATE TABLE IF NOT EXISTS files (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  file_name VARCHAR(255) NOT NULL,
-  original_name VARCHAR(255) NOT NULL,
-  file_path VARCHAR(500) NOT NULL,
-  file_type VARCHAR(100) NOT NULL,
-  file_size BIGINT NOT NULL,
-  mime_type VARCHAR(100),
-  category ENUM('RESIDENT_IMAGE', 'PROFILE_AVATAR', 'SHIFT_REPORT', 'SALARY_STATEMENT', 'CARE_NOTE_ATTACHMENT') NOT NULL,
-  entity_type VARCHAR(50) NOT NULL,
-  entity_id BIGINT NOT NULL,
-  uploaded_by BIGINT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL,
-  INDEX idx_category (category),
-  INDEX idx_entity (entity_type, entity_id),
-  INDEX idx_uploaded_by (uploaded_by)
-);
 
--- Nurse salary
-CREATE TABLE IF NOT EXISTS nurse_salaries (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  user_id BIGINT NOT NULL,
-  `year_month` CHAR(7) NOT NULL,
-  amount INT,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY unique_user_month (user_id, `year_month`),
-  INDEX idx_user_id (user_id),
-  FOREIGN KEY (user_id) REFERENCES users(id)
+CREATE TABLE corporations (
+    -- 法人ID（varchar 指定）
+    corporation_id VARCHAR(20) PRIMARY KEY,
+
+    -- 法人番号
+    corporation_number VARCHAR(50),
+
+    -- 名称
+    name VARCHAR(255) NOT NULL,
+    name_kana VARCHAR(255),
+
+    -- 住所
+    postal_code VARCHAR(20),
+    address_prefecture VARCHAR(100),
+    address_city VARCHAR(255),
+    address_building VARCHAR(255),
+    latitude_longitude VARCHAR(50),   -- 統合済み座標 (例 "35.1,139.5")
+
+    -- 連絡先
+    phone_number VARCHAR(30),
+    contact_email VARCHAR(255),
+
+    -- 備考
+    notes TEXT,
+
+    -- 請求関連
+    billing_unit_price DECIMAL(10,2),
+    billing_method_id VARCHAR(50),
+
+    -- 写真
+    photo_url TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Salary Rules table for salary calculation rules
-CREATE TABLE IF NOT EXISTS salary_rules (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  rule_type VARCHAR(50) NOT NULL,
-  condition_json JSON,
-  calculation_formula TEXT,
-  priority INT DEFAULT 0,
-  active TINYINT(1) DEFAULT 1,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  INDEX idx_rule_type (rule_type),
-  INDEX idx_active (active),
-  INDEX idx_priority (priority)
-);
+CREATE TABLE facilities (
+    -- 基本項目
+    facility_id VARCHAR(50) PRIMARY KEY,
+    facility_number VARCHAR(50),
+    corporation_id VARCHAR(20),
 
--- Shift Templates table for reusable shift patterns
-CREATE TABLE IF NOT EXISTS shift_templates (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  facility_id INT,
-  shift_type VARCHAR(50),
-  start_time TIME,
-  end_time TIME,
-  day_of_week TINYINT,
-  is_recurring TINYINT(1) DEFAULT 0,
-  active TINYINT(1) DEFAULT 1,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  INDEX idx_facility (facility_id),
-  INDEX idx_active (active)
-);
+    -- 名称
+    name VARCHAR(255) NOT NULL,
+    name_kana VARCHAR(255),
 
--- Attendance tracking table for nurse check-in/out with GPS
-CREATE TABLE IF NOT EXISTS attendance (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  shift_id BIGINT NOT NULL,
-  user_id BIGINT NOT NULL,
-  check_in_at DATETIME,
-  check_out_at DATETIME,
-  check_in_lat DECIMAL(10, 7),
-  check_in_lng DECIMAL(10, 7),
-  check_out_lat DECIMAL(10, 7),
-  check_out_lng DECIMAL(10, 7),
-  check_in_status ENUM('PENDING', 'CONFIRMED', 'REJECTED') DEFAULT 'PENDING',
-  check_out_status ENUM('PENDING', 'CONFIRMED', 'REJECTED') DEFAULT 'PENDING',
-  check_in_pin VARCHAR(10),
-  check_out_pin VARCHAR(10),
-  notes TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  INDEX idx_shift (shift_id),
-  INDEX idx_user (user_id),
-  INDEX idx_check_in_at (check_in_at),
-  INDEX idx_check_out_at (check_out_at)
-);
+    -- 住所
+    postal_code VARCHAR(20),
+    address_prefecture VARCHAR(100),
+    address_city VARCHAR(255),
+    address_building VARCHAR(255),
+    latitude_longitude VARCHAR(50),  -- 例: "35.6895,139.6917"
 
--- PIN verification table for status verification
-CREATE TABLE IF NOT EXISTS pin_verifications (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  user_id BIGINT NOT NULL,
-  pin VARCHAR(10) NOT NULL,
-  purpose ENUM('CHECK_IN', 'CHECK_OUT', 'STATUS_UPDATE') NOT NULL,
-  attendance_id BIGINT,
-  expires_at DATETIME NOT NULL,
-  used TINYINT(1) DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (attendance_id) REFERENCES attendance(id) ON DELETE SET NULL,
-  INDEX idx_user (user_id),
-  INDEX idx_pin (pin),
-  INDEX idx_expires_at (expires_at),
-  INDEX idx_used (used)
-);
+    -- 連絡先
+    phone_number VARCHAR(30),
 
--- Diagnoses table for resident medical diagnoses
-CREATE TABLE IF NOT EXISTS diagnoses (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  resident_id BIGINT NOT NULL,
-  diagnosis_code VARCHAR(50),
-  diagnosis_name VARCHAR(255) NOT NULL,
-  diagnosis_date DATE,
-  severity VARCHAR(50),
-  status VARCHAR(50) DEFAULT 'ACTIVE',
-  notes TEXT,
-  diagnosed_by BIGINT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (resident_id) REFERENCES residents(id) ON DELETE CASCADE,
-  FOREIGN KEY (diagnosed_by) REFERENCES users(id) ON DELETE SET NULL,
-  INDEX idx_resident (resident_id),
-  INDEX idx_status (status),
-  INDEX idx_diagnosis_date (diagnosis_date)
-);
+    -- 各種マスタID
+    facility_status_id VARCHAR(50),
+    pre_visit_contact_id VARCHAR(50),
+    contact_type_id VARCHAR(50),
+    building_type_id VARCHAR(50),
+    pl_support_id VARCHAR(50),
 
--- Medication notes table for resident medication tracking
-CREATE TABLE IF NOT EXISTS medication_notes (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  resident_id BIGINT NOT NULL,
-  medication_name VARCHAR(255) NOT NULL,
-  dosage VARCHAR(100),
-  frequency VARCHAR(100),
-  route VARCHAR(50),
-  start_date DATE,
-  end_date DATE,
-  prescribed_by VARCHAR(255),
-  notes TEXT,
-  status ENUM('ACTIVE', 'DISCONTINUED', 'COMPLETED') DEFAULT 'ACTIVE',
-  created_by BIGINT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (resident_id) REFERENCES residents(id) ON DELETE CASCADE,
-  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
-  INDEX idx_resident (resident_id),
-  INDEX idx_status (status),
-  INDEX idx_start_date (start_date)
-);
+    -- 備考
+    visit_notes TEXT,      -- 備考 / 訪問時備考
+    facility_notes TEXT,   -- 備考 / 施設備考
+    user_notes TEXT,       -- 備考 / 利用者備考
 
--- Care plans table for resident care planning
-CREATE TABLE IF NOT EXISTS care_plans (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  resident_id BIGINT NOT NULL,
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  start_date DATE NOT NULL,
-  end_date DATE,
-  status ENUM('ACTIVE', 'COMPLETED', 'CANCELLED') DEFAULT 'ACTIVE',
-  priority ENUM('LOW', 'MEDIUM', 'HIGH', 'URGENT') DEFAULT 'MEDIUM',
-  created_by BIGINT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (resident_id) REFERENCES residents(id) ON DELETE CASCADE,
-  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
-  INDEX idx_resident (resident_id),
-  INDEX idx_status (status),
-  INDEX idx_start_date (start_date)
-);
+    -- 地図
+    map_document_url TEXT,
 
--- Care plan tasks/items
-CREATE TABLE IF NOT EXISTS care_plan_items (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  care_plan_id BIGINT NOT NULL,
-  task_description TEXT NOT NULL,
-  frequency VARCHAR(100),
-  assigned_to BIGINT,
-  completed BOOLEAN DEFAULT FALSE,
-  completed_at DATETIME,
-  completed_by BIGINT,
-  due_date DATE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (care_plan_id) REFERENCES care_plans(id) ON DELETE CASCADE,
-  FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL,
-  FOREIGN KEY (completed_by) REFERENCES users(id) ON DELETE SET NULL,
-  INDEX idx_care_plan (care_plan_id),
-  INDEX idx_completed (completed),
-  INDEX idx_due_date (due_date)
-);
+    -- 請求
+    billing_unit_price DECIMAL(10,2),
+    billing_method_id VARCHAR(50),
 
--- Vital alerts table for monitoring vital signs outside safe ranges
-CREATE TABLE IF NOT EXISTS vital_alerts (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  resident_id BIGINT NOT NULL,
-  alert_type ENUM('SYSTOLIC_BP', 'DIASTOLIC_BP', 'PULSE', 'TEMPERATURE', 'SPO2') NOT NULL,
-  min_value DECIMAL(10, 2),
-  max_value DECIMAL(10, 2),
-  severity ENUM('LOW', 'MEDIUM', 'HIGH', 'CRITICAL') DEFAULT 'MEDIUM',
-  active BOOLEAN DEFAULT TRUE,
-  created_by BIGINT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (resident_id) REFERENCES residents(id) ON DELETE CASCADE,
-  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
-  INDEX idx_resident (resident_id),
-  INDEX idx_active (active),
-  INDEX idx_alert_type (alert_type)
-);
+    -- 入所者
+    capacity INT,
+    current_residents INT,
 
--- Vital alert triggers (records when alerts are triggered)
-CREATE TABLE IF NOT EXISTS vital_alert_triggers (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  vital_record_id BIGINT NOT NULL,
-  vital_alert_id BIGINT NOT NULL,
-  measured_value DECIMAL(10, 2) NOT NULL,
-  triggered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  acknowledged BOOLEAN DEFAULT FALSE,
-  acknowledged_by BIGINT,
-  acknowledged_at DATETIME,
-  notes TEXT,
-  FOREIGN KEY (vital_record_id) REFERENCES vital_records(id) ON DELETE CASCADE,
-  FOREIGN KEY (vital_alert_id) REFERENCES vital_alerts(id) ON DELETE CASCADE,
-  FOREIGN KEY (acknowledged_by) REFERENCES users(id) ON DELETE SET NULL,
-  INDEX idx_vital_record (vital_record_id),
-  INDEX idx_vital_alert (vital_alert_id),
-  INDEX idx_acknowledged (acknowledged),
-  INDEX idx_triggered_at (triggered_at)
-);
+    -- 訪問希望：看護師
+    nurse_id VARCHAR(100),
 
--- Alcohol checks table for tracking breath alcohol concentration tests
-CREATE TABLE IF NOT EXISTS alcohol_checks (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  user_id BIGINT NOT NULL,
-  resident_id BIGINT,
-  breath_alcohol_concentration DECIMAL(5, 2) NOT NULL,
-  checked_at DATETIME NOT NULL,
-  device_image_path VARCHAR(512),
-  notes TEXT,
-  checked_by BIGINT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (resident_id) REFERENCES residents(id) ON DELETE SET NULL,
-  FOREIGN KEY (checked_by) REFERENCES users(id) ON DELETE SET NULL,
-  INDEX idx_user_id (user_id),
-  INDEX idx_resident_id (resident_id),
-  INDEX idx_checked_at (checked_at),
-  INDEX idx_checked_by (checked_by)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    visit_count INT,
 
--- Option Master table for caching frequently accessed configuration data
-CREATE TABLE IF NOT EXISTS option_master (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  category VARCHAR(100) NOT NULL,
-  code VARCHAR(100) NOT NULL,
-  label VARCHAR(255) NOT NULL,
-  value TEXT,
-  display_order INT DEFAULT 0,
-  active TINYINT(1) DEFAULT 1,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  UNIQUE KEY unique_category_code (category, code),
-  INDEX idx_category (category),
-  INDEX idx_active (active)
-);
+    -- 訪問希望（曜日：boolean）
+    prefer_mon BOOLEAN DEFAULT FALSE,
+    prefer_tue BOOLEAN DEFAULT FALSE,
+    prefer_wed BOOLEAN DEFAULT FALSE,
+    prefer_thu BOOLEAN DEFAULT FALSE,
+    prefer_fri BOOLEAN DEFAULT FALSE,
 
--- Notifications
-CREATE TABLE IF NOT EXISTS notifications (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  title VARCHAR(255),
-  body TEXT,
-  target_role VARCHAR(50),
-  publish_from DATETIME,
-  publish_to DATETIME,
-  created_by BIGINT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (created_by) REFERENCES users(id)
-);
+    -- 訪問希望（時間：string）
+    time_mon VARCHAR(50),  -- 例: "15:00-20:00"
+    time_tue VARCHAR(50),
+    time_wed VARCHAR(50),
+    time_thu VARCHAR(50),
+    time_fri VARCHAR(50),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4  COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE residents (
+    -- 基本項目
+    resident_id VARCHAR(50) PRIMARY KEY,      -- 入所者ID
+    user_id VARCHAR(50),                      -- 利用者ID
+    status_id VARCHAR(50),                    -- 入所者状況 / ID
+    facility_id VARCHAR(50),                  -- 施設ID
+
+    -- 氏名（スナップショット）
+    last_name VARCHAR(100) NOT NULL,          -- 姓
+    first_name VARCHAR(100) NOT NULL,         -- 名
+    last_name_kana VARCHAR(100),
+    first_name_kana VARCHAR(100),
+
+    -- 連絡先
+    phone_number VARCHAR(30),
+
+    -- 日付関連
+    admission_date DATE,                      -- 入所日
+    effective_date DATE,                      -- 発効日
+    discharge_date DATE,                      -- 退所日
+
+    -- FLG
+    is_excluded BOOLEAN DEFAULT FALSE,        -- 測定対象外FLG
+
+    -- 備考
+    notes TEXT,
+
+    -- タイムスタンプ
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+        ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE shifts (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+
+    shift_period VARCHAR(255),
+    route_no INT,
+
+    facility_id VARCHAR(50),
+
+    facility_name VARCHAR(255),
+    facility_address TEXT,
+    resident_count INT,
+    capacity INT,
+
+    required_time INT,
+
+    start_datetime DATE,
+
+    nurse_id VARCHAR(100),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+  CREATE TABLE shift_locations (
+    -- 基本項目
+    shift_location_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+
+    facility_id VARCHAR(50),             -- 施設 / ID
+    nurse_id VARCHAR(100),               -- 看護師ID
+
+    date_time VARCHAR(50),         -- 日時
+
+    latitude_longitude_from VARCHAR(50), -- 緯度・経度 / From (例 "35.6895,139.6917")
+
+    distance_m INT,                      -- 移動距離（m）
+    duration_sec INT,                    -- 移動時間（秒）
+
+    shift_period VARCHAR(255),           -- シフト期間（例: "日勤", "夜勤", "早番" など）
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+        ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+ CREATE TABLE shift_schedules (
+    shift_schedule_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+
+    `year_month` CHAR(7) NOT NULL,       -- 例: "2025-12"
+    nurse_id VARCHAR(100) NOT NULL,      -- 看護師ID
+
+    shift_list JSON NOT NULL,             -- JSON スケジュール
+    is_latest BOOLEAN DEFAULT FALSE,      -- 最新フラグ（0/1）
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+        ON UPDATE CURRENT_TIMESTAMP
+
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- refresh_tokens テーブル
+-- ------------------------------------------------------------
+CREATE TABLE refresh_tokens (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL,
+    revoked BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_token (token),
+    INDEX idx_user_id (user_id),
+    INDEX idx_expires_at (expires_at)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- files テーブル
+-- ------------------------------------------------------------
+CREATE TABLE files (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    file_name VARCHAR(255) NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    file_type VARCHAR(50) NOT NULL,
+    file_size BIGINT UNSIGNED NOT NULL,
+    mime_type VARCHAR(100),
+    category ENUM('RESIDENT_IMAGE', 'PROFILE_AVATAR', 'SHIFT_REPORT', 'SALARY_STATEMENT', 'CARE_NOTE_ATTACHMENT') NOT NULL,
+    entity_type VARCHAR(50) NOT NULL,
+    entity_id BIGINT UNSIGNED NOT NULL,
+    uploaded_by BIGINT UNSIGNED,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_entity (entity_type, entity_id),
+    INDEX idx_category (category),
+    INDEX idx_uploaded_by (uploaded_by)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- vital_records テーブル
+-- ------------------------------------------------------------
+CREATE TABLE vital_records (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    resident_id VARCHAR(50) NOT NULL,
+    measured_at DATETIME,
+    systolic_bp INT,
+    diastolic_bp INT,
+    pulse INT,
+    temperature DECIMAL(4,1),
+    spo2 INT,
+    note TEXT,
+    created_by BIGINT UNSIGNED,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_resident_id (resident_id),
+    INDEX idx_measured_at (measured_at),
+    INDEX idx_created_by (created_by)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;

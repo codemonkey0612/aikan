@@ -1,44 +1,93 @@
 export type Nullable<T> = T | null;
 
-export type UserRole = "ADMIN" | "NURSE" | "STAFF" | "FACILITY_MANAGER";
+export type UserRole = "admin" | "nurse" | "facility_manager" | "corporate_officer";
 
 export interface User {
-  id: number;
+  id: number; // BIGINT UNSIGNED
   role: UserRole;
-  first_name: Nullable<string>;
-  last_name: Nullable<string>;
-  email: Nullable<string>;
-  phone: Nullable<string>;
-  active: number;
+  last_name: string;
+  first_name: string;
+  last_name_kana: Nullable<string>;
+  first_name_kana: Nullable<string>;
+  postal_code: Nullable<string>;
+  address_prefecture: Nullable<string>;
+  address_city: Nullable<string>;
+  address_building: Nullable<string>;
+  latitude_longitude: Nullable<string>; // "lat,lng" format
+  email: string;
+  phone_number: Nullable<string>;
+  user_photo_url: Nullable<string>;
+  notes: Nullable<string>;
+  position: Nullable<string>;
+  alcohol_check: boolean;
+  nurse_id: Nullable<string>; // VARCHAR(100)
   created_at: string;
+  updated_at: string;
 }
 
 export interface Facility {
-  id: number;
-  corporation_id: number;
+  facility_id: string; // VARCHAR(50) PRIMARY KEY
+  facility_number: Nullable<string>;
+  corporation_id: Nullable<string>; // VARCHAR(20)
   name: string;
-  code: Nullable<string>;
+  name_kana: Nullable<string>;
   postal_code: Nullable<string>;
-  address: Nullable<string>;
-  lat: Nullable<number>;
-  lng: Nullable<number>;
+  address_prefecture: Nullable<string>;
+  address_city: Nullable<string>;
+  address_building: Nullable<string>;
+  latitude_longitude: Nullable<string>; // "lat,lng" format
+  phone_number: Nullable<string>;
+  facility_status_id: Nullable<string>;
+  pre_visit_contact_id: Nullable<string>;
+  contact_type_id: Nullable<string>;
+  building_type_id: Nullable<string>;
+  pl_support_id: Nullable<string>;
+  visit_notes: Nullable<string>;
+  facility_notes: Nullable<string>;
+  user_notes: Nullable<string>;
+  map_document_url: Nullable<string>;
+  billing_unit_price: Nullable<number>;
+  billing_method_id: Nullable<string>;
+  capacity: Nullable<number>;
+  current_residents: Nullable<number>;
+  nurse_id: Nullable<string>; // VARCHAR(100)
+  visit_count: Nullable<number>;
+  prefer_mon: boolean;
+  prefer_tue: boolean;
+  prefer_wed: boolean;
+  prefer_thu: boolean;
+  prefer_fri: boolean;
+  time_mon: Nullable<string>;
+  time_tue: Nullable<string>;
+  time_wed: Nullable<string>;
+  time_thu: Nullable<string>;
+  time_fri: Nullable<string>;
   created_at: string;
+  updated_at: string;
 }
 
 export interface Resident {
-  id: number;
-  facility_id: number;
-  first_name: Nullable<string>;
-  last_name: Nullable<string>;
-  gender: Nullable<"MALE" | "FEMALE" | "OTHER">;
-  birth_date: Nullable<string>;
-  status: Nullable<string>;
+  resident_id: string; // VARCHAR(50) PRIMARY KEY
+  user_id: Nullable<string>; // VARCHAR(50)
+  status_id: Nullable<string>; // VARCHAR(50)
+  facility_id: Nullable<string>; // VARCHAR(50)
+  last_name: string;
+  first_name: string;
+  last_name_kana: Nullable<string>;
+  first_name_kana: Nullable<string>;
+  phone_number: Nullable<string>;
+  admission_date: Nullable<string>; // DATE
+  effective_date: Nullable<string>; // DATE
+  discharge_date: Nullable<string>; // DATE
+  is_excluded: boolean;
+  notes: Nullable<string>;
   created_at: string;
+  updated_at: string;
 }
 
 export interface VitalRecord {
   id: number;
-  resident_id: number;
+  resident_id: string; // VARCHAR(50)
   measured_at: Nullable<string>;
   systolic_bp: Nullable<number>;
   diastolic_bp: Nullable<number>;
@@ -52,19 +101,24 @@ export interface VitalRecord {
 
 export interface Shift {
   id: number;
-  user_id: number;
-  facility_id: number;
-  date: string;
-  start_time: Nullable<string>;
-  end_time: Nullable<string>;
-  shift_type: Nullable<string>;
+  shift_period: Nullable<string>;
+  route_no: Nullable<number>;
+  facility_id: Nullable<string>; // VARCHAR(50)
+  facility_name: Nullable<string>;
+  facility_address: Nullable<string>;
+  resident_count: Nullable<number>;
+  capacity: Nullable<number>;
+  required_time: Nullable<number>;
+  start_datetime: string; // DATE
+  nurse_id: Nullable<string>; // VARCHAR(100)
   created_at: string;
+  updated_at: string;
 }
 
 export interface Visit {
   id: number;
   shift_id: number;
-  resident_id: Nullable<number>;
+  resident_id: Nullable<string>; // VARCHAR(50)
   visited_at: string;
   note: Nullable<string>;
 }
@@ -173,7 +227,7 @@ export interface GeneratePinResponse {
 
 export interface Diagnosis {
   id: number;
-  resident_id: number;
+  resident_id: string; // VARCHAR(50)
   diagnosis_code: Nullable<string>;
   diagnosis_name: string;
   diagnosis_date: Nullable<string>;
@@ -190,7 +244,7 @@ export type CarePlanPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
 export interface CarePlan {
   id: number;
-  resident_id: number;
+  resident_id: string; // VARCHAR(50)
   title: string;
   description: Nullable<string>;
   start_date: string;
@@ -220,7 +274,7 @@ export type MedicationStatus = "ACTIVE" | "DISCONTINUED" | "COMPLETED";
 
 export interface MedicationNote {
   id: number;
-  resident_id: number;
+  resident_id: string; // VARCHAR(50)
   medication_name: string;
   dosage: Nullable<string>;
   frequency: Nullable<string>;
@@ -240,7 +294,7 @@ export type AlertSeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
 export interface VitalAlert {
   id: number;
-  resident_id: number;
+  resident_id: string; // VARCHAR(50)
   alert_type: VitalAlertType;
   min_value: Nullable<number>;
   max_value: Nullable<number>;
@@ -284,8 +338,8 @@ export interface FileRecord {
 
 export interface AlcoholCheck {
   id: number;
-  user_id: number;
-  resident_id: Nullable<number>;
+  user_id: number; // BIGINT UNSIGNED
+  resident_id: Nullable<string>; // VARCHAR(50)
   breath_alcohol_concentration: number; // mg/L
   checked_at: string;
   device_image_path: Nullable<string>;

@@ -3,7 +3,7 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2";
 
 export interface VitalRow extends RowDataPacket {
   id: number;
-  resident_id: number;
+  resident_id: string; // VARCHAR(50) - references residents.resident_id
   measured_at: string | null;
   systolic_bp: number | null;
   diastolic_bp: number | null;
@@ -31,7 +31,7 @@ export const getVitalsPaginated = async (
   sortBy: string = "created_at",
   sortOrder: "asc" | "desc" = "desc",
   filters?: {
-    resident_id?: number;
+    resident_id?: string; // VARCHAR(50)
     measured_from?: string;
     measured_to?: string;
     created_by?: number;

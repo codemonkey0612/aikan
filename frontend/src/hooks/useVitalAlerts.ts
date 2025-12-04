@@ -11,7 +11,7 @@ export function useVitalAlerts() {
   });
 }
 
-export function useVitalAlertsByResident(resident_id: number) {
+export function useVitalAlertsByResident(resident_id: string) {
   return useQuery<VitalAlert[]>({
     queryKey: [...VITAL_ALERTS_QUERY_KEY, "resident", resident_id],
     queryFn: () => VitalAlertsAPI.getByResident(resident_id),
@@ -28,7 +28,7 @@ export function useVitalAlertById(id: number) {
 }
 
 export function useVitalAlertTriggers(params?: {
-  resident_id?: number;
+  resident_id?: string;
   acknowledged?: boolean;
 }) {
   return useQuery<VitalAlertTrigger[]>({

@@ -6,7 +6,7 @@ export type CarePlanPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 
 export interface CarePlanRow extends RowDataPacket {
   id: number;
-  resident_id: number;
+  resident_id: string; // VARCHAR(50) - references residents.resident_id
   title: string;
   description: string | null;
   start_date: string;
@@ -33,7 +33,7 @@ export interface CarePlanItemRow extends RowDataPacket {
 }
 
 export interface CreateCarePlanInput {
-  resident_id: number;
+  resident_id: string; // VARCHAR(50)
   title: string;
   description?: string | null;
   start_date: string;
@@ -74,7 +74,7 @@ export const getCarePlanById = async (id: number) => {
   return rows[0] ?? null;
 };
 
-export const getCarePlansByResident = async (resident_id: number) => {
+export const getCarePlansByResident = async (resident_id: string) => {
   const [rows] = await db.query<CarePlanRow[]>(
     "SELECT * FROM care_plans WHERE resident_id = ? ORDER BY start_date DESC, created_at DESC",
     [resident_id]

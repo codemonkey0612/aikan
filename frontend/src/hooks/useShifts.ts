@@ -11,8 +11,8 @@ export interface UseShiftsParams {
   limit?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
-  user_id?: number;
-  facility_id?: number;
+  nurse_id?: string; // VARCHAR(100)
+  facility_id?: string; // VARCHAR(50)
   date_from?: string;
   date_to?: string;
 }

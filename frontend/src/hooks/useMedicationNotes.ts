@@ -11,7 +11,7 @@ export function useMedicationNotes() {
   });
 }
 
-export function useMedicationNotesByResident(resident_id: number) {
+export function useMedicationNotesByResident(resident_id: string) {
   return useQuery<MedicationNote[]>({
     queryKey: [...MEDICATION_NOTES_QUERY_KEY, "resident", resident_id],
     queryFn: () => MedicationNotesAPI.getByResident(resident_id),
@@ -19,7 +19,7 @@ export function useMedicationNotesByResident(resident_id: number) {
   });
 }
 
-export function useActiveMedicationNotesByResident(resident_id: number) {
+export function useActiveMedicationNotesByResident(resident_id: string) {
   return useQuery<MedicationNote[]>({
     queryKey: [...MEDICATION_NOTES_QUERY_KEY, "resident", resident_id, "active"],
     queryFn: () => MedicationNotesAPI.getActiveByResident(resident_id),

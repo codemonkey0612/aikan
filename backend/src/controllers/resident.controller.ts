@@ -8,7 +8,7 @@ export const getAllResidents = async (req: Request, res: Response) => {
 
 export const getResidentById = async (req: Request, res: Response) => {
   const resident = await ResidentService.getResidentById(
-    Number(req.params.id)
+    req.params.id // VARCHAR(50) - no conversion needed
   );
   res.json(resident);
 };
@@ -20,14 +20,14 @@ export const createResident = async (req: Request, res: Response) => {
 
 export const updateResident = async (req: Request, res: Response) => {
   const updated = await ResidentService.updateResident(
-    Number(req.params.id),
+    req.params.id, // VARCHAR(50) - no conversion needed
     req.body
   );
   res.json(updated);
 };
 
 export const deleteResident = async (req: Request, res: Response) => {
-  await ResidentService.deleteResident(Number(req.params.id));
+  await ResidentService.deleteResident(req.params.id); // VARCHAR(50) - no conversion needed
   res.json({ message: "Deleted" });
 };
 

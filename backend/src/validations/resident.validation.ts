@@ -3,7 +3,10 @@ import { z } from "zod";
 const genderSchema = z.enum(["MALE", "FEMALE", "OTHER"]);
 
 export const createResidentSchema = z.object({
-  facility_id: z.number().int().positive("施設IDは正の整数である必要があります"),
+  resident_id: z.string().min(1, "入所者IDは必須です").max(50),
+  facility_id: z.string().max(50).optional().nullable(), // VARCHAR(50)
+  user_id: z.string().max(50).optional().nullable(), // VARCHAR(50)
+  status_id: z.string().max(50).optional().nullable(), // VARCHAR(50)
   first_name: z.string().min(1, "名は必須です").max(100).optional().nullable(),
   last_name: z.string().min(1, "姓は必須です").max(100).optional().nullable(),
   gender: genderSchema.optional().nullable(),

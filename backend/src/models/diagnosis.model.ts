@@ -3,7 +3,7 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2";
 
 export interface DiagnosisRow extends RowDataPacket {
   id: number;
-  resident_id: number;
+  resident_id: string; // VARCHAR(50) - references residents.resident_id
   diagnosis_code: string | null;
   diagnosis_name: string;
   diagnosis_date: string | null;
@@ -16,7 +16,7 @@ export interface DiagnosisRow extends RowDataPacket {
 }
 
 export interface CreateDiagnosisInput {
-  resident_id: number;
+  resident_id: string; // VARCHAR(50)
   diagnosis_code?: string | null;
   diagnosis_name: string;
   diagnosis_date?: string | null;
@@ -43,7 +43,7 @@ export const getDiagnosisById = async (id: number) => {
   return rows[0] ?? null;
 };
 
-export const getDiagnosesByResident = async (resident_id: number) => {
+export const getDiagnosesByResident = async (resident_id: string) => {
   const [rows] = await db.query<DiagnosisRow[]>(
     "SELECT * FROM diagnoses WHERE resident_id = ? ORDER BY diagnosis_date DESC, created_at DESC",
     [resident_id]

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const createVitalSchema = z.object({
-  resident_id: z.number().int().positive("入居者IDは正の整数である必要があります"),
+  resident_id: z.string().min(1, "入居者IDは必須です").max(50), // VARCHAR(50)
   measured_at: z.string().datetime("測定日時は有効な日時形式である必要があります"),
   systolic_bp: z.number().int().min(0).max(300, "収縮期血圧は0-300の範囲で入力してください").optional().nullable(),
   diastolic_bp: z.number().int().min(0).max(300, "拡張期血圧は0-300の範囲で入力してください").optional().nullable(),

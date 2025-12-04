@@ -31,9 +31,11 @@ export function FacilitiesPage() {
       ];
     }
     const total = data.length;
-    const addressCount = data.filter((f) => !!f.address).length;
-    const geoCount = data.filter((f) => !!f.lat && !!f.lng).length;
-    const codeCount = data.filter((f) => !!f.code).length;
+    const addressCount = data.filter((f) => 
+      !!(f.address_prefecture || f.address_city || f.address_building)
+    ).length;
+    const geoCount = data.filter((f) => !!f.latitude_longitude).length;
+    const codeCount = data.filter((f) => !!f.facility_number).length;
     const rate = (count: number) =>
       `${Math.round((count / total) * 100) || 0}%`;
 
@@ -50,8 +52,13 @@ export function FacilitiesPage() {
     if (!query.trim()) return data;
     const keyword = query.trim().toLowerCase();
     return data.filter((facility) => {
-      const haystack = `${facility.name ?? ""}${facility.address ?? ""}${
-        facility.code ?? ""
+      const address = [
+        facility.address_prefecture,
+        facility.address_city,
+        facility.address_building,
+      ].filter(Boolean).join("");
+      const haystack = `${facility.name ?? ""}${address}${
+        facility.facility_number ?? ""
       }`.toLowerCase();
       return haystack.includes(keyword);
     });
@@ -106,54 +113,65 @@ export function FacilitiesPage() {
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          {filteredFacilities.map((facility) => (
-            <div
-              key={facility.id}
-              className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-400">
-                    施設名
-                  </p>
-                  <h3 className="text-xl font-semibold text-slate-900">
-                    {facility.name}
-                  </h3>
-                  <p className="text-sm text-slate-500">
-                    コード: {facility.code ?? "―"}
-                  </p>
+          {filteredFacilities.map((facility) => {
+            const address = [
+              facility.address_prefecture,
+              facility.address_city,
+              facility.address_building,
+            ].filter(Boolean).join(" ");
+            const [lat, lng] = facility.latitude_longitude
+              ? facility.latitude_longitude.split(",").map((s) => s.trim())
+              : [null, null];
+            
+            return (
+              <div
+                key={facility.facility_id}
+                className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-slate-400">
+                      施設名
+                    </p>
+                    <h3 className="text-xl font-semibold text-slate-900">
+                      {facility.name}
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      コード: {facility.facility_number ?? "―"}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-600">
+                    #{facility.facility_id}
+                  </span>
                 </div>
-                <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-600">
-                  #{facility.id}
-                </span>
-              </div>
 
-              <dl className="mt-4 grid gap-3 text-sm text-slate-600">
-                <div className="flex items-start gap-2">
-                  <MapPinIcon className="mt-0.5 h-4 w-4 text-brand-500" />
-                  <div>
-                    <dt className="text-xs uppercase tracking-wide text-slate-400">
-                      住所
-                    </dt>
-                    <dd>{facility.address ?? "未設定"}</dd>
+                <dl className="mt-4 grid gap-3 text-sm text-slate-600">
+                  <div className="flex items-start gap-2">
+                    <MapPinIcon className="mt-0.5 h-4 w-4 text-brand-500" />
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-slate-400">
+                        住所
+                      </dt>
+                      <dd>{address || "未設定"}</dd>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <ClipboardDocumentListIcon className="mt-0.5 h-4 w-4 text-emerald-500" />
-                  <div>
-                    <dt className="text-xs uppercase tracking-wide text-slate-400">
-                      緯度 / 経度
-                    </dt>
-                    <dd>
-                      {facility.lat && facility.lng
-                        ? `${facility.lat}, ${facility.lng}`
-                        : "未登録"}
-                    </dd>
+                  <div className="flex items-start gap-2">
+                    <ClipboardDocumentListIcon className="mt-0.5 h-4 w-4 text-emerald-500" />
+                    <div>
+                      <dt className="text-xs uppercase tracking-wide text-slate-400">
+                        緯度 / 経度
+                      </dt>
+                      <dd>
+                        {lat && lng
+                          ? `${lat}, ${lng}`
+                          : "未登録"}
+                      </dd>
+                    </div>
                   </div>
-                </div>
-              </dl>
-            </div>
-          ))}
+                </dl>
+              </div>
+            );
+          })}
         </div>
 
         {!isLoading && !filteredFacilities.length && (
@@ -180,13 +198,21 @@ export function FacilitiesPage() {
                 </TableCell>
               </TableRow>
             )}
-            {filteredFacilities.map((facility) => (
-              <TableRow key={facility.id}>
-                <TableCell>{facility.name}</TableCell>
-                <TableCell>{facility.address ?? "未登録"}</TableCell>
-                <TableCell>{facility.code ?? "―"}</TableCell>
-              </TableRow>
-            ))}
+            {filteredFacilities.map((facility) => {
+              const address = [
+                facility.address_prefecture,
+                facility.address_city,
+                facility.address_building,
+              ].filter(Boolean).join(" ");
+              
+              return (
+                <TableRow key={facility.facility_id}>
+                  <TableCell>{facility.name}</TableCell>
+                  <TableCell>{address || "未登録"}</TableCell>
+                  <TableCell>{facility.facility_number ?? "―"}</TableCell>
+                </TableRow>
+              );
+            })}
             {!isLoading && !filteredFacilities.length && (
               <TableRow>
                 <TableCell colSpan={3} className="text-center text-slate-400">

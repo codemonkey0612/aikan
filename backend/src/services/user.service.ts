@@ -12,12 +12,11 @@ export const getUserByEmail = (email: string) =>
 export const createUser = (data: CreateUserInput) =>
   UserModel.createUser(data);
 export const updateUser = async (id: number, data: UpdateUserInput & { password?: string }) => {
-  // passwordフィールドが来た場合は、password_hashに変換
+  // passwordフィールドが来た場合は、ハッシュ化してpasswordに設定
   const updateData: UpdateUserInput = { ...data };
   if (data.password) {
-    const password_hash = await bcrypt.hash(data.password, 10);
-    updateData.password_hash = password_hash;
-    delete (updateData as any).password;
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    updateData.password = hashedPassword;
   }
   return UserModel.updateUser(id, updateData);
 };

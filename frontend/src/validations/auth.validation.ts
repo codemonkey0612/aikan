@@ -27,7 +27,7 @@ export const registerSchema = z
       .regex(/^[0-9-]+$/, "電話番号は数字とハイフンのみ使用できます")
       .max(20)
       .optional(),
-    role: z.enum(["ADMIN", "NURSE", "STAFF", "FACILITY_MANAGER"]).default("ADMIN"),
+    role: z.enum(["admin", "nurse", "facility_manager", "corporate_officer"]).default("admin"),
     password: z
       .string()
       .min(6, "パスワードは6文字以上である必要があります")

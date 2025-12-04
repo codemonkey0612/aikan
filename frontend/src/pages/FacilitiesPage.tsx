@@ -133,6 +133,34 @@ export function FacilitiesPage() {
     setPage(1);
   };
 
+  const handleCreateFacility = async (data: any) => {
+    await createFacilityMutation.mutateAsync(data);
+  };
+
+  const handleUpdateFacility = async (data: any) => {
+    if (editingFacility) {
+      await updateFacilityMutation.mutateAsync({ id: editingFacility.facility_id, data });
+    }
+  };
+
+  const handleDeleteFacility = async (facility: Facility) => {
+    if (window.confirm(`${facility.name} を削除してもよろしいですか？`)) {
+      await deleteFacilityMutation.mutateAsync(facility.facility_id);
+    }
+  };
+
+  const handleEditFacility = (facility: Facility) => {
+    setEditingFacility(facility);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingFacility(null);
+  };
+
+  const canWrite = user?.role === "admin" || user?.role === "facility_manager";
+
   return (
     <div className="space-y-6">
       <header>

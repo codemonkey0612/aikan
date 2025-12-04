@@ -26,7 +26,7 @@ export function useUpdateFacility() {
   const client = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<Facility> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<Facility> }) =>
       api.updateFacility(id, data).then((res) => res.data),
     onSuccess: () =>
       client.invalidateQueries({ queryKey: FACILITIES_QUERY_KEY }),
@@ -37,7 +37,7 @@ export function useDeleteFacility() {
   const client = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => api.deleteFacility(id),
+    mutationFn: (id: string) => api.deleteFacility(id),
     onSuccess: () =>
       client.invalidateQueries({ queryKey: FACILITIES_QUERY_KEY }),
   });

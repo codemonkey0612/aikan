@@ -5,7 +5,9 @@ import { redisClient, isRedisAvailable } from "../config/redis";
  */
 export const CACHE_KEYS = {
   FACILITIES: "facilities:list",
-  FACILITY: (id: number) => `facility:${id}`,
+  FACILITY: (id: string) => `facility:${id}`,
+  CORPORATIONS: "corporations:list",
+  CORPORATION: (id: string) => `corporation:${id}`,
   OPTION_MASTER: "options:master",
   SHIFT_TEMPLATES: "shifts:templates",
   SHIFT_TEMPLATE: (id: number) => `shift:template:${id}`,

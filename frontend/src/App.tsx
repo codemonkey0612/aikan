@@ -4,19 +4,15 @@ import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { OverviewPage } from "./pages/OverviewPage";
 import { UsersPage } from "./pages/UsersPage";
 import { FacilitiesPage } from "./pages/FacilitiesPage";
+import { CorporationsPage } from "./pages/CorporationsPage";
 import { ResidentsPage } from "./pages/ResidentsPage";
 import { ResidentDetailPage } from "./pages/ResidentDetailPage";
 import { VitalsPage } from "./pages/VitalsPage";
 import { VitalsInputPage } from "./pages/VitalsInputPage";
 import { ShiftsPage } from "./pages/ShiftsPage";
-import { ShiftSchedulePage } from "./pages/ShiftSchedulePage";
-import { ShiftDailyPage } from "./pages/ShiftDailyPage";
 import { ShiftDetailPage } from "./pages/ShiftDetailPage";
-import { VisitsPage } from "./pages/VisitsPage";
-import { CalendarPage } from "./pages/CalendarPage";
 import { SalariesPage } from "./pages/SalariesPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
-import { AttendancePage } from "./pages/AttendancePage";
 import { CarePlanPage } from "./pages/CarePlanPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { AlcoholCheckPage } from "./pages/AlcoholCheckPage";
@@ -61,24 +57,14 @@ function App() {
               }
             />
             <Route path="facilities" element={<FacilitiesPage />} />
+            <Route path="corporations" element={<CorporationsPage />} />
             <Route path="residents" element={<ResidentsPage />} />
             <Route path="residents/:id" element={<ResidentDetailPage />} />
             <Route path="residents/:id/care-plan" element={<CarePlanPage />} />
             <Route path="vitals" element={<VitalsPage />} />
             <Route path="vitals/new" element={<VitalsInputPage />} />
             <Route path="shifts" element={<ShiftsPage />} />
-            <Route path="shifts/schedule" element={<ShiftSchedulePage />} />
-            <Route path="shifts/daily/:date" element={<ShiftDailyPage />} />
             <Route path="shifts/:id" element={<ShiftDetailPage />} />
-            <Route
-              path="calendar"
-              element={
-                <RequireRole allowedRoles={["admin", "facility_manager", "nurse"]}>
-                  <CalendarPage />
-                </RequireRole>
-              }
-            />
-            <Route path="visits" element={<VisitsPage />} />
             <Route
               path="salaries"
               element={
@@ -88,14 +74,6 @@ function App() {
               }
             />
             <Route path="notifications" element={<NotificationsPage />} />
-            <Route
-              path="attendance"
-              element={
-                <RequireRole allowedRoles={["admin", "facility_manager", "nurse"]}>
-                  <AttendancePage />
-                </RequireRole>
-              }
-            />
             <Route
               path="alcohol-checks"
               element={

@@ -25,6 +25,26 @@ export interface User {
   updated_at: string;
 }
 
+export interface Corporation {
+  corporation_id: string; // VARCHAR(20) PRIMARY KEY
+  corporation_number: Nullable<string>;
+  name: string;
+  name_kana: Nullable<string>;
+  postal_code: Nullable<string>;
+  address_prefecture: Nullable<string>;
+  address_city: Nullable<string>;
+  address_building: Nullable<string>;
+  latitude_longitude: Nullable<string>; // "lat,lng" format
+  phone_number: Nullable<string>;
+  contact_email: Nullable<string>;
+  billing_unit_price: Nullable<number>;
+  billing_method_id: Nullable<string>;
+  photo_url: Nullable<string>;
+  notes: Nullable<string>;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Facility {
   facility_id: string; // VARCHAR(50) PRIMARY KEY
   facility_number: Nullable<string>;

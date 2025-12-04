@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
-import { useFacilities, useCreateFacility, useUpdateFacility, useDeleteFacility } from "../hooks/useFacilities";
-import { useCorporations } from "../hooks/useCorporations";
+import { useCorporations, useCreateCorporation, useUpdateCorporation, useDeleteCorporation } from "../hooks/useCorporations";
 import { useAuth } from "../hooks/useAuth";
-import { FacilityFormModal } from "../components/facilities/FacilityFormModal";
+import { CorporationFormModal } from "../components/corporations/CorporationFormModal";
 import { Card } from "../components/ui/Card";
 import { SummaryCard } from "../components/dashboard/SummaryCard";
 import { Pagination } from "../components/ui/Pagination";
@@ -24,54 +23,52 @@ import {
   PencilIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import type { Facility } from "../api/types";
+import type { Corporation } from "../api/types";
 
 const ITEMS_PER_PAGE = 20;
 
-export function FacilitiesPage() {
+export function CorporationsPage() {
   const { user } = useAuth();
-  const { data, isLoading } = useFacilities();
-  const { data: corporations } = useCorporations();
-  const createFacilityMutation = useCreateFacility();
-  const updateFacilityMutation = useUpdateFacility();
-  const deleteFacilityMutation = useDeleteFacility();
+  const { data, isLoading } = useCorporations();
+  const createCorporationMutation = useCreateCorporation();
+  const updateCorporationMutation = useUpdateCorporation();
+  const deleteCorporationMutation = useDeleteCorporation();
 
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingFacility, setEditingFacility] = useState<Facility | null>(null);
+  const [editingCorporation, setEditingCorporation] = useState<Corporation | null>(null);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [addressFilter, setAddressFilter] = useState<"all" | "with" | "without">("all");
   const [geoFilter, setGeoFilter] = useState<"all" | "with" | "without">("all");
-  const [corporationFilter, setCorporationFilter] = useState<string>("all");
 
   const stats = useMemo(() => {
     if (!data?.length) {
       return [
-        { title: "登録施設数", value: 0, change: "-" },
+        { title: "登録法人数", value: 0, change: "-" },
         { title: "住所登録率", value: "0%", change: "0件" },
         { title: "緯度経度設定", value: "0%", change: "0件" },
-        { title: "コード登録数", value: 0, change: "-" },
+        { title: "法人番号登録数", value: 0, change: "-" },
       ];
     }
     const total = data.length;
-    const addressCount = data.filter((f) => 
-      !!(f.address_prefecture || f.address_city || f.address_building)
+    const addressCount = data.filter((c) => 
+      !!(c.address_prefecture || c.address_city || c.address_building)
     ).length;
-    const geoCount = data.filter((f) => !!f.latitude_longitude).length;
-    const codeCount = data.filter((f) => !!f.facility_number).length;
+    const geoCount = data.filter((c) => !!c.latitude_longitude).length;
+    const numberCount = data.filter((c) => !!c.corporation_number).length;
     const rate = (count: number) =>
       `${Math.round((count / total) * 100) || 0}%`;
 
     return [
-      { title: "登録施設数", value: total, change: "全体" },
+      { title: "登録法人数", value: total, change: "全体" },
       { title: "住所登録率", value: rate(addressCount), change: `${addressCount} / ${total}` },
       { title: "緯度経度設定", value: rate(geoCount), change: `${geoCount} / ${total}` },
-      { title: "コード登録数", value: codeCount, change: "-" },
+      { title: "法人番号登録数", value: numberCount, change: "-" },
     ];
   }, [data]);
 
-  const filteredFacilities = useMemo(() => {
+  const filteredCorporations = useMemo(() => {
     if (!data) return [];
     
     let filtered = data;
@@ -79,14 +76,14 @@ export function FacilitiesPage() {
     // 検索クエリでフィルタリング
     if (query.trim()) {
       const keyword = query.trim().toLowerCase();
-      filtered = filtered.filter((facility) => {
+      filtered = filtered.filter((corporation) => {
         const address = [
-          facility.address_prefecture,
-          facility.address_city,
-          facility.address_building,
+          corporation.address_prefecture,
+          corporation.address_city,
+          corporation.address_building,
         ].filter(Boolean).join("");
-        const haystack = `${facility.name ?? ""}${address}${
-          facility.facility_number ?? ""
+        const haystack = `${corporation.name ?? ""}${address}${
+          corporation.corporation_number ?? ""
         }`.toLowerCase();
         return haystack.includes(keyword);
       });
@@ -94,44 +91,67 @@ export function FacilitiesPage() {
 
     // 住所フィルター
     if (addressFilter === "with") {
-      filtered = filtered.filter((f) => 
-        !!(f.address_prefecture || f.address_city || f.address_building)
+      filtered = filtered.filter((c) => 
+        !!(c.address_prefecture || c.address_city || c.address_building)
       );
     } else if (addressFilter === "without") {
-      filtered = filtered.filter((f) => 
-        !(f.address_prefecture || f.address_city || f.address_building)
+      filtered = filtered.filter((c) => 
+        !(c.address_prefecture || c.address_city || c.address_building)
       );
     }
 
     // 緯度経度フィルター
     if (geoFilter === "with") {
-      filtered = filtered.filter((f) => !!f.latitude_longitude);
+      filtered = filtered.filter((c) => !!c.latitude_longitude);
     } else if (geoFilter === "without") {
-      filtered = filtered.filter((f) => !f.latitude_longitude);
-    }
-
-    // 法人フィルター
-    if (corporationFilter !== "all") {
-      filtered = filtered.filter((f) => f.corporation_id === corporationFilter);
+      filtered = filtered.filter((c) => !c.latitude_longitude);
     }
 
     return filtered;
-  }, [data, query, addressFilter, geoFilter, corporationFilter]);
+  }, [data, query, addressFilter, geoFilter]);
 
   // ページネーション計算
-  const paginatedFacilities = useMemo(() => {
+  const paginatedCorporations = useMemo(() => {
     const startIndex = (page - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
-    return filteredFacilities.slice(startIndex, endIndex);
-  }, [filteredFacilities, page]);
+    return filteredCorporations.slice(startIndex, endIndex);
+  }, [filteredCorporations, page]);
 
-  const totalPages = Math.ceil(filteredFacilities.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredCorporations.length / ITEMS_PER_PAGE);
 
   // 検索クエリが変更されたらページを1にリセット
   const handleQueryChange = (newQuery: string) => {
     setQuery(newQuery);
     setPage(1);
   };
+
+  const handleCreateCorporation = async (data: any) => {
+    await createCorporationMutation.mutateAsync(data);
+  };
+
+  const handleUpdateCorporation = async (data: any) => {
+    if (editingCorporation) {
+      await updateCorporationMutation.mutateAsync({ id: editingCorporation.corporation_id, data });
+    }
+  };
+
+  const handleDeleteCorporation = async (corporation: Corporation) => {
+    if (window.confirm(`${corporation.name} を削除してもよろしいですか？`)) {
+      await deleteCorporationMutation.mutateAsync(corporation.corporation_id);
+    }
+  };
+
+  const handleEditCorporation = (corporation: Corporation) => {
+    setEditingCorporation(corporation);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingCorporation(null);
+  };
+
+  const canWrite = user?.role === "admin" || user?.role === "corporate_officer";
 
   return (
     <div className="space-y-6">
@@ -140,10 +160,10 @@ export function FacilitiesPage() {
           ネットワーク
         </p>
         <h1 className="text-3xl font-semibold text-slate-900">
-          施設リスト
+          法人リスト
         </h1>
         <p className="text-slate-500">
-          施設の所在地やコード、地図登録状況を一目で把握できます。
+          法人の所在地や法人番号、地図登録状況を一目で把握できます。
         </p>
       </header>
 
@@ -163,10 +183,10 @@ export function FacilitiesPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-xl font-semibold text-slate-800">
-              施設検索
+              法人検索
             </h2>
             <p className="text-sm text-slate-500">
-              名称・住所・コードで絞り込みができます。
+              名称・住所・法人番号で絞り込みができます。
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -177,7 +197,7 @@ export function FacilitiesPage() {
                 type="search"
                 value={query}
                 onChange={(event) => handleQueryChange(event.target.value)}
-                placeholder="例：銀河ケアセンター"
+                placeholder="例：株式会社あいかん"
                 className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-10 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
               />
             </label>
@@ -228,26 +248,6 @@ export function FacilitiesPage() {
                         <option value="without">設定なし</option>
                       </select>
                     </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-700 mb-1">
-                        法人
-                      </label>
-                      <select
-                        value={corporationFilter}
-                        onChange={(e) => {
-                          setCorporationFilter(e.target.value);
-                          setPage(1);
-                        }}
-                        className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm"
-                      >
-                        <option value="all">すべて</option>
-                        {corporations?.map((corp) => (
-                          <option key={corp.corporation_id} value={corp.corporation_id}>
-                            {corp.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
                   </div>
                 </div>
               )}
@@ -257,7 +257,7 @@ export function FacilitiesPage() {
             {canWrite && (
               <button
                 onClick={() => {
-                  setEditingFacility(null);
+                  setEditingCorporation(null);
                   setIsModalOpen(true);
                 }}
                 className="flex items-center gap-2 rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500"
@@ -270,35 +270,40 @@ export function FacilitiesPage() {
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          {paginatedFacilities.map((facility) => {
+          {paginatedCorporations.map((corporation) => {
             const address = [
-              facility.address_prefecture,
-              facility.address_city,
-              facility.address_building,
+              corporation.address_prefecture,
+              corporation.address_city,
+              corporation.address_building,
             ].filter(Boolean).join(" ");
-            const [lat, lng] = facility.latitude_longitude
-              ? facility.latitude_longitude.split(",").map((s) => s.trim())
+            const [lat, lng] = corporation.latitude_longitude
+              ? corporation.latitude_longitude.split(",").map((s) => s.trim())
               : [null, null];
             
             return (
               <div
-                key={facility.facility_id}
+                key={corporation.corporation_id}
                 className="rounded-2xl border border-slate-200 bg-slate-50/60 p-5"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-xs uppercase tracking-wide text-slate-400">
-                      施設名
+                      法人名
                     </p>
                     <h3 className="text-xl font-semibold text-slate-900">
-                      {facility.name}
+                      {corporation.name}
                     </h3>
+                    {corporation.name_kana && (
+                      <p className="text-sm text-slate-500">
+                        ({corporation.name_kana})
+                      </p>
+                    )}
                     <p className="text-sm text-slate-500">
-                      コード: {facility.facility_number ?? "―"}
+                      法人番号: {corporation.corporation_number ?? "―"}
                     </p>
                   </div>
                   <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-600">
-                    #{facility.facility_id}
+                    #{corporation.corporation_id}
                   </span>
                 </div>
 
@@ -325,15 +330,25 @@ export function FacilitiesPage() {
                       </dd>
                     </div>
                   </div>
+                  {corporation.contact_email && (
+                    <div className="flex items-start gap-2">
+                      <div>
+                        <dt className="text-xs uppercase tracking-wide text-slate-400">
+                          連絡先メール
+                        </dt>
+                        <dd>{corporation.contact_email}</dd>
+                      </div>
+                    </div>
+                  )}
                 </dl>
               </div>
             );
           })}
         </div>
 
-        {!isLoading && !filteredFacilities.length && (
+        {!isLoading && !filteredCorporations.length && (
           <p className="mt-6 text-center text-sm text-slate-400">
-            条件に一致する施設が見つかりませんでした。
+            条件に一致する法人が見つかりませんでした。
           </p>
         )}
 
@@ -346,54 +361,76 @@ export function FacilitiesPage() {
               onPageChange={setPage}
             />
             <p className="mt-4 text-center text-sm text-slate-500">
-              {filteredFacilities.length}件中 {((page - 1) * ITEMS_PER_PAGE + 1)}-{Math.min(page * ITEMS_PER_PAGE, filteredFacilities.length)}件を表示
+              {filteredCorporations.length}件中 {((page - 1) * ITEMS_PER_PAGE + 1)}-{Math.min(page * ITEMS_PER_PAGE, filteredCorporations.length)}件を表示
             </p>
           </div>
         )}
       </Card>
 
-      <Card title="全施設一覧">
+      <Card title="全法人一覧">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHeaderCell>名称</TableHeaderCell>
+              <TableHeaderCell>法人番号</TableHeaderCell>
               <TableHeaderCell>住所</TableHeaderCell>
-              <TableHeaderCell>コード</TableHeaderCell>
+              <TableHeaderCell>連絡先</TableHeaderCell>
               {canWrite && <TableHeaderCell>操作</TableHeaderCell>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={canWrite ? 4 : 3} className="text-center text-slate-400">
-                  施設を読み込み中...
+                <TableCell colSpan={canWrite ? 5 : 4} className="text-center text-slate-400">
+                  法人を読み込み中...
                 </TableCell>
               </TableRow>
             )}
-            {paginatedFacilities.map((facility) => {
+            {paginatedCorporations.map((corporation) => {
               const address = [
-                facility.address_prefecture,
-                facility.address_city,
-                facility.address_building,
+                corporation.address_prefecture,
+                corporation.address_city,
+                corporation.address_building,
               ].filter(Boolean).join(" ");
               
               return (
-                <TableRow key={facility.facility_id}>
-                  <TableCell>{facility.name}</TableCell>
+                <TableRow key={corporation.corporation_id}>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{corporation.name}</div>
+                      {corporation.name_kana && (
+                        <div className="text-sm text-slate-500">
+                          {corporation.name_kana}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>{corporation.corporation_number ?? "―"}</TableCell>
                   <TableCell>{address || "未登録"}</TableCell>
-                  <TableCell>{facility.facility_number ?? "―"}</TableCell>
+                  <TableCell>
+                    <div>
+                      {corporation.phone_number && (
+                        <div>{corporation.phone_number}</div>
+                      )}
+                      {corporation.contact_email && (
+                        <div className="text-sm text-slate-500">
+                          {corporation.contact_email}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
                   {canWrite && (
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleEditFacility(facility)}
+                          onClick={() => handleEditCorporation(corporation)}
                           className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100"
                           title="編集"
                         >
                           <PencilIcon className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteFacility(facility)}
+                          onClick={() => handleDeleteCorporation(corporation)}
                           className="rounded-md p-1.5 text-rose-600 hover:bg-rose-50"
                           title="削除"
                         >
@@ -405,10 +442,10 @@ export function FacilitiesPage() {
                 </TableRow>
               );
             })}
-            {!isLoading && !filteredFacilities.length && (
+            {!isLoading && !filteredCorporations.length && (
               <TableRow>
-                <TableCell colSpan={canWrite ? 4 : 3} className="text-center text-slate-400">
-                  施設がまだ登録されていません。
+                <TableCell colSpan={canWrite ? 5 : 4} className="text-center text-slate-400">
+                  法人がまだ登録されていません。
                 </TableCell>
               </TableRow>
             )}
@@ -422,19 +459,19 @@ export function FacilitiesPage() {
               onPageChange={setPage}
             />
             <p className="mt-2 text-center text-sm text-slate-500">
-              {filteredFacilities.length}件中 {((page - 1) * ITEMS_PER_PAGE + 1)}-{Math.min(page * ITEMS_PER_PAGE, filteredFacilities.length)}件を表示
+              {filteredCorporations.length}件中 {((page - 1) * ITEMS_PER_PAGE + 1)}-{Math.min(page * ITEMS_PER_PAGE, filteredCorporations.length)}件を表示
             </p>
           </div>
         )}
       </Card>
 
       {/* フォームモーダル */}
-      <FacilityFormModal
+      <CorporationFormModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        onSubmit={editingFacility ? handleUpdateFacility : handleCreateFacility}
-        facility={editingFacility}
-        mode={editingFacility ? "edit" : "create"}
+        onSubmit={editingCorporation ? handleUpdateCorporation : handleCreateCorporation}
+        corporation={editingCorporation}
+        mode={editingCorporation ? "edit" : "create"}
       />
     </div>
   );

@@ -27,7 +27,7 @@ export function ShiftsPage() {
   // 月の開始日と終了日を計算
   const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
   const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
-  
+
   const { data, isLoading } = useShifts({
     date_from: monthStart.toISOString().slice(0, 10),
     date_to: monthEnd.toISOString().slice(0, 10),
@@ -85,7 +85,8 @@ export function ShiftsPage() {
     return days;
   }, [currentMonth]);
 
-  const shiftByDate = useMemo(() => {
+  // 日付ごとにシフトをグループ化（看護師と施設の組み合わせ）
+  const shiftsByDate = useMemo(() => {
     const map = new Map<string, Shift[]>();
     if (!data?.data) return map;
     data.data.forEach((shift) => {
@@ -111,12 +112,12 @@ export function ShiftsPage() {
     <div className="space-y-6">
       <header>
         <p className="text-sm uppercase tracking-wide text-slate-500">
-          勤務体制
+          訪問スケジュール
         </p>
         <h1 className="text-3xl font-semibold text-slate-900">シフト</h1>
       </header>
 
-      <Card title="月間シフトカレンダー">
+      <Card title="月間訪問スケジュール">
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <button
@@ -158,9 +159,17 @@ export function ShiftsPage() {
                 );
               }
               const key = formatKey(day);
-              const dayShifts = shiftByDate.get(key) ?? [];
-              const isToday =
-                formatKey(day) === formatKey(new Date());
+              const dayShifts = shiftsByDate.get(key) ?? [];
+              const isToday = formatKey(day) === formatKey(new Date());
+
+              // 施設ごとにグループ化（同じ施設への訪問をまとめる）
+              const shiftsByFacility = new Map<string, Shift[]>();
+              dayShifts.forEach((shift) => {
+                const facilityId = shift.facility_id || "unknown";
+                const list = shiftsByFacility.get(facilityId) ?? [];
+                list.push(shift);
+                shiftsByFacility.set(facilityId, list);
+              });
 
               return (
                 <div
@@ -173,26 +182,30 @@ export function ShiftsPage() {
                 >
                   <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
                     <span>{day.getDate()}</span>
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">
-                      {dayShifts.length} 件
-                    </span>
+                    {dayShifts.length > 0 && (
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">
+                        {dayShifts.length} 件
+                      </span>
+                    )}
                   </div>
                   <div className="mt-2 space-y-1">
-                    {dayShifts.slice(0, 3).map((shift) => {
-                      const nurseName = shift.nurse_id
-                        ? nurseMap.get(shift.nurse_id) || shift.nurse_id
-                        : "未設定";
+                    {Array.from(shiftsByFacility.entries()).slice(0, 3).map(([facilityId, shifts]) => {
+                      const shift = shifts[0];
                       const facilityName = shift.facility_id
                         ? shift.facility_name || facilityMap.get(shift.facility_id) || shift.facility_id
                         : "未設定";
+                      const nurseName = shift.nurse_id
+                        ? nurseMap.get(shift.nurse_id) || shift.nurse_id
+                        : "未設定";
+                      
                       return (
                         <Link
                           key={shift.id}
                           to={`/shifts/${shift.id}`}
-                          className="block rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-600 transition hover:bg-slate-200"
+                          className="block rounded-lg bg-pink-100 px-2 py-1 text-xs font-medium text-pink-700 transition hover:bg-pink-200"
                           title={`${nurseName} - ${facilityName}`}
                         >
-                          {nurseName} / {facilityName}
+                          {facilityName}
                         </Link>
                       );
                     })}
@@ -201,7 +214,7 @@ export function ShiftsPage() {
                         他 {dayShifts.length - 3} 件
                       </p>
                     )}
-                    {!dayShifts.length && (
+                    {dayShifts.length === 0 && (
                       <p className="text-xs text-slate-300">予定なし</p>
                     )}
                   </div>
@@ -214,4 +227,3 @@ export function ShiftsPage() {
     </div>
   );
 }
-

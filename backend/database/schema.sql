@@ -161,7 +161,7 @@ CREATE TABLE residents (
     -- 基本項目
     resident_id VARCHAR(50) PRIMARY KEY,      -- 入所者ID
     user_id VARCHAR(50),                      -- 利用者ID
-    status_id VARCHAR(50),                    -- 入所者状況 / ID
+    resident_status VARCHAR(50),                    -- 入所者状況 / ID
     facility_id VARCHAR(50),                  -- 施設ID
 
     -- 氏名（スナップショット）

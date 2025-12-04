@@ -17,7 +17,13 @@ export function FacilityImage({ facilityId, alt, className = "" }: FacilityImage
     FilesAPI.getByEntity("facility", parseInt(facilityId))
       .then((files) => {
         if (cancelled) return;
-        const imageFile = files.find((f) => f.category === "RESIDENT_IMAGE");
+        // 施設用の画像ファイルを探す
+        // 現在のFileCategoryには施設用カテゴリがないため、mime_typeで画像を判定
+        // TODO: FACILITY_IMAGEカテゴリを追加して、カテゴリベースで検索するように改善
+        const imageFile = files.find((f) => {
+          // mime_typeが画像であることを確認
+          return f.mime_type?.startsWith("image/") ?? false;
+        });
         if (imageFile) {
           return FilesAPI.get(imageFile.id);
         }

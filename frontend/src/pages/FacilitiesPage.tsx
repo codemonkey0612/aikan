@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useFacilities } from "../hooks/useFacilities";
 import { Card } from "../components/ui/Card";
 import { SummaryCard } from "../components/dashboard/SummaryCard";
+import { Pagination } from "../components/ui/Pagination";
 import {
   Table,
   TableBody,
@@ -17,9 +18,12 @@ import {
   MapPinIcon,
 } from "@heroicons/react/24/outline";
 
+const ITEMS_PER_PAGE = 20;
+
 export function FacilitiesPage() {
   const { data, isLoading } = useFacilities();
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
 
   const stats = useMemo(() => {
     if (!data?.length) {
@@ -64,6 +68,21 @@ export function FacilitiesPage() {
     });
   }, [data, query]);
 
+  // ページネーション計算
+  const paginatedFacilities = useMemo(() => {
+    const startIndex = (page - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return filteredFacilities.slice(startIndex, endIndex);
+  }, [filteredFacilities, page]);
+
+  const totalPages = Math.ceil(filteredFacilities.length / ITEMS_PER_PAGE);
+
+  // 検索クエリが変更されたらページを1にリセット
+  const handleQueryChange = (newQuery: string) => {
+    setQuery(newQuery);
+    setPage(1);
+  };
+
   return (
     <div className="space-y-6">
       <header>
@@ -105,7 +124,7 @@ export function FacilitiesPage() {
             <input
               type="search"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => handleQueryChange(event.target.value)}
               placeholder="例：銀河ケアセンター"
               className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-10 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
             />
@@ -113,7 +132,7 @@ export function FacilitiesPage() {
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          {filteredFacilities.map((facility) => {
+          {paginatedFacilities.map((facility) => {
             const address = [
               facility.address_prefecture,
               facility.address_city,
@@ -179,6 +198,20 @@ export function FacilitiesPage() {
             条件に一致する施設が見つかりませんでした。
           </p>
         )}
+
+        {/* ページネーション */}
+        {totalPages > 1 && (
+          <div className="mt-6 border-t border-slate-200 pt-6">
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+            <p className="mt-4 text-center text-sm text-slate-500">
+              {filteredFacilities.length}件中 {((page - 1) * ITEMS_PER_PAGE + 1)}-{Math.min(page * ITEMS_PER_PAGE, filteredFacilities.length)}件を表示
+            </p>
+          </div>
+        )}
       </Card>
 
       <Card title="全施設一覧">
@@ -198,7 +231,7 @@ export function FacilitiesPage() {
                 </TableCell>
               </TableRow>
             )}
-            {filteredFacilities.map((facility) => {
+            {paginatedFacilities.map((facility) => {
               const address = [
                 facility.address_prefecture,
                 facility.address_city,
@@ -222,6 +255,18 @@ export function FacilitiesPage() {
             )}
           </TableBody>
         </Table>
+        {totalPages > 1 && (
+          <div className="mt-4 border-t border-slate-200 pt-4">
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+            <p className="mt-2 text-center text-sm text-slate-500">
+              {filteredFacilities.length}件中 {((page - 1) * ITEMS_PER_PAGE + 1)}-{Math.min(page * ITEMS_PER_PAGE, filteredFacilities.length)}件を表示
+            </p>
+          </div>
+        )}
       </Card>
     </div>
   );

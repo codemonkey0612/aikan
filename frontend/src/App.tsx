@@ -9,6 +9,9 @@ import { ResidentDetailPage } from "./pages/ResidentDetailPage";
 import { VitalsPage } from "./pages/VitalsPage";
 import { VitalsInputPage } from "./pages/VitalsInputPage";
 import { ShiftsPage } from "./pages/ShiftsPage";
+import { ShiftSchedulePage } from "./pages/ShiftSchedulePage";
+import { ShiftDailyPage } from "./pages/ShiftDailyPage";
+import { ShiftDetailPage } from "./pages/ShiftDetailPage";
 import { VisitsPage } from "./pages/VisitsPage";
 import { SalariesPage } from "./pages/SalariesPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
@@ -63,6 +66,9 @@ function App() {
             <Route path="vitals" element={<VitalsPage />} />
             <Route path="vitals/new" element={<VitalsInputPage />} />
             <Route path="shifts" element={<ShiftsPage />} />
+            <Route path="shifts/schedule" element={<ShiftSchedulePage />} />
+            <Route path="shifts/daily/:date" element={<ShiftDailyPage />} />
+            <Route path="shifts/:id" element={<ShiftDetailPage />} />
             <Route path="visits" element={<VisitsPage />} />
             <Route
               path="salaries"

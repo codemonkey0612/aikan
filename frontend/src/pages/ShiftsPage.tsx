@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { useShifts } from "../hooks/useShifts";
+import { useUsers } from "../hooks/useUsers";
+import { useFacilities } from "../hooks/useFacilities";
 import type { Shift } from "../api/types";
 import { Card } from "../components/ui/Card";
 import {
@@ -29,11 +31,35 @@ export function ShiftsPage() {
   const [page, setPage] = useState(1);
   const limit = 20;
   const { data, isLoading } = useShifts({ page, limit });
+  const { data: users } = useUsers();
+  const { data: facilities } = useFacilities();
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
     now.setDate(1);
     return now;
   });
+
+  // 看護師IDから看護師名へのマッピング
+  const nurseMap = useMemo(() => {
+    const map = new Map<string, string>();
+    users?.forEach((u) => {
+      if (u.nurse_id) {
+        map.set(u.nurse_id, `${u.last_name} ${u.first_name}`);
+      }
+    });
+    return map;
+  }, [users]);
+
+  // 施設IDから施設名へのマッピング
+  const facilityMap = useMemo(() => {
+    const map = new Map<string, string>();
+    facilities?.forEach((f) => {
+      if (f.facility_id) {
+        map.set(f.facility_id, f.name);
+      }
+    });
+    return map;
+  }, [facilities]);
 
   const monthLabel = currentMonth.toLocaleDateString("ja-JP", {
     year: "numeric",
@@ -69,8 +95,9 @@ export function ShiftsPage() {
     const map = new Map<string, Shift[]>();
     if (!data?.data) return map;
     data.data.forEach((shift) => {
-      if (!shift.date) return;
-      const key = formatKey(new Date(shift.date));
+      if (!shift.start_datetime) return;
+      const date = new Date(shift.start_datetime);
+      const key = formatKey(date);
       const list = map.get(key) ?? [];
       list.push(shift);
       map.set(key, list);
@@ -157,14 +184,23 @@ export function ShiftsPage() {
                     </span>
                   </div>
                   <div className="mt-2 space-y-1">
-                    {dayShifts.slice(0, 3).map((shift) => (
-                      <div
-                        key={shift.id}
-                        className="rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-600"
-                      >
-                        #{shift.user_id} / {shift.shift_type ?? "未設定"}
-                      </div>
-                    ))}
+                    {dayShifts.slice(0, 3).map((shift) => {
+                      const nurseName = shift.nurse_id
+                        ? nurseMap.get(shift.nurse_id) || shift.nurse_id
+                        : "未設定";
+                      const facilityName = shift.facility_id
+                        ? shift.facility_name || facilityMap.get(shift.facility_id) || shift.facility_id
+                        : "未設定";
+                      return (
+                        <div
+                          key={shift.id}
+                          className="rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-600"
+                          title={`${nurseName} - ${facilityName}`}
+                        >
+                          {nurseName} / {facilityName}
+                        </div>
+                      );
+                    })}
                     {dayShifts.length > 3 && (
                       <p className="text-right text-[10px] text-slate-400">
                         他 {dayShifts.length - 3} 件
@@ -199,14 +235,26 @@ export function ShiftsPage() {
                 </TableCell>
               </TableRow>
             )}
-            {data?.data && data.data.length > 0 && data.data.map((shift) => (
-              <TableRow key={shift.id}>
-                <TableCell>#{shift.user_id}</TableCell>
-                <TableCell>#{shift.facility_id}</TableCell>
-                <TableCell>{shift.date}</TableCell>
-                <TableCell>{shift.shift_type ?? "N/A"}</TableCell>
-              </TableRow>
-            ))}
+            {data?.data && data.data.length > 0 && data.data.map((shift) => {
+              const nurseName = shift.nurse_id
+                ? nurseMap.get(shift.nurse_id) || shift.nurse_id
+                : "未設定";
+              const facilityName = shift.facility_id
+                ? shift.facility_name || facilityMap.get(shift.facility_id) || shift.facility_id
+                : "未設定";
+              const shiftDate = shift.start_datetime
+                ? new Date(shift.start_datetime).toLocaleDateString("ja-JP")
+                : "未設定";
+              
+              return (
+                <TableRow key={shift.id}>
+                  <TableCell>{nurseName}</TableCell>
+                  <TableCell>{facilityName}</TableCell>
+                  <TableCell>{shiftDate}</TableCell>
+                  <TableCell>{shift.shift_period ?? "N/A"}</TableCell>
+                </TableRow>
+              );
+            })}
             {!isLoading && (!data?.data || data.data.length === 0) && (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-slate-400">

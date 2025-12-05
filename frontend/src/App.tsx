@@ -15,7 +15,8 @@ import { SalariesPage } from "./pages/SalariesPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { CarePlanPage } from "./pages/CarePlanPage";
 import { ProfilePage } from "./pages/ProfilePage";
-import { AlcoholCheckPage } from "./pages/AlcoholCheckPage";
+import { NurseAvailabilityPage } from "./pages/NurseAvailabilityPage";
+import { FacilityShiftRequestPage } from "./pages/FacilityShiftRequestPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { useAuth } from "./hooks/useAuth";
@@ -66,6 +67,22 @@ function App() {
             <Route path="shifts" element={<ShiftsPage />} />
             <Route path="shifts/:id" element={<ShiftDetailPage />} />
             <Route
+              path="nurse-availability"
+              element={
+                <RequireRole allowedRoles={["nurse"]}>
+                  <NurseAvailabilityPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="facility-shift-requests"
+              element={
+                <RequireRole allowedRoles={["admin", "facility_manager"]}>
+                  <FacilityShiftRequestPage />
+                </RequireRole>
+              }
+            />
+            <Route
               path="salaries"
               element={
                 <RequireRole allowedRoles={["admin"]}>
@@ -74,14 +91,6 @@ function App() {
               }
             />
             <Route path="notifications" element={<NotificationsPage />} />
-            <Route
-              path="alcohol-checks"
-              element={
-                <RequireRole allowedRoles={["admin", "facility_manager", "nurse"]}>
-                  <AlcoholCheckPage />
-                </RequireRole>
-              }
-            />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

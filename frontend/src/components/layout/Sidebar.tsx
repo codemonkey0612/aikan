@@ -10,7 +10,7 @@ import {
   UsersIcon,
   HeartIcon,
   MapPinIcon,
-  BeakerIcon,
+  CalendarIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useAuth } from "../../hooks/useAuth";
@@ -32,7 +32,8 @@ const allNavItems: NavItem[] = [
   { label: "入居者", to: "/residents", icon: UserGroupIcon, permissions: ["residents:read"] },
   { label: "バイタル", to: "/vitals", icon: HeartIcon, permissions: ["vitals:read"] },
   { label: "シフト", to: "/shifts", icon: ClockIcon, permissions: ["shifts:read"] },
-  { label: "アルコールチェック", to: "/alcohol-checks", icon: BeakerIcon, permissions: ["alcohol_checks:read"] },
+  { label: "希望シフト提出", to: "/nurse-availability", icon: CalendarIcon, permissions: ["shifts:write"] },
+  { label: "施設シフト依頼", to: "/facility-shift-requests", icon: BuildingOffice2Icon, permissions: ["shifts:write"] },
   { label: "給与", to: "/salaries", icon: CurrencyDollarIcon, permissions: ["salaries:read"] },
   { label: "お知らせ", to: "/notifications", icon: MegaphoneIcon, permissions: ["notifications:read"] },
 ];

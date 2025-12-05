@@ -198,14 +198,39 @@ export function ShiftsPage() {
                         ? nurseMap.get(shift.nurse_id) || shift.nurse_id
                         : "未設定";
                       
+                      // 時間をフォーマット
+                      const startTime = shift.start_datetime
+                        ? new Date(shift.start_datetime).toLocaleTimeString("ja-JP", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "";
+                      const endTime = shift.end_datetime
+                        ? new Date(shift.end_datetime).toLocaleTimeString("ja-JP", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "";
+                      const timeDisplay = startTime && endTime 
+                        ? `${startTime}-${endTime}`
+                        : startTime || "時間未設定";
+                      
                       return (
                         <Link
                           key={shift.id}
                           to={`/shifts/${shift.id}`}
-                          className="block rounded-lg bg-pink-100 px-2 py-1 text-xs font-medium text-pink-700 transition hover:bg-pink-200"
-                          title={`${nurseName} - ${facilityName}`}
+                          className="block rounded-lg bg-pink-100 px-2 py-1.5 text-xs transition hover:bg-pink-200"
+                          title={`${nurseName} - ${facilityName} (${timeDisplay})`}
                         >
-                          {facilityName}
+                          <div className="font-medium text-pink-700 truncate">
+                            {facilityName}
+                          </div>
+                          <div className="text-[10px] text-pink-600 mt-0.5">
+                            {nurseName}
+                          </div>
+                          <div className="text-[10px] text-pink-500 mt-0.5">
+                            {timeDisplay}
+                          </div>
                         </Link>
                       );
                     })}

@@ -193,71 +193,6 @@ CREATE TABLE residents (
   COLLATE=utf8mb4_unicode_ci;
 
 
-CREATE TABLE shifts (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-
-    shift_period VARCHAR(255),
-    route_no INT,
-
-    facility_id VARCHAR(50),
-
-    facility_name VARCHAR(255),
-    facility_address TEXT,
-    resident_count INT,
-    capacity INT,
-
-    required_time INT,
-
-    start_datetime DATE,
-
-    nurse_id VARCHAR(100),
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci;
-
-  CREATE TABLE shift_locations (
-    -- 基本項目
-    shift_location_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-
-    facility_id VARCHAR(50),             -- 施設 / ID
-    nurse_id VARCHAR(100),               -- 看護師ID
-
-    date_time VARCHAR(50),         -- 日時
-
-    latitude_longitude_from VARCHAR(50), -- 緯度・経度 / From (例 "35.6895,139.6917")
-
-    distance_m INT,                      -- 移動距離（m）
-    duration_sec INT,                    -- 移動時間（秒）
-
-    shift_period VARCHAR(255),           -- シフト期間（例: "日勤", "夜勤", "早番" など）
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
-        ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci;
-
- CREATE TABLE shift_schedules (
-    shift_schedule_id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-
-    `year_month` CHAR(7) NOT NULL,       -- 例: "2025-12"
-    nurse_id VARCHAR(100) NOT NULL,      -- 看護師ID
-
-    shift_list JSON NOT NULL,             -- JSON スケジュール
-    is_latest BOOLEAN DEFAULT FALSE,      -- 最新フラグ（0/1）
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
-        ON UPDATE CURRENT_TIMESTAMP
-
-) ENGINE=InnoDB
-  DEFAULT CHARSET=utf8mb4
-  COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
 -- refresh_tokens テーブル
@@ -320,3 +255,183 @@ CREATE TABLE vital_records (
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- shifts テーブル
+-- ------------------------------------------------------------
+CREATE TABLE shifts (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    shift_period VARCHAR(255),
+    route_no INT,
+    facility_id VARCHAR(50),
+    facility_name VARCHAR(255),
+    facility_address VARCHAR(500),
+    resident_count INT,
+    capacity INT,
+    required_time INT, -- minutes
+    start_datetime DATETIME NOT NULL,
+    end_datetime DATETIME, -- 訪問終了時刻
+    nurse_id VARCHAR(100),
+    distance_km DECIMAL(10,2), -- 距離（キロメートル）
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_nurse_id (nurse_id),
+    INDEX idx_facility_id (facility_id),
+    INDEX idx_start_datetime (start_datetime),
+    INDEX idx_shift_period (shift_period)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- nurse_availability テーブル（看護師の希望シフト）
+-- ------------------------------------------------------------
+CREATE TABLE nurse_availability (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    nurse_id VARCHAR(100) NOT NULL,
+    year_month CHAR(7) NOT NULL, -- "2025-12"
+    availability_data JSON NOT NULL, -- { "2025-12-01": { "available": true, "time_slots": ["09:00-12:00", "14:00-17:00"] }, ... }
+    status ENUM('draft', 'submitted', 'approved') DEFAULT 'draft',
+    submitted_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_nurse_id (nurse_id),
+    INDEX idx_year_month (year_month),
+    INDEX idx_status (status),
+    UNIQUE KEY unique_nurse_month (nurse_id, year_month)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------
+-- facility_shift_requests テーブル（施設のシフト依頼）
+-- ------------------------------------------------------------
+CREATE TABLE facility_shift_requests (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    facility_id VARCHAR(50) NOT NULL,
+    year_month CHAR(7) NOT NULL, -- "2025-12"
+    request_data JSON NOT NULL, -- { "2025-12-01": { "time_slots": ["15:00-20:00"], "required_nurses": 1, "notes": "..." }, ... }
+    status ENUM('draft', 'submitted', 'scheduled') DEFAULT 'draft',
+    submitted_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_facility_id (facility_id),
+    INDEX idx_year_month (year_month),
+    INDEX idx_status (status),
+    UNIQUE KEY unique_facility_month (facility_id, year_month)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+
+
+-- ------------------------------------------------------------
+-- nurse_salaries テーブル（給与計算結果）
+-- ------------------------------------------------------------
+CREATE TABLE `nurse_salaries` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `user_id` BIGINT UNSIGNED NOT NULL,
+    `nurse_id` VARCHAR(100),
+    `year_month` CHAR(7) NOT NULL, -- "2025-12"
+    `total_amount` DECIMAL(10,2) NOT NULL DEFAULT 0,
+    `distance_pay` DECIMAL(10,2) NOT NULL DEFAULT 0, -- paydist
+    `time_pay` DECIMAL(10,2) NOT NULL DEFAULT 0, -- payemin
+    `vital_pay` DECIMAL(10,2) NOT NULL DEFAULT 0, -- payvital
+    `total_distance_km` DECIMAL(10,2) DEFAULT 0,
+    `total_minutes` INT DEFAULT 0,
+    `total_vital_count` INT DEFAULT 0,
+    `calculation_details` JSON, -- 詳細な計算ログ
+    `calculated_at` TIMESTAMP NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_nurse_id` (`nurse_id`),
+    INDEX `idx_year_month` (`year_month`),
+    UNIQUE KEY `unique_nurse_month` (`nurse_id`, `year_month`)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+
+-- Check if shifts table exists, if not create it
+CREATE TABLE IF NOT EXISTS shifts (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    shift_period VARCHAR(255),
+    route_no INT,
+    facility_id VARCHAR(50),
+    facility_name VARCHAR(255),
+    facility_address VARCHAR(500),
+    resident_count INT,
+    capacity INT,
+    required_time INT,
+    start_datetime DATETIME NOT NULL,
+    nurse_id VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_nurse_id (nurse_id),
+    INDEX idx_facility_id (facility_id),
+    INDEX idx_start_datetime (start_datetime),
+    INDEX idx_shift_period (shift_period)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add new columns if they don't exist
+-- Note: MySQL doesn't support IF NOT EXISTS for ALTER TABLE ADD COLUMN
+-- So we need to check manually or use a stored procedure
+-- For now, we'll just add them and ignore errors if they exist
+
+-- ------------------------------------------------------------
+-- notifications テーブル
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS notifications (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NULL,
+    body TEXT NULL,
+    target_role VARCHAR(50) NULL,
+    publish_from DATETIME NULL,
+    publish_to DATETIME NULL,
+    created_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_target_role (target_role),
+    INDEX idx_publish_from (publish_from),
+    INDEX idx_publish_to (publish_to),
+    INDEX idx_created_by (created_by)
+) ENGINE=InnoDB
+  DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci;
+
+-- Add end_datetime column
+SET @dbname = DATABASE();
+SET @tablename = 'shifts';
+SET @columnname = 'end_datetime';
+SET @preparedStatement = (SELECT IF(
+  (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE
+      (table_name = @tablename)
+      AND (table_schema = @dbname)
+      AND (column_name = @columnname)
+  ) > 0,
+  'SELECT 1',
+  CONCAT('ALTER TABLE ', @tablename, ' ADD COLUMN ', @columnname, ' DATETIME NULL AFTER start_datetime')
+));
+PREPARE alterIfNotExists FROM @preparedStatement;
+EXECUTE alterIfNotExists;
+DEALLOCATE PREPARE alterIfNotExists;
+
+-- Add distance_km column
+SET @columnname = 'distance_km';
+SET @preparedStatement = (SELECT IF(
+  (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE
+      (table_name = @tablename)
+      AND (table_schema = @dbname)
+      AND (column_name = @columnname)
+  ) > 0,
+  'SELECT 1',
+  CONCAT('ALTER TABLE ', @tablename, ' ADD COLUMN ', @columnname, ' DECIMAL(10,2) NULL AFTER end_datetime')
+));
+PREPARE alterIfNotExists FROM @preparedStatement;
+EXECUTE alterIfNotExists;
+DEALLOCATE PREPARE alterIfNotExists;
+

@@ -30,7 +30,7 @@ export const calculateNurseSalary = async (
   const paymin = 35;
 
   // Get nurse location
-  const users = await UserModel.getAllUsers({ nurse_id });
+  const users = await UserModel.getAllUsers();
   const nurse = users.find((u) => u.nurse_id === nurse_id);
   const nurseCoords = parseCoordinates(nurse?.latitude_longitude ?? null);
 

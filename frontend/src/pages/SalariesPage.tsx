@@ -91,7 +91,7 @@ export function SalariesPage() {
               >
                 <option value="">看護師を選択</option>
                 {nurses.map((nurse) => (
-                  <option key={nurse.nurse_id || `nurse-${nurse.id}`} value={nurse.nurse_id}>
+                  <option key={`nurse-${nurse.id}`} value={nurse.nurse_id || ""}>
                     {nurse.last_name} {nurse.first_name} ({nurse.nurse_id})
                   </option>
                 ))}
@@ -243,7 +243,7 @@ export function SalariesPage() {
                 </TableCell>
               </TableRow>
             )}
-            {data?.map((salary) => (
+            {Array.isArray(data) && data.map((salary) => (
               <TableRow key={salary.id}>
                 <TableCell>
                   {salary.nurse_id || `#${salary.user_id}`}

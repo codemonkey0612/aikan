@@ -1,6 +1,5 @@
 import * as ShiftModel from "../models/shift.model";
 import * as SalaryModel from "../models/salary.model";
-import * as SalarySettingModel from "../models/salarySetting.model";
 import * as VitalModel from "../models/vital.model";
 import * as UserModel from "../models/user.model";
 import * as ResidentModel from "../models/resident.model";
@@ -26,17 +25,12 @@ export const calculateNurseSalary = async (
   nurse_id: string,
   year_month: string
 ): Promise<SalaryCalculationResult> => {
-  // Get pay rates
-  const paykmSetting = await SalarySettingModel.getSalarySettingByKey("paykm");
-  const payminSetting = await SalarySettingModel.getSalarySettingByKey(
-    "paymin"
-  );
-
-  const paykm = paykmSetting?.setting_value ?? 100.0;
-  const paymin = payminSetting?.setting_value ?? 2000.0;
+  // Pay rates (hardcoded)
+  const paykm = 50;
+  const paymin = 35;
 
   // Get nurse location
-  const users = await UserModel.getAllUsers({ nurse_id });
+  const users = await UserModel.getAllUsers();
   const nurse = users.find((u) => u.nurse_id === nurse_id);
   const nurseCoords = parseCoordinates(nurse?.latitude_longitude ?? null);
 

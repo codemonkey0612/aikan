@@ -42,20 +42,20 @@ export const getAllSalaries = async (filters?: {
   const queryParams: any[] = [];
 
   if (filters?.user_id) {
-    whereClause += " AND user_id = ?";
+    whereClause += " AND `user_id` = ?";
     queryParams.push(filters.user_id);
   }
   if (filters?.nurse_id) {
-    whereClause += " AND nurse_id = ?";
+    whereClause += " AND `nurse_id` = ?";
     queryParams.push(filters.nurse_id);
   }
   if (filters?.year_month) {
-    whereClause += " AND year_month = ?";
+    whereClause += " AND `year_month` = ?";
     queryParams.push(filters.year_month);
   }
 
   const [rows] = await db.query<SalaryRow[]>(
-    `SELECT * FROM nurse_salaries WHERE ${whereClause} ORDER BY year_month DESC, created_at DESC`,
+    `SELECT * FROM \`nurse_salaries\` WHERE ${whereClause} ORDER BY \`year_month\` DESC, \`created_at\` DESC`,
     queryParams
   );
 
@@ -80,7 +80,7 @@ export const getAllSalaries = async (filters?: {
 
 export const getSalaryById = async (id: number) => {
   const [rows] = await db.query<SalaryRow[]>(
-    "SELECT * FROM nurse_salaries WHERE id = ?",
+    "SELECT * FROM `nurse_salaries` WHERE `id` = ?",
     [id]
   );
   if (rows.length === 0) return null;
@@ -107,7 +107,7 @@ export const getSalaryByNurseAndMonth = async (
   year_month: string
 ) => {
   const [rows] = await db.query<SalaryRow[]>(
-    "SELECT * FROM nurse_salaries WHERE nurse_id = ? AND year_month = ?",
+    "SELECT * FROM `nurse_salaries` WHERE `nurse_id` = ? AND `year_month` = ?",
     [nurse_id, year_month]
   );
   if (rows.length === 0) return null;
@@ -145,11 +145,11 @@ export const createSalary = async (data: SalaryInput) => {
   } = data;
 
   const [result] = await db.query<ResultSetHeader>(
-    `INSERT INTO nurse_salaries (
-      user_id, nurse_id, year_month, total_amount,
-      distance_pay, time_pay, vital_pay,
-      total_distance_km, total_minutes, total_vital_count,
-      calculation_details, calculated_at
+    `INSERT INTO \`nurse_salaries\` (
+      \`user_id\`, \`nurse_id\`, \`year_month\`, \`total_amount\`,
+      \`distance_pay\`, \`time_pay\`, \`vital_pay\`,
+      \`total_distance_km\`, \`total_minutes\`, \`total_vital_count\`,
+      \`calculation_details\`, \`calculated_at\`
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
     [
       user_id,
@@ -179,10 +179,10 @@ export const updateSalary = async (
   Object.entries(data).forEach(([key, value]) => {
     if (value !== undefined) {
       if (key === "calculation_details") {
-        fields.push("calculation_details = ?");
+        fields.push("`calculation_details` = ?");
         values.push(JSON.stringify(value));
       } else {
-        fields.push(`${key} = ?`);
+        fields.push(`\`${key}\` = ?`);
         values.push(value);
       }
     }
@@ -195,7 +195,7 @@ export const updateSalary = async (
   values.push(id);
 
   await db.query(
-    `UPDATE nurse_salaries SET ${fields.join(", ")} WHERE id = ?`,
+    `UPDATE \`nurse_salaries\` SET ${fields.join(", ")} WHERE \`id\` = ?`,
     values
   );
 
@@ -203,6 +203,6 @@ export const updateSalary = async (
 };
 
 export const deleteSalary = async (id: number) => {
-  await db.query("DELETE FROM nurse_salaries WHERE id = ?", [id]);
+  await db.query("DELETE FROM `nurse_salaries` WHERE `id` = ?", [id]);
 };
 

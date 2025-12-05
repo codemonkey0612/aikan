@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { useSalaries, useCalculateNurseSalary, useCalculateAndSaveSalary } from "../hooks/useSalaries";
 import { useUsers } from "../hooks/useUsers";
-import { useSalarySettings, useUpdateSalarySetting } from "../hooks/useSalarySettings";
 import { useAuth } from "../hooks/useAuth";
 import { Card } from "../components/ui/Card";
 import { FileUpload } from "../components/files/FileUpload";
@@ -22,8 +21,6 @@ import {
 export function SalariesPage() {
   const { user } = useAuth();
   const { data: users } = useUsers();
-  const { data: salarySettings } = useSalarySettings();
-  const updateSettingMutation = useUpdateSalarySetting();
   const calculateAndSaveMutation = useCalculateAndSaveSalary();
 
   const [selectedNurseId, setSelectedNurseId] = useState<string>("");
@@ -49,22 +46,6 @@ export function SalariesPage() {
   const nurses = useMemo(() => {
     return users?.filter((u) => u.nurse_id && u.role === "nurse") || [];
   }, [users]);
-
-  const paykmSetting = salarySettings?.find((s) => s.setting_key === "paykm");
-  const payminSetting = salarySettings?.find((s) => s.setting_key === "paymin");
-
-  const handleUpdateSetting = async (key: string, value: number) => {
-    if (!paykmSetting || !payminSetting) return;
-    try {
-      await updateSettingMutation.mutateAsync({
-        key,
-        data: { setting_value: value },
-      });
-      alert("設定を更新しました");
-    } catch (error: any) {
-      alert(`エラー: ${error.message}`);
-    }
-  };
 
   const handleCalculateAndSave = async () => {
     if (!selectedNurseId) {
@@ -93,55 +74,6 @@ export function SalariesPage() {
         <h1 className="text-3xl font-semibold text-slate-900">給与</h1>
       </header>
 
-      {/* 給与計算設定 */}
-      <Card title="給与計算設定">
-        <div className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                距離ベース単価 (paykm) - 1kmあたり
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  step="0.01"
-                  value={paykmSetting?.setting_value || 0}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    handleUpdateSetting("paykm", value);
-                  }}
-                  className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
-                />
-                <span className="text-sm text-slate-500">円/km</span>
-              </div>
-              <p className="mt-1 text-xs text-slate-500">
-                {paykmSetting?.description || ""}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                時間ベース単価 (paymin) - 1時間あたり
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  step="0.01"
-                  value={payminSetting?.setting_value || 0}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    handleUpdateSetting("paymin", value);
-                  }}
-                  className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm"
-                />
-                <span className="text-sm text-slate-500">円/時間</span>
-              </div>
-              <p className="mt-1 text-xs text-slate-500">
-                {payminSetting?.description || ""}
-              </p>
-            </div>
-          </div>
-        </div>
-      </Card>
 
       {/* 給与計算 */}
       <Card title="給与計算">
@@ -159,7 +91,7 @@ export function SalariesPage() {
               >
                 <option value="">看護師を選択</option>
                 {nurses.map((nurse) => (
-                  <option key={nurse.nurse_id || `nurse-${nurse.id}`} value={nurse.nurse_id}>
+                  <option key={`nurse-${nurse.id}`} value={nurse.nurse_id || ""}>
                     {nurse.last_name} {nurse.first_name} ({nurse.nurse_id})
                   </option>
                 ))}
@@ -210,7 +142,7 @@ export function SalariesPage() {
                           ¥{calculation.distance_pay.toLocaleString()}
                         </p>
                         <p className="text-xs text-slate-500 mt-1">
-                          {calculation.total_distance_km} km × {paykmSetting?.setting_value || 0} 円
+                          {calculation.total_distance_km} km
                         </p>
                       </div>
                       <div>
@@ -221,7 +153,7 @@ export function SalariesPage() {
                           ¥{calculation.time_pay.toLocaleString()}
                         </p>
                         <p className="text-xs text-slate-500 mt-1">
-                          {Math.round(calculation.total_minutes / 60)} 時間 × {payminSetting?.setting_value || 0} 円
+                          {Math.round(calculation.total_minutes / 60)} 時間
                         </p>
                       </div>
                       <div>
@@ -232,7 +164,7 @@ export function SalariesPage() {
                           ¥{calculation.vital_pay.toLocaleString()}
                         </p>
                         <p className="text-xs text-slate-500 mt-1">
-                          {calculation.total_vital_count} 件 × 10.0 × {payminSetting?.setting_value || 0} 円
+                          {calculation.total_vital_count} 件
                         </p>
                       </div>
                       <div>
@@ -311,7 +243,7 @@ export function SalariesPage() {
                 </TableCell>
               </TableRow>
             )}
-            {data?.map((salary) => (
+            {Array.isArray(data) && data.map((salary) => (
               <TableRow key={salary.id}>
                 <TableCell>
                   {salary.nurse_id || `#${salary.user_id}`}

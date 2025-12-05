@@ -1,15 +1,46 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as api from "../api/salaries";
-import type { Salary } from "../api/types";
+import type { Salary, SalaryCalculationResult } from "../api/types";
 
 const SALARIES_QUERY_KEY = ["salaries"] as const;
-const getSalariesQueryKey = (params?: Record<string, unknown>) =>
-  ["salaries", params ?? null] as const;
+const getSalariesQueryKey = (params?: {
+  user_id?: number;
+  nurse_id?: string;
+  year_month?: string;
+}) => ["salaries", params ?? null] as const;
 
-export function useSalaries(params?: Record<string, unknown>) {
+export function useSalaries(params?: {
+  user_id?: number;
+  nurse_id?: string;
+  year_month?: string;
+}) {
   return useQuery<Salary[]>({
     queryKey: getSalariesQueryKey(params),
     queryFn: () => api.getSalaries(params).then((res) => res.data),
+  });
+}
+
+export function useCalculateNurseSalary(
+  nurse_id: string,
+  year_month: string,
+  enabled: boolean = true
+) {
+  return useQuery<SalaryCalculationResult>({
+    queryKey: ["salary-calculation", nurse_id, year_month],
+    queryFn: () =>
+      api.calculateNurseSalary(nurse_id, year_month).then((res) => res.data),
+    enabled: enabled && !!nurse_id && !!year_month,
+  });
+}
+
+export function useCalculateAndSaveSalary() {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { nurse_id: string; year_month: string }) =>
+      api.calculateAndSaveSalary(data).then((res) => res.data),
+    onSuccess: () =>
+      client.invalidateQueries({ queryKey: SALARIES_QUERY_KEY }),
   });
 }
 

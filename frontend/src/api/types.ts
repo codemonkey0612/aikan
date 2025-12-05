@@ -146,9 +146,74 @@ export interface Visit {
 export interface Salary {
   id: number;
   user_id: number;
+  nurse_id: Nullable<string>;
   year_month: string;
-  amount: Nullable<number>;
+  total_amount: number;
+  distance_pay: number;
+  time_pay: number;
+  vital_pay: number;
+  total_distance_km: number;
+  total_minutes: number;
+  total_vital_count: number;
+  calculation_details: Nullable<any>;
+  calculated_at: Nullable<string>;
   created_at: string;
+  updated_at: string;
+}
+
+export interface NurseAvailability {
+  id: number;
+  nurse_id: string;
+  year_month: string;
+  availability_data: {
+    [date: string]: {
+      available: boolean;
+      time_slots?: string[];
+      notes?: string;
+    };
+  };
+  status: "draft" | "submitted" | "approved";
+  submitted_at: Nullable<string>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FacilityShiftRequest {
+  id: number;
+  facility_id: string;
+  year_month: string;
+  request_data: {
+    [date: string]: {
+      time_slots: string[];
+      required_nurses?: number;
+      notes?: string;
+    };
+  };
+  status: "draft" | "submitted" | "scheduled";
+  submitted_at: Nullable<string>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SalarySetting {
+  id: number;
+  setting_key: string;
+  setting_value: number;
+  description: Nullable<string>;
+  updated_by: Nullable<number>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SalaryCalculationResult {
+  total_amount: number;
+  distance_pay: number;
+  time_pay: number;
+  vital_pay: number;
+  total_distance_km: number;
+  total_minutes: number;
+  total_vital_count: number;
+  calculation_details: any[];
 }
 
 export interface Notification {

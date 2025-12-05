@@ -19,6 +19,10 @@ import medicationNoteRoutes from "./routes/medicationNote.routes";
 import vitalAlertRoutes from "./routes/vitalAlert.routes";
 import fileRoutes from "./routes/file.routes";
 import alcoholCheckRoutes from "./routes/alcohol-check.routes";
+import nurseAvailabilityRoutes from "./routes/nurseAvailability.routes";
+import facilityShiftRequestRoutes from "./routes/facilityShiftRequest.routes";
+import salarySettingRoutes from "./routes/salarySetting.routes";
+import salaryCalculationRoutes from "./routes/salaryCalculation.routes";
 import { errorHandler } from "./middlewares/error.middleware";
 const openapiDocument = yaml.load("./openapi.yaml");
 
@@ -52,6 +56,10 @@ app.use("/api/medication-notes", medicationNoteRoutes);
 app.use("/api/vital-alerts", vitalAlertRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/alcohol-checks", alcoholCheckRoutes);
+app.use("/api/nurse-availability", nurseAvailabilityRoutes);
+app.use("/api/facility-shift-requests", facilityShiftRequestRoutes);
+app.use("/api/salary-settings", salarySettingRoutes);
+app.use("/api/salary-calculation", salaryCalculationRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({ message: "API is running" });

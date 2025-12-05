@@ -11,7 +11,9 @@ export interface ShiftRow extends RowDataPacket {
   resident_count: number | null;
   capacity: number | null;
   required_time: number | null;
-  start_datetime: string; // DATE in DB, but string in TypeScript
+  start_datetime: string; // DATETIME in DB, but string in TypeScript
+  end_datetime: string | null; // DATETIME - optional, may not exist in old DB
+  distance_km: number | null; // DECIMAL(10,2) - optional, may not exist in old DB
   nurse_id: string | null; // VARCHAR(100)
   created_at: string;
   updated_at: string;

@@ -31,3 +31,5 @@ export const deleteCorporation = async (req: Request, res: Response) => {
   res.json({ message: "Deleted" });
 };
 
+
+

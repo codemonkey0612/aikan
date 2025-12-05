@@ -7,3 +7,5 @@ export const updateCorporation = (corporation_id: string, data: any) =>
   api.put(`/corporations/${corporation_id}`, data);
 export const deleteCorporation = (corporation_id: string) => api.delete(`/corporations/${corporation_id}`);
 
+
+

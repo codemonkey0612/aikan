@@ -22,7 +22,6 @@ import alcoholCheckRoutes from "./routes/alcohol-check.routes";
 import { errorHandler } from "./middlewares/error.middleware";
 const openapiDocument = yaml.load("./openapi.yaml");
 
-
 const app = express();
 
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapiDocument));

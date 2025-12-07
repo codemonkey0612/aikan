@@ -34,8 +34,8 @@ export const getAllUsers = async (req: Request, res: Response) => {
     });
   } else {
     // Non-paginated response (for backward compatibility)
-    const users = await UserService.getAllUsers();
-    res.json(users);
+  const users = await UserService.getAllUsers();
+  res.json(users);
   }
 };
 

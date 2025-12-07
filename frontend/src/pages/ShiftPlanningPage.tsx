@@ -73,6 +73,12 @@ export function ShiftPlanningPage() {
   });
   const createShiftMutation = useCreateShift();
 
+  // 施設IDを正規化するヘルパー関数（数値と文字列の両方に対応）
+  const normalizeId = (id: string | number | null | undefined): string => {
+    if (id === null || id === undefined) return '';
+    return String(id).trim().replace(/\r\n/g, '').replace(/\n/g, '').replace(/\r/g, '');
+  };
+
   // Create maps for quick lookup
   const nurseMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -84,15 +90,84 @@ export function ShiftPlanningPage() {
     return map;
   }, [users]);
 
+  // 施設IDから施設名へのマッピング（正規化してマッチング、数値と文字列の両方に対応）
   const facilityMap = useMemo(() => {
     const map = new Map<string, string>();
-    facilities?.forEach((f) => {
-      if (f.facility_id) {
-        map.set(f.facility_id, f.name);
+    if (!facilities) return map;
+    
+    facilities.forEach((f) => {
+      if (f.facility_id && f.name) {
+        // 数値も文字列も扱えるように正規化
+        const normalizedId = normalizeId(f.facility_id);
+        const originalId = String(f.facility_id);
+        
+        // 正規化されたIDでマップに追加
+        map.set(normalizedId, f.name);
+        
+        // 元のID（正規化前）も保持
+        map.set(originalId, f.name);
+        
+        // 数値としても保存（2366 のような数値IDに対応）
+        const numericValue = Number(f.facility_id);
+        if (!isNaN(numericValue)) {
+          const numericId = String(numericValue);
+          map.set(numericId, f.name);
+          // 数値の正規化版も追加
+          map.set(normalizeId(numericId), f.name);
+        }
+        
+        // 大文字小文字を区別しないバージョンも追加
+        map.set(normalizedId.toLowerCase(), f.name);
+        map.set(originalId.toLowerCase(), f.name);
       }
     });
     return map;
   }, [facilities]);
+
+  // 施設名を取得するヘルパー関数
+  const getFacilityNameById = (facilityId: string | number | null | undefined): string => {
+    if (!facilityId) return "未設定";
+    
+    const idStr = String(facilityId);
+    const normalizedId = normalizeId(facilityId);
+    
+    // 正規化されたIDで検索
+    let name = facilityMap.get(normalizedId);
+    if (name) return name;
+    
+    // 元のIDで検索
+    name = facilityMap.get(idStr);
+    if (name) return name;
+    
+    // 数値として検索
+    const numericValue = Number(facilityId);
+    if (!isNaN(numericValue)) {
+      const numericId = String(numericValue);
+      name = facilityMap.get(numericId);
+      if (name) return name;
+    }
+    
+    // 施設リストから直接検索（フォールバック）
+    if (facilities && facilities.length > 0) {
+      const facility = facilities.find((f) => {
+        if (!f.facility_id || !f.name) return false;
+        const fId = String(f.facility_id);
+        const fNormalized = normalizeId(f.facility_id);
+        const fNumeric = Number(f.facility_id);
+        const shiftNumeric = numericValue;
+        
+        return fNormalized === normalizedId || 
+               fId === idStr ||
+               (!isNaN(fNumeric) && !isNaN(shiftNumeric) && fNumeric === shiftNumeric);
+      });
+      if (facility?.name) {
+        return facility.name;
+      }
+    }
+    
+    // フォールバック: IDを表示
+    return idStr;
+  };
 
   // Find matches between availability and requests
   const matches = useMemo<ShiftMatch[]>(() => {
@@ -124,7 +199,7 @@ export function ShiftPlanningPage() {
                   nurse_id: availability.nurse_id,
                   nurse_name: nurseMap.get(availability.nurse_id) || availability.nurse_id,
                   facility_id: request.facility_id,
-                  facility_name: facilityMap.get(request.facility_id) || request.facility_id,
+                  facility_name: getFacilityNameById(request.facility_id),
                   time_slot: requestSlot, // Use request time slot
                   availability_id: availability.id,
                   request_id: request.id,

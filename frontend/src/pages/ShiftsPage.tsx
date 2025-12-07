@@ -17,7 +17,7 @@ const formatKey = (date: Date) => date.toISOString().slice(0, 10);
 
 export function ShiftsPage() {
   const { data: users } = useUsers();
-  const { data: facilities } = useFacilities();
+  const { data: facilities, isLoading: facilitiesLoading } = useFacilities();
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
     now.setDate(1);
@@ -44,16 +44,91 @@ export function ShiftsPage() {
     return map;
   }, [users]);
 
-  // 施設IDから施設名へのマッピング
+  // 施設IDを正規化するヘルパー関数（数値と文字列の両方に対応）
+  const normalizeId = (id: string | number | null | undefined): string => {
+    if (id === null || id === undefined) return '';
+    // 数値も文字列も扱えるように変換
+    return String(id).trim().replace(/\r\n/g, '').replace(/\n/g, '').replace(/\r/g, '');
+  };
+
+  // 施設IDから施設名へのマッピング（正規化してマッチング、数値と文字列の両方に対応）
   const facilityMap = useMemo(() => {
     const map = new Map<string, string>();
-    facilities?.forEach((f) => {
-      if (f.facility_id) {
-        map.set(f.facility_id, f.name);
+    if (!facilities) return map;
+    
+    facilities.forEach((f) => {
+      if (f.facility_id && f.name) {
+        // 数値も文字列も扱えるように正規化
+        const normalizedId = normalizeId(f.facility_id);
+        const originalId = String(f.facility_id);
+        
+        // 正規化されたIDでマップに追加
+        map.set(normalizedId, f.name);
+        
+        // 元のID（正規化前）も保持
+        map.set(originalId, f.name);
+        
+        // 数値としても保存（2366 のような数値IDに対応）
+        const numericValue = Number(f.facility_id);
+        if (!isNaN(numericValue)) {
+          const numericId = String(numericValue);
+          map.set(numericId, f.name);
+          // 数値の正規化版も追加
+          map.set(normalizeId(numericId), f.name);
+        }
+        
+        // 大文字小文字を区別しないバージョンも追加
+        map.set(normalizedId.toLowerCase(), f.name);
+        map.set(originalId.toLowerCase(), f.name);
       }
     });
     return map;
   }, [facilities]);
+
+  // 施設名を取得するヘルパー関数（ShiftPlanningPageと同じロジックを使用）
+  const getFacilityNameById = (facilityId: string | number | null | undefined): string => {
+    if (!facilityId) return "未設定";
+    
+    const idStr = String(facilityId);
+    const normalizedId = normalizeId(facilityId);
+    
+    // 正規化されたIDで検索
+    let name = facilityMap.get(normalizedId);
+    if (name) return name;
+    
+    // 元のIDで検索
+    name = facilityMap.get(idStr);
+    if (name) return name;
+    
+    // 数値として検索
+    const numericValue = Number(facilityId);
+    if (!isNaN(numericValue)) {
+      const numericId = String(numericValue);
+      name = facilityMap.get(numericId);
+      if (name) return name;
+    }
+    
+    // 施設リストから直接検索（フォールバック）
+    if (facilities && facilities.length > 0) {
+      const facility = facilities.find((f) => {
+        if (!f.facility_id || !f.name) return false;
+        const fId = String(f.facility_id);
+        const fNormalized = normalizeId(f.facility_id);
+        const fNumeric = Number(f.facility_id);
+        const shiftNumeric = numericValue;
+        
+        return fNormalized === normalizedId || 
+               fId === idStr ||
+               (!isNaN(fNumeric) && !isNaN(shiftNumeric) && fNumeric === shiftNumeric);
+      });
+      if (facility?.name) {
+        return facility.name;
+      }
+    }
+    
+    // フォールバック: IDを表示
+    return idStr;
+  };
 
   const monthLabel = currentMonth.toLocaleDateString("ja-JP", {
     year: "numeric",
@@ -163,9 +238,12 @@ export function ShiftsPage() {
               const isToday = formatKey(day) === formatKey(new Date());
 
               // 施設ごとにグループ化（同じ施設への訪問をまとめる）
+              // 正規化されたIDを使用してグループ化
               const shiftsByFacility = new Map<string, Shift[]>();
               dayShifts.forEach((shift) => {
-                const facilityId = shift.facility_id || "unknown";
+                // グループ化には正規化されたIDを使用
+                // ただし、元のshift.facility_idを保持して後でルックアップに使用
+                const facilityId = shift.facility_id ? normalizeId(shift.facility_id) : "unknown";
                 const list = shiftsByFacility.get(facilityId) ?? [];
                 list.push(shift);
                 shiftsByFacility.set(facilityId, list);
@@ -191,9 +269,10 @@ export function ShiftsPage() {
                   <div className="mt-2 space-y-1">
                     {Array.from(shiftsByFacility.entries()).slice(0, 3).map(([facilityId, shifts]) => {
                       const shift = shifts[0];
-                      const facilityName = shift.facility_id
-                        ? shift.facility_name || facilityMap.get(shift.facility_id) || shift.facility_id
-                        : "未設定";
+                      // 施設名を取得（shift.facility_name を優先、なければIDから検索）
+                      const facilityName = shift.facility_name && shift.facility_name.trim()
+                        ? shift.facility_name.trim()
+                        : getFacilityNameById(shift.facility_id);
                       const nurseName = shift.nurse_id
                         ? nurseMap.get(shift.nurse_id) || shift.nurse_id
                         : "未設定";

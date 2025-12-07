@@ -164,36 +164,36 @@ export function OverviewPage() {
         <div className="rounded-2xl bg-white p-6 shadow-lg border border-slate-100">
           <h3 className="text-lg font-bold text-slate-900 mb-6">直近のシフト</h3>
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHeaderCell>看護師</TableHeaderCell>
-                  <TableHeaderCell>施設</TableHeaderCell>
-                  <TableHeaderCell className="text-right">日付</TableHeaderCell>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {shifts?.data.map((shift) => (
-                  <TableRow key={shift.id}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHeaderCell>看護師</TableHeaderCell>
+                <TableHeaderCell>施設</TableHeaderCell>
+                <TableHeaderCell className="text-right">日付</TableHeaderCell>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {shifts?.data.map((shift) => (
+                <TableRow key={shift.id}>
                     <TableCell>{shift.nurse_id || "未設定"}</TableCell>
                     <TableCell>{shift.facility_name || shift.facility_id || "未設定"}</TableCell>
-                    <TableCell className="text-right">
+                  <TableCell className="text-right">
                       {shift.start_datetime 
                         ? new Date(shift.start_datetime).toLocaleDateString("ja-JP")
                         : "未設定"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!shifts?.data.length && (
-                  <TableRow>
-                    <TableCell className="text-center text-slate-400" colSpan={3}>
-                      シフトはまだ登録されていません。
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {!shifts?.data.length && (
+                <TableRow>
+                  <TableCell className="text-center text-slate-400" colSpan={3}>
+                    シフトはまだ登録されていません。
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
         </div>
       </section>
 
@@ -201,37 +201,37 @@ export function OverviewPage() {
         <div className="rounded-2xl bg-white p-6 shadow-lg border border-slate-100">
           <h3 className="text-lg font-bold text-slate-900 mb-6">最新のバイタル</h3>
           <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHeaderCell>入居者</TableHeaderCell>
-                  <TableHeaderCell>血圧</TableHeaderCell>
-                  <TableHeaderCell className="text-right">
-                    体温
-                  </TableHeaderCell>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHeaderCell>入居者</TableHeaderCell>
+                <TableHeaderCell>血圧</TableHeaderCell>
+                <TableHeaderCell className="text-right">
+                  体温
+                </TableHeaderCell>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {vitals?.data.map((record) => (
+                <TableRow key={record.id}>
+                  <TableCell>#{record.resident_id}</TableCell>
+                  <TableCell>
+                    {record.systolic_bp ?? "--"}/{record.diastolic_bp ?? "--"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {record.temperature ?? "--"}°C
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {vitals?.data.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell>#{record.resident_id}</TableCell>
-                    <TableCell>
-                      {record.systolic_bp ?? "--"}/{record.diastolic_bp ?? "--"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {record.temperature ?? "--"}°C
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!vitals?.data.length && (
-                  <TableRow>
-                    <TableCell className="text-center text-slate-400" colSpan={3}>
-                      バイタルはまだ登録されていません。
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+              ))}
+              {!vitals?.data.length && (
+                <TableRow>
+                  <TableCell className="text-center text-slate-400" colSpan={3}>
+                    バイタルはまだ登録されていません。
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
           </div>
         </div>
       </section>

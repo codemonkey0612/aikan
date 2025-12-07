@@ -43,41 +43,63 @@ export const getAllNurseAvailabilities = async (
   const queryParams: any[] = [];
 
   if (filters?.nurse_id) {
-    whereClause += " AND nurse_id = ?";
+    whereClause += " AND `nurse_id` = ?";
     queryParams.push(filters.nurse_id);
   }
   if (filters?.year_month) {
-    whereClause += " AND year_month = ?";
+    whereClause += " AND `year_month` = ?";
     queryParams.push(filters.year_month);
   }
   if (filters?.status) {
-    whereClause += " AND status = ?";
+    whereClause += " AND `status` = ?";
     queryParams.push(filters.status);
   }
 
   const [rows] = await db.query<NurseAvailabilityRow[]>(
-    `SELECT * FROM nurse_availability WHERE ${whereClause} ORDER BY year_month DESC, created_at DESC`,
+    `SELECT * FROM \`nurse_availability\` WHERE ${whereClause} ORDER BY \`year_month\` DESC, \`created_at\` DESC`,
     queryParams
   );
 
-  return rows.map((row) => ({
-    ...row,
-    availability_data: JSON.parse(row.availability_data),
-  }));
+  return rows.map((row) => {
+    let availabilityData = null;
+    if (row.availability_data) {
+      try {
+        availabilityData = typeof row.availability_data === 'string' 
+          ? JSON.parse(row.availability_data) 
+          : row.availability_data;
+      } catch (e) {
+        availabilityData = null;
+      }
+    }
+    return {
+      ...row,
+      availability_data: availabilityData,
+    };
+  });
 };
 
 export const getNurseAvailabilityById = async (id: number) => {
   const [rows] = await db.query<NurseAvailabilityRow[]>(
-    "SELECT * FROM nurse_availability WHERE id = ?",
+    "SELECT * FROM `nurse_availability` WHERE `id` = ?",
     [id]
   );
 
   if (rows.length === 0) return null;
 
   const row = rows[0];
+  let availabilityData = null;
+  if (row.availability_data) {
+    try {
+      availabilityData = typeof row.availability_data === 'string' 
+        ? JSON.parse(row.availability_data) 
+        : row.availability_data;
+    } catch (e) {
+      availabilityData = null;
+    }
+  }
   return {
     ...row,
-    availability_data: JSON.parse(row.availability_data),
+    availability_data: availabilityData,
   };
 };
 
@@ -86,16 +108,26 @@ export const getNurseAvailabilityByNurseAndMonth = async (
   year_month: string
 ) => {
   const [rows] = await db.query<NurseAvailabilityRow[]>(
-    "SELECT * FROM nurse_availability WHERE nurse_id = ? AND year_month = ?",
+    "SELECT * FROM `nurse_availability` WHERE `nurse_id` = ? AND `year_month` = ?",
     [nurse_id, year_month]
   );
 
   if (rows.length === 0) return null;
 
   const row = rows[0];
+  let availabilityData = null;
+  if (row.availability_data) {
+    try {
+      availabilityData = typeof row.availability_data === 'string' 
+        ? JSON.parse(row.availability_data) 
+        : row.availability_data;
+    } catch (e) {
+      availabilityData = null;
+    }
+  }
   return {
     ...row,
-    availability_data: JSON.parse(row.availability_data),
+    availability_data: availabilityData,
   };
 };
 
@@ -107,8 +139,8 @@ export const createNurseAvailability = async (
   const submitted_at = status === "submitted" ? new Date() : null;
 
   const [result] = await db.query<ResultSetHeader>(
-    `INSERT INTO nurse_availability (
-      nurse_id, year_month, availability_data, status, submitted_at
+    `INSERT INTO \`nurse_availability\` (
+      \`nurse_id\`, \`year_month\`, \`availability_data\`, \`status\`, \`submitted_at\`
     ) VALUES (?, ?, ?, ?, ?)`,
     [
       nurse_id,
@@ -130,15 +162,15 @@ export const updateNurseAvailability = async (
   const values: any[] = [];
 
   if (data.availability_data !== undefined) {
-    fields.push("availability_data = ?");
+    fields.push("`availability_data` = ?");
     values.push(JSON.stringify(data.availability_data));
   }
 
   if (data.status !== undefined) {
-    fields.push("status = ?");
+    fields.push("`status` = ?");
     values.push(data.status);
     if (data.status === "submitted") {
-      fields.push("submitted_at = ?");
+      fields.push("`submitted_at` = ?");
       values.push(new Date());
     }
   }
@@ -150,7 +182,7 @@ export const updateNurseAvailability = async (
   values.push(id);
 
   await db.query(
-    `UPDATE nurse_availability SET ${fields.join(", ")} WHERE id = ?`,
+    `UPDATE \`nurse_availability\` SET ${fields.join(", ")} WHERE \`id\` = ?`,
     values
   );
 
@@ -158,6 +190,6 @@ export const updateNurseAvailability = async (
 };
 
 export const deleteNurseAvailability = async (id: number) => {
-  await db.query("DELETE FROM nurse_availability WHERE id = ?", [id]);
+  await db.query("DELETE FROM `nurse_availability` WHERE `id` = ?", [id]);
 };
 

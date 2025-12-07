@@ -55,6 +55,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "vitals:read",
     "vitals:write",
     "shifts:read",
+    "shifts:write",
     "visits:read",
     "visits:write",
     "notifications:read",

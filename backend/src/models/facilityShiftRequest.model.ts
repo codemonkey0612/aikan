@@ -43,41 +43,64 @@ export const getAllFacilityShiftRequests = async (
   const queryParams: any[] = [];
 
   if (filters?.facility_id) {
-    whereClause += " AND facility_id = ?";
+    whereClause += " AND `facility_id` = ?";
     queryParams.push(filters.facility_id);
   }
   if (filters?.year_month) {
-    whereClause += " AND year_month = ?";
+    whereClause += " AND `year_month` = ?";
     queryParams.push(filters.year_month);
   }
   if (filters?.status) {
-    whereClause += " AND status = ?";
+    whereClause += " AND `status` = ?";
     queryParams.push(filters.status);
   }
 
   const [rows] = await db.query<FacilityShiftRequestRow[]>(
-    `SELECT * FROM facility_shift_requests WHERE ${whereClause} ORDER BY year_month DESC, created_at DESC`,
+    `SELECT * FROM \`facility_shift_requests\` WHERE ${whereClause} ORDER BY \`year_month\` DESC, \`created_at\` DESC`,
     queryParams
   );
 
-  return rows.map((row) => ({
-    ...row,
-    request_data: JSON.parse(row.request_data),
-  }));
+  return rows.map((row) => {
+    let requestData = null;
+    if (row.request_data) {
+      try {
+        // Handle both JSON type (already parsed) and TEXT type (needs parsing)
+        requestData = typeof row.request_data === 'string' 
+          ? JSON.parse(row.request_data) 
+          : row.request_data;
+      } catch (e) {
+        requestData = null;
+      }
+    }
+    return {
+      ...row,
+      request_data: requestData,
+    };
+  });
 };
 
 export const getFacilityShiftRequestById = async (id: number) => {
   const [rows] = await db.query<FacilityShiftRequestRow[]>(
-    "SELECT * FROM facility_shift_requests WHERE id = ?",
+    "SELECT * FROM `facility_shift_requests` WHERE `id` = ?",
     [id]
   );
 
   if (rows.length === 0) return null;
 
   const row = rows[0];
+  let requestData = null;
+  if (row.request_data) {
+    try {
+      requestData = typeof row.request_data === 'string' 
+        ? JSON.parse(row.request_data) 
+        : row.request_data;
+    } catch (e) {
+      requestData = null;
+    }
+  }
   return {
     ...row,
-    request_data: JSON.parse(row.request_data),
+    request_data: requestData,
   };
 };
 
@@ -86,16 +109,26 @@ export const getFacilityShiftRequestByFacilityAndMonth = async (
   year_month: string
 ) => {
   const [rows] = await db.query<FacilityShiftRequestRow[]>(
-    "SELECT * FROM facility_shift_requests WHERE facility_id = ? AND year_month = ?",
+    "SELECT * FROM `facility_shift_requests` WHERE `facility_id` = ? AND `year_month` = ?",
     [facility_id, year_month]
   );
 
   if (rows.length === 0) return null;
 
   const row = rows[0];
+  let requestData = null;
+  if (row.request_data) {
+    try {
+      requestData = typeof row.request_data === 'string' 
+        ? JSON.parse(row.request_data) 
+        : row.request_data;
+    } catch (e) {
+      requestData = null;
+    }
+  }
   return {
     ...row,
-    request_data: JSON.parse(row.request_data),
+    request_data: requestData,
   };
 };
 
@@ -107,8 +140,8 @@ export const createFacilityShiftRequest = async (
   const submitted_at = status === "submitted" ? new Date() : null;
 
   const [result] = await db.query<ResultSetHeader>(
-    `INSERT INTO facility_shift_requests (
-      facility_id, year_month, request_data, status, submitted_at
+    `INSERT INTO \`facility_shift_requests\` (
+      \`facility_id\`, \`year_month\`, \`request_data\`, \`status\`, \`submitted_at\`
     ) VALUES (?, ?, ?, ?, ?)`,
     [facility_id, year_month, JSON.stringify(request_data), status, submitted_at]
   );
@@ -124,15 +157,15 @@ export const updateFacilityShiftRequest = async (
   const values: any[] = [];
 
   if (data.request_data !== undefined) {
-    fields.push("request_data = ?");
+    fields.push("`request_data` = ?");
     values.push(JSON.stringify(data.request_data));
   }
 
   if (data.status !== undefined) {
-    fields.push("status = ?");
+    fields.push("`status` = ?");
     values.push(data.status);
     if (data.status === "submitted") {
-      fields.push("submitted_at = ?");
+      fields.push("`submitted_at` = ?");
       values.push(new Date());
     }
   }
@@ -144,7 +177,7 @@ export const updateFacilityShiftRequest = async (
   values.push(id);
 
   await db.query(
-    `UPDATE facility_shift_requests SET ${fields.join(", ")} WHERE id = ?`,
+    `UPDATE \`facility_shift_requests\` SET ${fields.join(", ")} WHERE \`id\` = ?`,
     values
   );
 
@@ -152,6 +185,6 @@ export const updateFacilityShiftRequest = async (
 };
 
 export const deleteFacilityShiftRequest = async (id: number) => {
-  await db.query("DELETE FROM facility_shift_requests WHERE id = ?", [id]);
+  await db.query("DELETE FROM `facility_shift_requests` WHERE `id` = ?", [id]);
 };
 

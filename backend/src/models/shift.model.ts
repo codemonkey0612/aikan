@@ -115,6 +115,31 @@ export const getShiftById = async (id: number) => {
   return rows[0] ?? null;
 };
 
+// Helper function to convert ISO datetime string to MySQL DATETIME format
+const formatDateTimeForMySQL = (datetime: string | null | undefined): string | null => {
+  if (!datetime) return null;
+  try {
+    // If it's already in MySQL format (YYYY-MM-DD HH:MM:SS), return as is
+    if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(datetime)) {
+      return datetime;
+    }
+    // Convert ISO string to MySQL DATETIME format
+    const date = new Date(datetime);
+    if (isNaN(date.getTime())) {
+      throw new Error(`Invalid datetime: ${datetime}`);
+    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  } catch (error) {
+    throw new Error(`Failed to format datetime: ${datetime}`);
+  }
+};
+
 export const createShift = async (data: CreateShiftInput) => {
   const {
     shift_period,
@@ -129,6 +154,14 @@ export const createShift = async (data: CreateShiftInput) => {
     end_datetime,
     nurse_id,
   } = data;
+
+  // Validate and format datetime
+  if (!start_datetime) {
+    throw new Error("start_datetime is required");
+  }
+
+  const formattedStartDatetime = formatDateTimeForMySQL(start_datetime);
+  const formattedEndDatetime = formatDateTimeForMySQL(end_datetime);
 
   const [result] = await db.query<ResultSetHeader>(
     `INSERT INTO shifts (
@@ -145,8 +178,8 @@ export const createShift = async (data: CreateShiftInput) => {
       resident_count ?? null,
       capacity ?? null,
       required_time ?? null,
-      start_datetime,
-      end_datetime ?? null,
+      formattedStartDatetime,
+      formattedEndDatetime,
       nurse_id ?? null,
     ]
   );

@@ -43,8 +43,17 @@ export const getShiftById = async (req: Request, res: Response) => {
 };
 
 export const createShift = async (req: Request, res: Response) => {
-  const created = await ShiftService.createShift(req.body);
-  res.status(201).json(created);
+  try {
+    const created = await ShiftService.createShift(req.body);
+    res.status(201).json(created);
+  } catch (error: any) {
+    console.error("Error creating shift:", error);
+    const status = error.status || error.statusCode || 500;
+    res.status(status).json({
+      message: error.message || "シフトの作成に失敗しました",
+      ...(process.env.NODE_ENV === "development" && { stack: error.stack }),
+    });
+  }
 };
 
 export const updateShift = async (req: Request, res: Response) => {

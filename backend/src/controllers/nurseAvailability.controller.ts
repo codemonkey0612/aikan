@@ -46,13 +46,20 @@ export const getNurseAvailabilityByNurseAndMonth = async (
 ) => {
   try {
     const { nurse_id, year_month } = req.params;
+    console.log("Controller: getNurseAvailabilityByNurseAndMonth", { nurse_id, year_month });
     const availability =
       await NurseAvailabilityService.getNurseAvailabilityByNurseAndMonth(
         nurse_id,
         year_month
       );
+    console.log("Controller: result", availability ? `Found (id: ${availability.id})` : "null");
+    // Return null as JSON null, not undefined
+    if (!availability) {
+      return res.json(null);
+    }
     res.json(availability);
   } catch (error: any) {
+    console.error("Error fetching nurse availability:", error);
     res.status(500).json({ error: error.message });
   }
 };

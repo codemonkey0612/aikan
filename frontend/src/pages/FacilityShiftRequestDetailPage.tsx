@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useFacilityShiftRequestByFacilityAndMonth } from "../hooks/useFacilityShiftRequests";
 import { useFacilities } from "../hooks/useFacilities";
@@ -29,21 +29,32 @@ export function FacilityShiftRequestDetailPage() {
   }>();
   const navigate = useNavigate();
 
-  // Parse yearMonth or use current month
-  const [currentMonth, setCurrentMonth] = useState(() => {
-    if (yearMonth) {
-      const [year, month] = yearMonth.split("-");
+  // Parse yearMonth from URL or use next month as default
+  const getMonthFromYearMonth = (ym: string | undefined) => {
+    if (ym) {
+      const [year, month] = ym.split("-");
       return new Date(parseInt(year), parseInt(month) - 1, 1);
     }
     const now = new Date();
     now.setDate(1);
     now.setMonth(now.getMonth() + 1);
     return now;
-  });
+  };
 
-  const displayYearMonth = formatYearMonth(currentMonth);
+  const [currentMonth, setCurrentMonth] = useState(() =>
+    getMonthFromYearMonth(yearMonth)
+  );
+
+  // Sync currentMonth with URL params when they change
+  useEffect(() => {
+    if (yearMonth) {
+      const newMonth = getMonthFromYearMonth(yearMonth);
+      setCurrentMonth(newMonth);
+    }
+  }, [yearMonth]);
+
   const actualFacilityId = facilityId || "";
-  const actualYearMonth = yearMonth || displayYearMonth;
+  const actualYearMonth = yearMonth || formatYearMonth(currentMonth);
 
   const { data: request, isLoading } =
     useFacilityShiftRequestByFacilityAndMonth(actualFacilityId, actualYearMonth);

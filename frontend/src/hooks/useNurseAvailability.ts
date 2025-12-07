@@ -29,10 +29,20 @@ export function useNurseAvailabilityByNurseAndMonth(
 ) {
   return useQuery<NurseAvailability | null>({
     queryKey: [...NURSE_AVAILABILITY_QUERY_KEY, nurse_id, year_month],
-    queryFn: () =>
-      api
-        .getNurseAvailabilityByNurseAndMonth(nurse_id, year_month)
-        .then((res) => res.data),
+    queryFn: async () => {
+      try {
+        const response = await api.getNurseAvailabilityByNurseAndMonth(nurse_id, year_month);
+        console.log("API Response:", response.data);
+        return response.data;
+      } catch (error: any) {
+        console.error("API Error:", error);
+        // If 404, return null (no data found)
+        if (error.response?.status === 404) {
+          return null;
+        }
+        throw error;
+      }
+    },
     enabled: !!nurse_id && !!year_month,
   });
 }

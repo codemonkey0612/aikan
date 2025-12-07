@@ -6,6 +6,7 @@ import {
   useUpdateNurseAvailability,
 } from "../hooks/useNurseAvailability";
 import { Card } from "../components/ui/Card";
+import { TimeSlotPicker } from "../components/ui/TimeSlotPicker";
 import {
   CalendarDaysIcon,
   ChevronLeftIcon,
@@ -148,13 +149,13 @@ export function NurseAvailabilityPage() {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-sm uppercase tracking-wide text-slate-500">
+        <p className="text-xs sm:text-sm uppercase tracking-wide text-slate-500">
           シフト管理
         </p>
-        <h1 className="text-3xl font-semibold text-slate-900">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900">
           希望シフト提出
         </h1>
-        <p className="text-slate-500">
+        <p className="text-sm sm:text-base text-slate-500">
           {monthLabel}の希望シフトを入力してください
         </p>
       </header>
@@ -164,25 +165,25 @@ export function NurseAvailabilityPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <button
               onClick={() => changeMonth(-1)}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-slate-600 hover:bg-slate-50"
             >
               <ChevronLeftIcon className="h-4 w-4" />
-              前の月
+              <span className="hidden sm:inline">前の月</span>
             </button>
-            <div className="flex items-center gap-2 text-lg font-semibold text-slate-800">
-              <CalendarDaysIcon className="h-6 w-6 text-brand-600" />
-              {monthLabel}
+            <div className="flex items-center gap-2 text-base sm:text-lg font-semibold text-slate-800">
+              <CalendarDaysIcon className="h-5 w-5 sm:h-6 sm:w-6 text-brand-600" />
+              <span className="whitespace-nowrap">{monthLabel}</span>
             </div>
             <button
               onClick={() => changeMonth(1)}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-slate-600 hover:bg-slate-50"
             >
-              次の月
+              <span className="hidden sm:inline">次の月</span>
               <ChevronRightIcon className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-500">
+          <div className="hidden md:grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-500">
             {WEEK_DAYS.map((day) => (
               <div key={day} className="uppercase tracking-wide">
                 {day}
@@ -190,7 +191,7 @@ export function NurseAvailabilityPage() {
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-2 md:gap-2">
             {calendarDays.map((day) => {
               const key = formatKey(day);
               const dayData = availabilityData[key] || { available: false };
@@ -198,10 +199,16 @@ export function NurseAvailabilityPage() {
               const dayOfWeek = day.getDay();
               const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
+              const dayName = WEEK_DAYS[dayOfWeek];
+              const dateStr = day.toLocaleDateString("ja-JP", {
+                month: "short",
+                day: "numeric",
+              });
+
               return (
                 <div
                   key={key}
-                  className={`flex flex-col rounded-2xl border p-3 text-sm ${
+                  className={`flex flex-col rounded-lg md:rounded-2xl border p-3 md:p-3 text-sm ${
                     isToday
                       ? "border-brand-300 bg-brand-50"
                       : isWeekend
@@ -210,12 +217,17 @@ export function NurseAvailabilityPage() {
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-slate-600">
-                      {day.getDate()}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm md:text-xs font-semibold text-slate-600">
+                        {dateStr}
+                      </span>
+                      <span className="text-xs text-slate-400 md:hidden">
+                        ({dayName})
+                      </span>
+                    </div>
                     <button
                       onClick={() => handleDateToggle(day)}
-                      className={`h-5 w-5 rounded ${
+                      className={`h-6 w-6 md:h-5 md:w-5 rounded flex items-center justify-center ${
                         dayData.available
                           ? "bg-green-500 text-white"
                           : "bg-slate-200"
@@ -228,23 +240,15 @@ export function NurseAvailabilityPage() {
                     </button>
                   </div>
                   {dayData.available && (
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1 text-xs text-slate-500">
+                    <div className="space-y-1 mt-2">
+                      <div className="flex items-center gap-1 text-xs text-slate-500 mb-1">
                         <ClockIcon className="h-3 w-3" />
                         <span>時間帯</span>
                       </div>
-                      <input
-                        type="text"
-                        placeholder="例: 09:00-12:00,14:00-17:00"
-                        value={dayData.time_slots?.join(",") || ""}
-                        onChange={(e) => {
-                          const slots = e.target.value
-                            .split(",")
-                            .map((s) => s.trim())
-                            .filter(Boolean);
-                          handleTimeSlotChange(day, slots);
-                        }}
-                        className="w-full rounded border border-slate-300 px-2 py-1 text-xs"
+                      <TimeSlotPicker
+                        value={dayData.time_slots || []}
+                        onChange={(slots) => handleTimeSlotChange(day, slots)}
+                        placeholder="時間帯を追加"
                       />
                     </div>
                   )}
@@ -253,18 +257,18 @@ export function NurseAvailabilityPage() {
             })}
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 border-t border-slate-200">
             <button
               onClick={() => handleSave("draft")}
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              className="w-full sm:w-auto rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
             >
               下書き保存
             </button>
             <button
               onClick={() => handleSave("submitted")}
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50"
+              className="w-full sm:w-auto rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50"
             >
               提出
             </button>

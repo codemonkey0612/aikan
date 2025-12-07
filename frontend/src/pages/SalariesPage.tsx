@@ -68,17 +68,17 @@ export function SalariesPage() {
   return (
     <div className="space-y-6">
       <header>
-        <p className="text-sm uppercase tracking-wide text-slate-500">
+        <p className="text-xs sm:text-sm uppercase tracking-wide text-slate-500">
           経理
         </p>
-        <h1 className="text-3xl font-semibold text-slate-900">給与</h1>
+        <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900">給与</h1>
       </header>
 
 
       {/* 給与計算 */}
       <Card title="給与計算">
         <div className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 <UserIcon className="h-4 w-4 inline mr-1" />
@@ -133,7 +133,7 @@ export function SalariesPage() {
                     <h3 className="text-lg font-semibold text-slate-900 mb-4">
                       計算結果
                     </h3>
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                       <div>
                         <p className="text-xs text-slate-500 mb-1">
                           距離ベース給与

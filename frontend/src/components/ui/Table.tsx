@@ -7,7 +7,7 @@ interface TableProps extends PropsWithChildren {
 
 export function Table({ className, children }: TableProps) {
   return (
-    <div className={clsx("overflow-hidden rounded-xl border border-slate-200", className)}>
+    <div className={clsx("overflow-x-auto rounded-xl border border-slate-200", className)}>
       <table className="min-w-full divide-y divide-slate-200 bg-white">
         {children}
       </table>

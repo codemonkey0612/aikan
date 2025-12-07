@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import { getFacilityById } from "../api/facilities";
 import { useCorporations } from "../hooks/useCorporations";
@@ -68,7 +69,7 @@ export function FacilityDetailPage() {
   const copyAddressToClipboard = () => {
     if (address) {
       navigator.clipboard.writeText(address);
-      alert("住所をクリップボードにコピーしました");
+      toast.success("住所をクリップボードにコピーしました");
     }
   };
 

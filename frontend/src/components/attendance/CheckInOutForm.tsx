@@ -1,4 +1,5 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 import { useCheckIn, useCheckOut, useGeneratePin } from "../../hooks/useAttendance";
 import { useGeolocation } from "../../hooks/useGeolocation";
 import { MapPinIcon, ClockIcon } from "@heroicons/react/24/outline";
@@ -35,14 +36,15 @@ export function CheckInOutForm({ shiftId, attendance, onSuccess }: CheckInOutFor
       });
       setGeneratedPin(result.pin);
       setShowPinInput(true);
+      toast.success("PINを生成しました");
     } catch (error: any) {
-      alert(error?.response?.data?.message || "PIN生成に失敗しました");
+      toast.error(error?.response?.data?.message || "PIN生成に失敗しました");
     }
   };
 
   const handleCheckIn = async () => {
     if (!latitude || !longitude) {
-      alert("位置情報を取得してください");
+      toast.error("位置情報を取得してください");
       return;
     }
 
@@ -57,20 +59,20 @@ export function CheckInOutForm({ shiftId, attendance, onSuccess }: CheckInOutFor
       setShowPinInput(false);
       setGeneratedPin(null);
       onSuccess?.();
-      alert("チェックインしました");
+      toast.success("チェックインしました");
     } catch (error: any) {
-      alert(error?.response?.data?.message || "チェックインに失敗しました");
+      toast.error(error?.response?.data?.message || "チェックインに失敗しました");
     }
   };
 
   const handleCheckOut = async () => {
     if (!attendance?.id) {
-      alert("出退勤記録が見つかりません");
+      toast.error("出退勤記録が見つかりません");
       return;
     }
 
     if (!latitude || !longitude) {
-      alert("位置情報を取得してください");
+      toast.error("位置情報を取得してください");
       return;
     }
 
@@ -86,9 +88,9 @@ export function CheckInOutForm({ shiftId, attendance, onSuccess }: CheckInOutFor
       setGeneratedPin(null);
       onSuccess?.();
       const distance = result.distance_km;
-      alert(`チェックアウトしました${distance ? `\n移動距離: ${distance.toFixed(2)}km` : ""}`);
+      toast.success(`チェックアウトしました${distance ? ` (移動距離: ${distance.toFixed(2)}km)` : ""}`);
     } catch (error: any) {
-      alert(error?.response?.data?.message || "チェックアウトに失敗しました");
+      toast.error(error?.response?.data?.message || "チェックアウトに失敗しました");
     }
   };
 

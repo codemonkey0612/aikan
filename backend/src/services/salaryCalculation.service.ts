@@ -25,23 +25,34 @@ export const calculateNurseSalary = async (
   nurse_id: string,
   year_month: string
 ): Promise<SalaryCalculationResult> => {
-  // Pay rates (hardcoded)
-  const paykm = 50;
-  const paymin = 35;
+  try {
+    // Pay rates (hardcoded)
+    const paykm = 50;
+    const paymin = 35;
 
-  // Get nurse location
-  const users = await UserModel.getAllUsers();
-  const nurse = users.find((u) => u.nurse_id === nurse_id);
-  const nurseCoords = parseCoordinates(nurse?.latitude_longitude ?? null);
+    // Get nurse location
+    // Normalize nurse_id for comparison
+    const normalizedNurseIdForUser = String(nurse_id).trim().replace(/\r\n/g, '').replace(/\n/g, '').replace(/\r/g, '');
+    const users = await UserModel.getAllUsers();
+    const nurse = users.find((u) => {
+      if (!u.nurse_id) return false;
+      const userNurseId = String(u.nurse_id).trim().replace(/\r\n/g, '').replace(/\n/g, '').replace(/\r/g, '');
+      return userNurseId === normalizedNurseIdForUser;
+    });
+    const nurseCoords = parseCoordinates(nurse?.latitude_longitude ?? null);
 
   // Get shifts for the month
   const year = parseInt(year_month.split("-")[0]);
   const month = parseInt(year_month.split("-")[1]);
   const monthStart = new Date(year, month - 1, 1);
+  monthStart.setHours(0, 0, 0, 0);
   const monthEnd = new Date(year, month, 0, 23, 59, 59);
 
+  // Normalize nurse_id (trim whitespace and newlines)
+  const normalizedNurseId = String(nurse_id).trim().replace(/\r\n/g, '').replace(/\n/g, '').replace(/\r/g, '');
+
   const shifts = await ShiftModel.getShiftsPaginated(1, 10000, "start_datetime", "asc", {
-    nurse_id,
+    nurse_id: normalizedNurseId,
     date_from: monthStart.toISOString().slice(0, 10),
     date_to: monthEnd.toISOString().slice(0, 10),
   });
@@ -120,26 +131,32 @@ export const calculateNurseSalary = async (
       const residentIds = facilityResidents.map((r) => r.resident_id);
 
       if (residentIds.length > 0) {
-        // Count vital records for these residents on this date
-        const dateStart = new Date(shiftDate);
-        dateStart.setHours(0, 0, 0, 0);
-        const dateEnd = new Date(shiftDate);
-        dateEnd.setHours(23, 59, 59, 999);
+        try {
+          // Count vital records for these residents on this date
+          const dateStart = new Date(shiftDate);
+          dateStart.setHours(0, 0, 0, 0);
+          const dateEnd = new Date(shiftDate);
+          dateEnd.setHours(23, 59, 59, 999);
 
-        const [vitalRows] = await db.query<any[]>(
-          `SELECT COUNT(*) as count FROM vital_records 
-           WHERE resident_id IN (${residentIds.map(() => "?").join(",")})
-           AND measured_at >= ? AND measured_at <= ?`,
-          [
-            ...residentIds,
-            dateStart.toISOString().slice(0, 19).replace("T", " "),
-            dateEnd.toISOString().slice(0, 19).replace("T", " "),
-          ]
-        );
+          const [vitalRows] = await db.query<any[]>(
+            `SELECT COUNT(*) as count FROM vital_records 
+             WHERE resident_id IN (${residentIds.map(() => "?").join(",")})
+             AND measured_at >= ? AND measured_at <= ?`,
+            [
+              ...residentIds,
+              dateStart.toISOString().slice(0, 19).replace("T", " "),
+              dateEnd.toISOString().slice(0, 19).replace("T", " "),
+            ]
+          );
 
-        const vitalCount = vitalRows[0]?.count ?? 0;
-        shiftDetails.vital_count = vitalCount;
-        totalVitalCount += vitalCount;
+          const vitalCount = vitalRows?.[0]?.count ?? 0;
+          shiftDetails.vital_count = vitalCount;
+          totalVitalCount += vitalCount;
+        } catch (vitalError) {
+          console.error(`Error counting vitals for shift ${shift.id}:`, vitalError);
+          // Continue with 0 vital count if query fails
+          shiftDetails.vital_count = 0;
+        }
       }
     }
 
@@ -152,16 +169,21 @@ export const calculateNurseSalary = async (
   const vitalPay = Math.round(totalVitalCount * 10.0 * paymin);
   const totalAmount = distancePay + timePay + vitalPay;
 
-  return {
-    total_amount: totalAmount,
-    distance_pay: distancePay,
-    time_pay: timePay,
-    vital_pay: vitalPay,
-    total_distance_km: Math.round(totalDistanceKm * 100) / 100,
-    total_minutes: totalMinutes,
-    total_vital_count: totalVitalCount,
-    calculation_details: calculationDetails,
-  };
+    return {
+      total_amount: totalAmount,
+      distance_pay: distancePay,
+      time_pay: timePay,
+      vital_pay: vitalPay,
+      total_distance_km: Math.round(totalDistanceKm * 100) / 100,
+      total_minutes: totalMinutes,
+      total_vital_count: totalVitalCount,
+      calculation_details: calculationDetails,
+    };
+  } catch (error: any) {
+    console.error("Error in calculateNurseSalary:", error);
+    console.error("nurse_id:", nurse_id, "year_month:", year_month);
+    throw error;
+  }
 };
 
 /**

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import toast from "react-hot-toast";
 import { useAuth } from "../hooks/useAuth";
 import {
   useNurseAvailabilityByNurseAndMonth,
@@ -84,7 +85,7 @@ export function NurseAvailabilityPage() {
 
   const handleSave = async (status: "draft" | "submitted") => {
     if (!nurseId) {
-      alert("看護師IDが設定されていません");
+      toast.error("看護師IDが設定されていません");
       return;
     }
 
@@ -105,9 +106,9 @@ export function NurseAvailabilityPage() {
           status,
         });
       }
-      alert(status === "submitted" ? "提出しました" : "下書きを保存しました");
+      toast.success(status === "submitted" ? "提出しました" : "下書きを保存しました");
     } catch (error: any) {
-      alert(`エラー: ${error.message}`);
+      toast.error(`エラー: ${error.message}`);
     }
   };
 

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import toast from "react-hot-toast";
 import { useNurseAvailabilities } from "../hooks/useNurseAvailability";
 import { useFacilityShiftRequests } from "../hooks/useFacilityShiftRequests";
 import { useUsers } from "../hooks/useUsers";
@@ -242,9 +243,9 @@ export function ShiftPlanningPage() {
         shift_period: yearMonth,
       });
       
-      alert(`シフトを作成しました: ${match.nurse_name} - ${match.facility_name} (${match.date} ${match.time_slot})`);
+      toast.success(`シフトを作成しました: ${match.nurse_name} - ${match.facility_name} (${match.date} ${match.time_slot})`);
     } catch (error: any) {
-      alert(`エラー: ${error.message || "シフトの作成に失敗しました"}`);
+      toast.error(`エラー: ${error.message || "シフトの作成に失敗しました"}`);
     }
   };
 
@@ -268,9 +269,9 @@ export function ShiftPlanningPage() {
       });
 
       await Promise.all(promises);
-      alert(`${matches.length}件のシフトを作成しました`);
+      toast.success(`${matches.length}件のシフトを作成しました`);
     } catch (error: any) {
-      alert(`エラー: ${error.message || "シフトの作成に失敗しました"}`);
+      toast.error(`エラー: ${error.message || "シフトの作成に失敗しました"}`);
     }
   };
 

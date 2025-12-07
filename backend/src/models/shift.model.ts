@@ -90,8 +90,11 @@ export const getShiftsPaginated = async (
   const queryParams: any[] = [];
 
   if (filters?.nurse_id) {
-    whereClause += " AND nurse_id = ?";
-    queryParams.push(filters.nurse_id);
+    // Normalize nurse_id for comparison (handle whitespace and newlines)
+    // Use CAST to ensure string comparison, match the pattern used in JOIN clause
+    whereClause += " AND TRIM(REPLACE(REPLACE(CAST(s.nurse_id AS CHAR), '\r', ''), '\n', '')) = ?";
+    const normalizedNurseId = String(filters.nurse_id).trim().replace(/\r\n/g, '').replace(/\n/g, '').replace(/\r/g, '');
+    queryParams.push(normalizedNurseId);
   }
   if (filters?.facility_id) {
     whereClause += " AND facility_id = ?";
@@ -139,8 +142,10 @@ export const getShiftsPaginated = async (
   );
 
   // 総件数取得
+  // Replace s. prefix in whereClause for count query (since it doesn't use alias)
+  const countWhereClause = whereClause.replace(/s\./g, '');
   const [countRows] = await db.query<RowDataPacket[]>(
-    `SELECT COUNT(*) as count FROM shifts WHERE ${whereClause}`,
+    `SELECT COUNT(*) as count FROM shifts WHERE ${countWhereClause}`,
     queryParams
   );
   const total = (countRows[0] as { count: number })?.count ?? 0;

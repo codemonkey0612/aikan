@@ -5,17 +5,13 @@ import { useUsers } from "../hooks/useUsers";
 import { useAvatar } from "../hooks/useAvatar";
 import { getDefaultAvatar } from "../utils/defaultAvatars";
 import { Card } from "../components/ui/Card";
+import { ModernCalendar } from "../components/calendar/ModernCalendar";
 import {
-  CalendarDaysIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   UserGroupIcon,
   CheckCircleIcon,
   ClockIcon,
 } from "@heroicons/react/24/outline";
 import type { NurseAvailability } from "../api/types";
-
-const WEEK_DAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
 const formatKey = (date: Date) => date.toISOString().slice(0, 10);
 const formatYearMonth = (date: Date) => {
@@ -63,39 +59,6 @@ export function ViewNurseAvailabilityPage() {
     year: "numeric",
     month: "long",
   });
-
-  const calendarDays = useMemo(() => {
-    const days: (Date | null)[] = [];
-    const firstDay = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth(),
-      1
-    );
-    const startWeekday = firstDay.getDay();
-    const daysInMonth = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth() + 1,
-      0
-    ).getDate();
-
-    for (let i = 0; i < startWeekday; i++) {
-      days.push(null);
-    }
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(
-        new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
-      );
-    }
-    return days;
-  }, [currentMonth]);
-
-  const changeMonth = (delta: number) => {
-    setCurrentMonth((prev) => {
-      const next = new Date(prev);
-      next.setMonth(prev.getMonth() + delta);
-      return next;
-    });
-  };
 
   // Get nurse name
   const getNurseName = (nurseId: string) => {
@@ -192,116 +155,62 @@ export function ViewNurseAvailabilityPage() {
             </button>
           }
         >
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <button
-                onClick={() => changeMonth(-1)}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-              >
-                <ChevronLeftIcon className="h-4 w-4" />
-                前の月
-              </button>
-              <div className="flex items-center gap-2 text-lg font-semibold text-slate-800">
-                <CalendarDaysIcon className="h-6 w-6 text-brand-600" />
-                {monthLabel}
-              </div>
-              <button
-                onClick={() => changeMonth(1)}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-              >
-                次の月
-                <ChevronRightIcon className="h-4 w-4" />
-              </button>
-            </div>
+          <ModernCalendar
+            currentMonth={currentMonth}
+            onMonthChange={setCurrentMonth}
+            renderDayContent={(day) => {
+              const key = formatKey(day.date);
+              const availability = availabilitiesByNurse.get(selectedNurseId);
+              const dayData = availability?.availability_data[key] || {
+                available: false,
+              };
 
-            <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-500">
-              {WEEK_DAYS.map((day) => (
-                <div key={day} className="uppercase tracking-wide">
-                  {day}
-                </div>
-              ))}
-            </div>
+              if (!dayData.available) return null;
 
-            <div className="grid grid-cols-7 gap-2">
-              {calendarDays.map((day, index) => {
-                if (!day) {
-                  return (
-                    <div
-                      key={`empty-${index}`}
-                      className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-3"
-                    />
-                  );
-                }
-                const key = formatKey(day);
-                const availability = availabilitiesByNurse.get(selectedNurseId);
-                const dayData = availability?.availability_data[key] || {
-                  available: false,
-                };
-                const isToday = formatKey(day) === formatKey(new Date());
-
-                return (
-                  <div
-                    key={key}
-                    className={`flex flex-col rounded-2xl border p-3 text-sm ${
-                      isToday
-                        ? "border-brand-300 bg-brand-50"
-                        : "border-slate-200 bg-white"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-                      <span>{day.getDate()}</span>
-                      {dayData.available && (
-                        <CheckCircleIcon className="h-4 w-4 text-green-500" />
-                      )}
+              return (
+                <div className="space-y-1">
+                  {dayData.time_slots && dayData.time_slots.length > 0 && (
+                    <div className="space-y-1">
+                      {dayData.time_slots.map((slot, idx) => (
+                        <div
+                          key={`${key}-slot-${idx}-${slot}`}
+                          className="flex items-center gap-1 rounded bg-green-50 px-2 py-1 text-xs"
+                        >
+                          <ClockIcon className="h-3 w-3 text-green-600" />
+                          <span className="text-green-700">{slot}</span>
+                        </div>
+                      ))}
                     </div>
-                    {dayData.available && (
-                      <div className="mt-2 space-y-1">
-                        {dayData.time_slots && dayData.time_slots.length > 0 && (
-                          <div className="space-y-1">
-                            {dayData.time_slots.map((slot, idx) => (
-                              <div
-                                key={`${key}-slot-${idx}-${slot}`}
-                                className="flex items-center gap-1 rounded bg-green-50 px-2 py-1 text-xs"
-                              >
-                                <ClockIcon className="h-3 w-3 text-green-600" />
-                                <span className="text-green-700">{slot}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        {dayData.notes && (
-                          <p className="text-xs text-slate-500 truncate">
-                            {dayData.notes}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {availability && (
-              <div className="pt-4 border-t border-slate-200">
-                <p className="text-sm text-slate-500">
-                  ステータス:{" "}
-                  <span className="font-medium">
-                    {availability.status === "draft"
-                      ? "下書き"
-                      : availability.status === "submitted"
-                      ? "提出済み"
-                      : "承認済み"}
-                  </span>
-                  {availability.submitted_at && (
-                    <span className="ml-4 text-xs text-slate-400">
-                      提出日時:{" "}
-                      {new Date(availability.submitted_at).toLocaleString("ja-JP")}
-                    </span>
                   )}
-                </p>
-              </div>
-            )}
-          </div>
+                  {dayData.notes && (
+                    <p className="text-xs text-slate-500 truncate">
+                      {dayData.notes}
+                    </p>
+                  )}
+                </div>
+              );
+            }}
+          />
+          {availabilitiesByNurse.get(selectedNurseId) && (
+            <div className="pt-4 border-t border-slate-200 mt-4">
+              <p className="text-sm text-slate-500">
+                ステータス:{" "}
+                <span className="font-medium">
+                  {availabilitiesByNurse.get(selectedNurseId)?.status === "draft"
+                    ? "下書き"
+                    : availabilitiesByNurse.get(selectedNurseId)?.status === "submitted"
+                    ? "提出済み"
+                    : "承認済み"}
+                </span>
+                {availabilitiesByNurse.get(selectedNurseId)?.submitted_at && (
+                  <span className="ml-4 text-xs text-slate-400">
+                    提出日時:{" "}
+                    {new Date(availabilitiesByNurse.get(selectedNurseId)!.submitted_at!).toLocaleString("ja-JP")}
+                  </span>
+                )}
+              </p>
+            </div>
+          )}
         </Card>
       )}
 

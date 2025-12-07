@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getFacilityById } from "../api/facilities";
 import { useCorporations } from "../hooks/useCorporations";
 import { Card } from "../components/ui/Card";
+import { GoogleMapComponent } from "../components/maps/GoogleMap";
 import {
   ArrowLeftIcon,
   BuildingOffice2Icon,
@@ -193,17 +194,15 @@ export function FacilityDetailPage() {
       {lat && lng && (
         <Card title="Map">
           <div className="space-y-4">
-            <div className="h-64 w-full rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center">
-              <div className="text-center text-slate-400">
-                <MapPinIcon className="h-12 w-12 mx-auto mb-2" />
-                <p className="text-sm">地図表示</p>
-                <p className="text-xs mt-1">
-                  {lat}, {lng}
-                </p>
-              </div>
+            <div className="w-full rounded-lg border border-slate-200 overflow-hidden">
+              <GoogleMapComponent
+                lat={parseFloat(lat)}
+                lng={parseFloat(lng)}
+                height="400px"
+              />
             </div>
             <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-slate-600 font-mono bg-red-50 px-2 py-1 rounded border border-red-200">
                 {lat}, {lng}
               </p>
               <button className="text-sm text-brand-600 hover:text-brand-700">

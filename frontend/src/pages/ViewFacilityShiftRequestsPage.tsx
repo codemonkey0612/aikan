@@ -3,16 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useFacilityShiftRequests } from "../hooks/useFacilityShiftRequests";
 import { useFacilities } from "../hooks/useFacilities";
 import { Card } from "../components/ui/Card";
+import { ModernCalendar } from "../components/calendar/ModernCalendar";
 import {
-  CalendarDaysIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   BuildingOffice2Icon,
   ClockIcon,
 } from "@heroicons/react/24/outline";
 import type { FacilityShiftRequest } from "../api/types";
-
-const WEEK_DAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
 const formatKey = (date: Date) => date.toISOString().slice(0, 10);
 const formatYearMonth = (date: Date) => {
@@ -55,39 +51,6 @@ export function ViewFacilityShiftRequestsPage() {
     year: "numeric",
     month: "long",
   });
-
-  const calendarDays = useMemo(() => {
-    const days: (Date | null)[] = [];
-    const firstDay = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth(),
-      1
-    );
-    const startWeekday = firstDay.getDay();
-    const daysInMonth = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth() + 1,
-      0
-    ).getDate();
-
-    for (let i = 0; i < startWeekday; i++) {
-      days.push(null);
-    }
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(
-        new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
-      );
-    }
-    return days;
-  }, [currentMonth]);
-
-  const changeMonth = (delta: number) => {
-    setCurrentMonth((prev) => {
-      const next = new Date(prev);
-      next.setMonth(prev.getMonth() + delta);
-      return next;
-    });
-  };
 
   // Get facility name - normalize IDs to handle string/number and whitespace
   const getFacilityName = (facilityId: string) => {
@@ -189,119 +152,63 @@ export function ViewFacilityShiftRequestsPage() {
             </button>
           }
         >
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <button
-                onClick={() => changeMonth(-1)}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-              >
-                <ChevronLeftIcon className="h-4 w-4" />
-                前の月
-              </button>
-              <div className="flex items-center gap-2 text-lg font-semibold text-slate-800">
-                <CalendarDaysIcon className="h-6 w-6 text-brand-600" />
-                {monthLabel}
-              </div>
-              <button
-                onClick={() => changeMonth(1)}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-              >
-                次の月
-                <ChevronRightIcon className="h-4 w-4" />
-              </button>
-            </div>
+          <ModernCalendar
+            currentMonth={currentMonth}
+            onMonthChange={setCurrentMonth}
+            renderDayContent={(day) => {
+              const key = formatKey(day.date);
+              const request = requestsByFacility.get(selectedFacilityId);
+              const dayData = request?.request_data[key] || {
+                time_slots: [],
+              };
 
-            <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-500">
-              {WEEK_DAYS.map((day) => (
-                <div key={day} className="uppercase tracking-wide">
-                  {day}
-                </div>
-              ))}
-            </div>
+              if (!dayData.time_slots || dayData.time_slots.length === 0) return null;
 
-            <div className="grid grid-cols-7 gap-2">
-              {calendarDays.map((day, index) => {
-                if (!day) {
-                  return (
+              return (
+                <div className="space-y-1">
+                  {dayData.time_slots.map((slot, idx) => (
                     <div
-                      key={`empty-${index}`}
-                      className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-3"
-                    />
-                  );
-                }
-                const key = formatKey(day);
-                const request = requestsByFacility.get(selectedFacilityId);
-                const dayData = request?.request_data[key] || {
-                  time_slots: [],
-                };
-                const isToday = formatKey(day) === formatKey(new Date());
-
-                return (
-                  <div
-                    key={key}
-                    className={`flex flex-col rounded-2xl border p-3 text-sm ${
-                      isToday
-                        ? "border-brand-300 bg-brand-50"
-                        : "border-slate-200 bg-white"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-                      <span>{day.getDate()}</span>
-                      {dayData.time_slots && dayData.time_slots.length > 0 && (
-                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] text-blue-700">
-                          {dayData.time_slots.length} 件
-                        </span>
-                      )}
+                      key={idx}
+                      className="flex items-center gap-1 rounded bg-blue-50 px-2 py-1 text-xs"
+                    >
+                      <ClockIcon className="h-3 w-3 text-blue-600" />
+                      <span className="text-blue-700">{slot}</span>
                     </div>
-                    {dayData.time_slots && dayData.time_slots.length > 0 && (
-                      <div className="mt-2 space-y-1">
-                        {dayData.time_slots.map((slot, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-center gap-1 rounded bg-blue-50 px-2 py-1 text-xs"
-                          >
-                            <ClockIcon className="h-3 w-3 text-blue-600" />
-                            <span className="text-blue-700">{slot}</span>
-                          </div>
-                        ))}
-                        {dayData.notes && (
-                          <p className="text-xs text-slate-500 truncate mt-1">
-                            {dayData.notes}
-                          </p>
-                        )}
-                        {dayData.required_nurses && (
-                          <p className="text-xs text-slate-400">
-                            必要看護師数: {dayData.required_nurses}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {request && (
-              <div className="pt-4 border-t border-slate-200">
-                <p className="text-sm text-slate-500">
-                  ステータス:{" "}
-                  <span className="font-medium">
-                    {request.status === "draft"
-                      ? "下書き"
-                      : request.status === "submitted"
-                      ? "提出済み"
-                      : "スケジュール済み"}
-                  </span>
-                  {request.submitted_at && (
-                    <span className="ml-4 text-xs text-slate-400">
-                      提出日時:{" "}
-                      {new Date(request.submitted_at).toLocaleString("ja-JP")}
-                    </span>
+                  ))}
+                  {dayData.notes && (
+                    <p className="text-xs text-slate-500 truncate mt-1">
+                      {dayData.notes}
+                    </p>
                   )}
-                </p>
-              </div>
-            )}
-          </div>
+                  {dayData.required_nurses && (
+                    <p className="text-xs text-slate-400">
+                      必要看護師数: {dayData.required_nurses}
+                    </p>
+                  )}
+                </div>
+              );
+            }}
+          />
+          {requestsByFacility.get(selectedFacilityId) && (
+            <div className="pt-4 border-t border-slate-200 mt-4">
+              <p className="text-sm text-slate-500">
+                ステータス:{" "}
+                <span className="font-medium">
+                  {requestsByFacility.get(selectedFacilityId)?.status === "draft"
+                    ? "下書き"
+                    : requestsByFacility.get(selectedFacilityId)?.status === "submitted"
+                    ? "提出済み"
+                    : "スケジュール済み"}
+                </span>
+                {requestsByFacility.get(selectedFacilityId)?.submitted_at && (
+                  <span className="ml-4 text-xs text-slate-400">
+                    提出日時:{" "}
+                    {new Date(requestsByFacility.get(selectedFacilityId)!.submitted_at!).toLocaleString("ja-JP")}
+                  </span>
+                )}
+              </p>
+            </div>
+          )}
         </Card>
       )}
 

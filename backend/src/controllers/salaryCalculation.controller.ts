@@ -6,6 +6,18 @@ import * as UserModel from "../models/user.model";
 export const calculateNurseSalary = async (req: Request, res: Response) => {
   try {
     const { nurse_id, year_month } = req.params;
+    
+    console.log("calculateNurseSalary called with:", { nurse_id, year_month });
+    
+    if (!nurse_id || !year_month) {
+      return res.status(400).json({ error: "nurse_id and year_month are required" });
+    }
+
+    // Validate year_month format (YYYY-MM)
+    if (!/^\d{4}-\d{2}$/.test(year_month)) {
+      return res.status(400).json({ error: "year_month must be in format YYYY-MM" });
+    }
+
     const calculation =
       await SalaryCalculationService.calculateNurseSalary(
         nurse_id,
@@ -13,7 +25,12 @@ export const calculateNurseSalary = async (req: Request, res: Response) => {
       );
     res.json(calculation);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    console.error("Error in calculateNurseSalary:", error);
+    console.error("Error stack:", error.stack);
+    res.status(500).json({ 
+      error: error.message || "Failed to calculate salary",
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 
@@ -26,9 +43,24 @@ export const calculateAndSaveSalary = async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
+    if (!nurse_id || !year_month) {
+      return res.status(400).json({ error: "nurse_id and year_month are required" });
+    }
+
+    // Validate year_month format (YYYY-MM)
+    if (!/^\d{4}-\d{2}$/.test(year_month)) {
+      return res.status(400).json({ error: "year_month must be in format YYYY-MM" });
+    }
+
     // Get user_id from nurse_id
-    const users = await UserModel.getAllUsers({ nurse_id });
-    const nurseUser = users.find((u) => u.nurse_id === nurse_id);
+    // Normalize nurse_id for comparison
+    const normalizedNurseId = String(nurse_id).trim().replace(/\r\n/g, '').replace(/\n/g, '').replace(/\r/g, '');
+    const users = await UserModel.getAllUsers();
+    const nurseUser = users.find((u) => {
+      if (!u.nurse_id) return false;
+      const userNurseId = String(u.nurse_id).trim().replace(/\r\n/g, '').replace(/\n/g, '').replace(/\r/g, '');
+      return userNurseId === normalizedNurseId;
+    });
 
     if (!nurseUser) {
       return res.status(404).json({ error: "Nurse not found" });
@@ -36,13 +68,14 @@ export const calculateAndSaveSalary = async (req: Request, res: Response) => {
 
     const salary = await SalaryCalculationService.calculateAndSaveSalary(
       nurseUser.id,
-      nurse_id,
+      normalizedNurseId,
       year_month
     );
 
     res.json(salary);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    console.error("Error in calculateAndSaveSalary:", error);
+    res.status(500).json({ error: error.message || "Failed to calculate and save salary" });
   }
 };
 

@@ -129,7 +129,8 @@ export interface Shift {
   resident_count: Nullable<number>;
   capacity: Nullable<number>;
   required_time: Nullable<number>;
-  start_datetime: string; // DATE
+  start_datetime: string; // DATETIME
+  end_datetime: Nullable<string>; // DATETIME - optional
   nurse_id: Nullable<string>; // VARCHAR(100)
   created_at: string;
   updated_at: string;

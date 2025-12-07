@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import toast from "react-hot-toast";
 import { useSalaries, useCalculateNurseSalary, useCalculateAndSaveSalary } from "../hooks/useSalaries";
 import { useUsers } from "../hooks/useUsers";
 import { useAuth } from "../hooks/useAuth";
@@ -49,7 +50,7 @@ export function SalariesPage() {
 
   const handleCalculateAndSave = async () => {
     if (!selectedNurseId) {
-      alert("看護師を選択してください");
+      toast.error("看護師を選択してください");
       return;
     }
     try {
@@ -57,9 +58,9 @@ export function SalariesPage() {
         nurse_id: selectedNurseId,
         year_month: selectedYearMonth,
       });
-      alert("給与を計算して保存しました");
+      toast.success("給与を計算して保存しました");
     } catch (error: any) {
-      alert(`エラー: ${error.message}`);
+      toast.error(`エラー: ${error.message}`);
     }
   };
 

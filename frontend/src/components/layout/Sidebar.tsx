@@ -94,8 +94,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </button>
         <div className="flex-1 overflow-y-auto px-4 py-6">
           <div className="mb-6 px-3">
-            <h2 className="text-xl font-bold text-white mb-1">ナーシング管理</h2>
-            <p className="text-xs text-blue-100">Nursing System</p>
+            <h2 className="text-xl font-bold text-white mb-1">あいかんクラウド</h2>
           </div>
           {user && (
             <div className="mb-6 px-3 py-3 rounded-lg bg-white/10 backdrop-blur-sm">

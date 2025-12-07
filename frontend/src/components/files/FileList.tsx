@@ -1,3 +1,4 @@
+import toast from "react-hot-toast";
 import { useFilesByEntity, useDeleteFile } from "../../hooks/useFiles";
 import { useQueryClient } from "@tanstack/react-query";
 import { FilesAPI } from "../../api/endpoints";
@@ -34,8 +35,9 @@ export function FileList({
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+      toast.success("ファイルをダウンロードしました");
     } catch (error) {
-      alert("ファイルのダウンロードに失敗しました");
+      toast.error("ファイルのダウンロードに失敗しました");
     }
   };
 
@@ -49,8 +51,9 @@ export function FileList({
             queryKey: ["avatar", entity_id],
           });
         }
+        toast.success("ファイルを削除しました");
       } catch (error) {
-        alert("ファイルの削除に失敗しました");
+        toast.error("ファイルの削除に失敗しました");
       }
     }
   };

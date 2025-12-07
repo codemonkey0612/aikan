@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import toast from "react-hot-toast";
 import { useFacilities } from "../hooks/useFacilities";
 import {
   useFacilityShiftRequestByFacilityAndMonth,
@@ -85,7 +86,7 @@ export function FacilityShiftRequestPage() {
 
   const handleSave = async (status: "draft" | "submitted") => {
     if (!selectedFacilityId) {
-      alert("施設を選択してください");
+      toast.error("施設を選択してください");
       return;
     }
 
@@ -106,9 +107,9 @@ export function FacilityShiftRequestPage() {
           status,
         });
       }
-      alert(status === "submitted" ? "提出しました" : "下書きを保存しました");
+      toast.success(status === "submitted" ? "提出しました" : "下書きを保存しました");
     } catch (error: any) {
-      alert(`エラー: ${error.message}`);
+      toast.error(`エラー: ${error.message}`);
     }
   };
 

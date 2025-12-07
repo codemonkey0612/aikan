@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { useProfile, useUpdateProfile, useChangePassword } from "../hooks/useProfile";
 import { useAuth } from "../hooks/useAuth";
 import { useAvatar } from "../hooks/useAvatar";
@@ -197,14 +198,14 @@ export function ProfilePage() {
 
                     // ファイルサイズチェック（10MB）
                     if (file.size > 10 * 1024 * 1024) {
-                      alert("ファイルサイズが大きすぎます。最大10MBまでです。");
+                      toast.error("ファイルサイズが大きすぎます。最大10MBまでです。");
                       e.target.value = "";
                       return;
                     }
 
                     // ファイルタイプチェック
                     if (!file.type.startsWith("image/")) {
-                      alert("画像ファイルを選択してください。");
+                      toast.error("画像ファイルを選択してください。");
                       e.target.value = "";
                       return;
                     }
@@ -228,7 +229,7 @@ export function ProfilePage() {
                     } catch (error: any) {
                       console.error("Avatar upload error:", error);
                       const errorMessage = error?.response?.data?.message || error?.message || "アバターのアップロードに失敗しました";
-                      alert(errorMessage);
+                      toast.error(errorMessage);
                       setErrors({ general: errorMessage });
                     } finally {
                       setIsUploadingAvatar(false);

@@ -15,6 +15,7 @@ import {
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useAuth } from "../../hooks/useAuth";
+import { useAvatar } from "../../hooks/useAvatar";
 import type { UserRole } from "../../api/types";
 
 interface NavItem {
@@ -50,6 +51,19 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   // On desktop (lg+), sidebar is always visible. On mobile, it's controlled by isOpen prop.
   const isDesktopOpen = isOpen === undefined ? true : isOpen;
   const { user } = useAuth();
+  const { data: avatarUrl } = useAvatar(user?.id);
+  
+  // Get user initials for fallback
+  const getUserInitials = () => {
+    if (!user) return "U";
+    if (user.last_name && user.first_name) {
+      return `${user.last_name.charAt(0)}${user.first_name.charAt(0)}`.toUpperCase();
+    }
+    if (user.last_name) return user.last_name.charAt(0).toUpperCase();
+    if (user.first_name) return user.first_name.charAt(0).toUpperCase();
+    if (user.email) return user.email.charAt(0).toUpperCase();
+    return "U";
+  };
 
   // ユーザーのロールに応じて表示可能なメニューをフィルタリング
   const navItems = allNavItems.filter((item) => {
@@ -82,8 +96,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {user && (
             <div className="mb-6 px-3 py-3 rounded-lg bg-white/10 backdrop-blur-sm">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold">
-                  {user.last_name?.charAt(0) || "U"}
+                <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold overflow-hidden">
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt={`${user.last_name} ${user.first_name}`}
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (fallback) fallback.style.display = "flex";
+                      }}
+                    />
+                  ) : null}
+                  <span className={avatarUrl ? "hidden" : ""}>{getUserInitials()}</span>
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">

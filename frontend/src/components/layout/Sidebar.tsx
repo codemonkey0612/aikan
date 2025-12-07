@@ -3,18 +3,15 @@ import {
   BuildingOffice2Icon,
   ChartBarIcon,
   ClockIcon,
-  ClipboardDocumentIcon,
   CurrencyDollarIcon,
   MegaphoneIcon,
   UserGroupIcon,
   UsersIcon,
   HeartIcon,
-  MapPinIcon,
   CalendarIcon,
   XMarkIcon,
   BuildingOfficeIcon,
   BriefcaseIcon,
-  UserCircleIcon,
   CalendarDaysIcon,
   ClipboardDocumentCheckIcon,
   DocumentTextIcon,
@@ -22,6 +19,7 @@ import {
 import clsx from "clsx";
 import { useAuth } from "../../hooks/useAuth";
 import { useAvatar } from "../../hooks/useAvatar";
+import { getDefaultAvatar } from "../../utils/defaultAvatars";
 import type { UserRole } from "../../api/types";
 
 interface NavItem {
@@ -103,19 +101,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <div className="mb-6 px-3 py-3 rounded-lg bg-white/10 backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold overflow-hidden">
-                  {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt={`${user.last_name} ${user.first_name}`}
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                        if (fallback) fallback.style.display = "flex";
-                      }}
-                    />
-                  ) : null}
-                  <span className={avatarUrl ? "hidden" : ""}>{getUserInitials()}</span>
+                  <img
+                    src={avatarUrl || getDefaultAvatar(user.role)}
+                    alt={`${user.last_name} ${user.first_name}`}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      // If image fails to load, show initials
+                      e.currentTarget.style.display = "none";
+                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = "flex";
+                    }}
+                  />
+                  <span className="hidden">{getUserInitials()}</span>
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">

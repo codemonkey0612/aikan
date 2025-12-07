@@ -1,6 +1,7 @@
 import type { User } from "../../api/types";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useAvatar } from "../../hooks/useAvatar";
+import { getDefaultAvatar } from "../../utils/defaultAvatars";
 
 interface UserCardProps {
   user: User;
@@ -28,24 +29,19 @@ export function UserCard({ user, onEdit, onDelete }: UserCardProps) {
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-brand-100">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={fullName}
-                  className="h-12 w-12 rounded-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                    const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                    if (fallback) fallback.style.display = "flex";
-                  }}
-                />
-              ) : null}
-              <div
-                className={`flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-brand-600 font-semibold text-sm ${
-                  avatarUrl ? "hidden" : ""
-                }`}
-              >
+            <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 overflow-hidden">
+              <img
+                src={avatarUrl || getDefaultAvatar(user.role)}
+                alt={fullName}
+                className="h-12 w-12 rounded-full object-cover"
+                onError={(e) => {
+                  // If image fails to load, show initials
+                  e.currentTarget.style.display = "none";
+                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                  if (fallback) fallback.style.display = "flex";
+                }}
+              />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-brand-600 font-semibold text-sm hidden">
                 {getUserInitials()}
               </div>
             </div>

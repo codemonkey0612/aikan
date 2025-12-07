@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Bars3Icon, BellIcon, MagnifyingGlassIcon, UserCircleIcon, ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../../hooks/useAuth";
 import { useAvatar } from "../../hooks/useAvatar";
+import { getDefaultAvatar } from "../../utils/defaultAvatars";
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -95,19 +96,18 @@ export function Topbar({ onMenuClick }: TopbarProps) {
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm shadow-md hover:shadow-lg transition cursor-pointer overflow-hidden"
           >
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={`${user?.last_name} ${user?.first_name}`}
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                  if (fallback) fallback.style.display = "flex";
-                }}
-              />
-            ) : null}
-            <span className={avatarUrl ? "hidden" : ""}>{getUserInitials()}</span>
+            <img
+              src={avatarUrl || getDefaultAvatar(user?.role)}
+              alt={`${user?.last_name} ${user?.first_name}`}
+              className="h-full w-full object-cover"
+              onError={(e) => {
+                // If image fails to load, show initials
+                e.currentTarget.style.display = "none";
+                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = "flex";
+              }}
+            />
+            <span className="hidden">{getUserInitials()}</span>
           </button>
           
           {isMenuOpen && (

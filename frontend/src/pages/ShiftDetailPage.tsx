@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "../components/ui/Table";
 import type { Shift, Resident, VitalRecord } from "../api/types";
+import { getDefaultAvatar } from "../utils/defaultAvatars";
 
 export function ShiftDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -250,18 +251,21 @@ export function ShiftDetailPage() {
         <Card>
           <h2 className="text-xl font-semibold text-slate-900 mb-4">看護師情報</h2>
           <div className="flex items-center gap-4">
-            {nurseAvatarUrl ? (
-              <img
-                src={nurseAvatarUrl}
-                alt={`${nurse.last_name} ${nurse.first_name}`}
-                className="h-16 w-16 rounded-full object-cover"
-              />
-            ) : (
-              <div className="h-16 w-16 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 font-semibold">
-                {nurse.last_name.charAt(0)}
-                {nurse.first_name.charAt(0)}
-              </div>
-            )}
+            <img
+              src={nurseAvatarUrl || getDefaultAvatar(nurse.role)}
+              alt={`${nurse.last_name} ${nurse.first_name}`}
+              className="h-16 w-16 rounded-full object-cover"
+              onError={(e) => {
+                // If image fails to load, show initials
+                e.currentTarget.style.display = "none";
+                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = "flex";
+              }}
+            />
+            <div className="h-16 w-16 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 font-semibold hidden">
+              {nurse.last_name.charAt(0)}
+              {nurse.first_name.charAt(0)}
+            </div>
             <div className="flex-1">
               <p className="text-sm text-slate-500">氏名</p>
               <p className="font-semibold text-slate-900">

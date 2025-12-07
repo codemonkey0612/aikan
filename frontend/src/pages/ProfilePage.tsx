@@ -7,6 +7,7 @@ import { Card } from "../components/ui/Card";
 import { UserCircleIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { FileUpload } from "../components/files/FileUpload";
 import { FileList } from "../components/files/FileList";
+import { getDefaultAvatar } from "../utils/defaultAvatars";
 
 export function ProfilePage() {
   const { refreshProfile } = useAuth();
@@ -237,23 +238,18 @@ export function ProfilePage() {
                   }}
                 />
                 <div className="relative">
-                  {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt={getUserDisplayName()}
-                      className="h-20 w-20 rounded-full object-cover border-2 border-slate-200 transition group-hover:opacity-80"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                        if (fallback) fallback.style.display = "flex";
-                      }}
-                    />
-                  ) : null}
-                  <div
-                    className={`h-20 w-20 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 font-semibold text-2xl border-2 border-slate-200 transition group-hover:opacity-80 ${
-                      avatarUrl ? "hidden" : ""
-                    }`}
-                  >
+                  <img
+                    src={avatarUrl || getDefaultAvatar(profile?.role)}
+                    alt={getUserDisplayName()}
+                    className="h-20 w-20 rounded-full object-cover border-2 border-slate-200 transition group-hover:opacity-80"
+                    onError={(e) => {
+                      // If image fails to load, show initials
+                      e.currentTarget.style.display = "none";
+                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = "flex";
+                    }}
+                  />
+                  <div className="h-20 w-20 rounded-full bg-brand-100 flex items-center justify-center text-brand-600 font-semibold text-2xl border-2 border-slate-200 transition group-hover:opacity-80 hidden">
                     {profile?.first_name && profile?.last_name
                       ? `${profile.last_name.charAt(0)}${profile.first_name.charAt(0)}`.toUpperCase()
                       : profile?.email

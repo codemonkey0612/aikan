@@ -6,6 +6,17 @@ import type {
 } from "../models/user.model";
 
 export const getAllUsers = () => UserModel.getAllUsers();
+
+export const getUsersPaginated = (
+  page: number,
+  limit: number,
+  sortBy: string,
+  sortOrder: "asc" | "desc",
+  filters?: {
+    role?: UserModel.UserRole;
+    search?: string;
+  }
+) => UserModel.getUsersPaginated(page, limit, sortBy, sortOrder, filters);
 export const getUserById = (id: number) => UserModel.getUserById(id);
 export const getUserByEmail = (email: string) =>
   UserModel.getUserByEmail(email);

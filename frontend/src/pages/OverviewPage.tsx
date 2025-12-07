@@ -21,7 +21,7 @@ export function OverviewPage() {
     <div className="space-y-6">
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900 mb-1">
-          おかえりなさい 👋
+          おかえりなさい 
         </h1>
         <p className="text-slate-600">
           施設とケア状況のサマリーをご確認ください。

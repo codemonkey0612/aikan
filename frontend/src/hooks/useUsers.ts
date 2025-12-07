@@ -1,10 +1,30 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as api from "../api/users";
-import type { User } from "../api/types";
+import type { User, PaginatedResponse } from "../api/types";
 
 const USERS_QUERY_KEY = ["users"] as const;
+const getUsersQueryKey = (params?: UseUsersParams) =>
+  ["users", params ?? null] as const;
 
-export function useUsers() {
+export interface UseUsersParams {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  role?: User["role"];
+  search?: string;
+}
+
+export function useUsers(params?: UseUsersParams) {
+  // If pagination params are provided, use paginated endpoint
+  if (params?.page || params?.limit) {
+    return useQuery<PaginatedResponse<User>>({
+      queryKey: getUsersQueryKey(params),
+      queryFn: () => api.getUsersPaginated(params).then((res) => res.data),
+    });
+  }
+  
+  // Otherwise, use non-paginated endpoint
   return useQuery<User[]>({
     queryKey: USERS_QUERY_KEY,
     queryFn: () => api.getUsers().then((res) => res.data),

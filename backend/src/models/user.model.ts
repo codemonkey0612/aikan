@@ -55,6 +55,61 @@ export const getAllUsers = async () => {
   return rows;
 };
 
+/**
+ * ページネーション対応でユーザーを取得
+ */
+export const getUsersPaginated = async (
+  page: number = 1,
+  limit: number = 20,
+  sortBy: string = "created_at",
+  sortOrder: "asc" | "desc" = "desc",
+  filters?: {
+    role?: UserRole;
+    search?: string;
+  }
+) => {
+  const offset = (page - 1) * limit;
+  const validSortColumns = [
+    "id",
+    "email",
+    "last_name",
+    "first_name",
+    "role",
+    "created_at",
+  ];
+  const sortColumn = validSortColumns.includes(sortBy) ? sortBy : "created_at";
+  const order = sortOrder.toUpperCase() as "ASC" | "DESC";
+
+  let whereClause = "1=1";
+  const queryParams: any[] = [];
+
+  if (filters?.role) {
+    whereClause += " AND role = ?";
+    queryParams.push(filters.role);
+  }
+
+  if (filters?.search) {
+    whereClause += " AND (email LIKE ? OR last_name LIKE ? OR first_name LIKE ? OR CONCAT(last_name, ' ', first_name) LIKE ?)";
+    const searchPattern = `%${filters.search}%`;
+    queryParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
+  }
+
+  // データ取得
+  const [rows] = await db.query<UserRow[]>(
+    `SELECT * FROM users WHERE ${whereClause} ORDER BY ${sortColumn} ${order} LIMIT ? OFFSET ?`,
+    [...queryParams, limit, offset]
+  );
+
+  // 総件数取得
+  const [countRows] = await db.query<RowDataPacket[]>(
+    `SELECT COUNT(*) as count FROM users WHERE ${whereClause}`,
+    queryParams
+  );
+  const total = (countRows[0] as { count: number })?.count ?? 0;
+
+  return { data: rows, total };
+};
+
 export const getUserById = async (id: number) => {
   const [rows] = await db.query<UserRow[]>(
     "SELECT * FROM users WHERE id = ?",

@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bars3Icon, BellIcon, MagnifyingGlassIcon, UserCircleIcon, ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../../hooks/useAuth";
 import { useAvatar } from "../../hooks/useAvatar";
+import { useNotifications } from "../../hooks/useNotifications";
 import { getDefaultAvatar } from "../../utils/defaultAvatars";
 
 interface TopbarProps {
@@ -13,8 +14,28 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { data: avatarUrl } = useAvatar(user?.id);
+  const { data: notifications } = useNotifications();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Calculate active notifications count
+  const activeNotificationsCount = useMemo(() => {
+    if (!notifications) return 0;
+    const now = new Date();
+    return notifications.filter((notification) => {
+      const publishFrom = notification.publish_from
+        ? new Date(notification.publish_from)
+        : null;
+      const publishTo = notification.publish_to
+        ? new Date(notification.publish_to)
+        : null;
+
+      // Check if notification is active (published and not expired)
+      if (publishTo && now > publishTo) return false;
+      if (publishFrom && now < publishFrom) return false;
+      return true;
+    }).length;
+  }, [notifications]);
   
   // Get user initials for fallback
   const getUserInitials = () => {
@@ -83,12 +104,20 @@ export function Topbar({ onMenuClick }: TopbarProps) {
               className="w-64 rounded-lg border border-slate-300 bg-slate-50 py-2 pl-10 pr-4 text-sm focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
-          <button className="relative p-2 text-slate-500 hover:text-slate-700">
+          <button
+            onClick={() => navigate("/notifications")}
+            className="relative p-2 text-slate-500 hover:text-slate-700 transition-colors"
+            aria-label="お知らせ"
+          >
             <BellIcon className="h-5 w-5" />
-            <span className="absolute top-1 right-1 flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-        </span>
+            {activeNotificationsCount > 0 && (
+              <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-5 w-5 items-center justify-center bg-red-500 text-white text-xs font-semibold">
+                  {activeNotificationsCount > 9 ? "9+" : activeNotificationsCount}
+                </span>
+              </span>
+            )}
           </button>
         </div>
         <div className="relative" ref={menuRef}>

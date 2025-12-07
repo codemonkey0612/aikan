@@ -2,6 +2,8 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNurseAvailabilities } from "../hooks/useNurseAvailability";
 import { useUsers } from "../hooks/useUsers";
+import { useAvatar } from "../hooks/useAvatar";
+import { getDefaultAvatar } from "../utils/defaultAvatars";
 import { Card } from "../components/ui/Card";
 import {
   CalendarDaysIcon,
@@ -330,54 +332,21 @@ export function ViewNurseAvailabilityPage() {
               <tbody className="divide-y divide-slate-200">
                 {availabilities.map((availability) => {
                   const nurseName = getNurseName(availability.nurse_id);
+                  const nurse = nurses.find((n) => n.nurse_id === availability.nurse_id);
                   const availableDays = Object.values(
                     availability.availability_data
                   ).filter((d) => d.available).length;
 
                   return (
-                    <tr
+                    <NurseRow
                       key={availability.id}
-                      className="hover:bg-slate-50 cursor-pointer"
-                      onClick={() =>
-                        navigate(
-                          `/view-nurse-availability/${availability.nurse_id}/${yearMonth}`
-                        )
-                      }
-                    >
-                      <td className="px-4 py-3 text-sm font-medium text-slate-900">
-                        {nurseName}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
-                        {availability.nurse_id}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <span
-                          className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                            availability.status === "submitted"
-                              ? "bg-green-100 text-green-700"
-                              : availability.status === "approved"
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-slate-100 text-slate-700"
-                          }`}
-                        >
-                          {availability.status === "draft"
-                            ? "下書き"
-                            : availability.status === "submitted"
-                            ? "提出済み"
-                            : "承認済み"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
-                        {availability.submitted_at
-                          ? new Date(
-                              availability.submitted_at
-                            ).toLocaleString("ja-JP")
-                          : "-"}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
-                        {availableDays} 日
-                      </td>
-                    </tr>
+                      availability={availability}
+                      nurse={nurse}
+                      nurseName={nurseName}
+                      availableDays={availableDays}
+                      yearMonth={yearMonth}
+                      navigate={navigate}
+                    />
                   );
                 })}
               </tbody>
@@ -390,6 +359,92 @@ export function ViewNurseAvailabilityPage() {
         )}
       </Card>
     </div>
+  );
+}
+
+// Separate component for nurse row to use hooks
+function NurseRow({
+  availability,
+  nurse,
+  nurseName,
+  availableDays,
+  yearMonth,
+  navigate,
+}: {
+  availability: NurseAvailability;
+  nurse?: { id?: number; role?: string; last_name?: string; first_name?: string };
+  nurseName: string;
+  availableDays: number;
+  yearMonth: string;
+  navigate: (path: string) => void;
+}) {
+  const { data: avatarUrl } = useAvatar(nurse?.id);
+
+  const getUserInitials = () => {
+    if (nurse?.last_name && nurse?.first_name) {
+      return `${nurse.last_name.charAt(0)}${nurse.first_name.charAt(0)}`.toUpperCase();
+    }
+    return "N";
+  };
+
+  return (
+    <tr
+      className="hover:bg-slate-50 cursor-pointer"
+      onClick={() =>
+        navigate(
+          `/view-nurse-availability/${availability.nurse_id}/${yearMonth}`
+        )
+      }
+    >
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+            <img
+              src={avatarUrl || getDefaultAvatar(nurse?.role as any)}
+              alt={nurseName}
+              className="h-full w-full object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = "flex";
+              }}
+            />
+            <span className="hidden text-brand-600 font-semibold text-sm">
+              {getUserInitials()}
+            </span>
+          </div>
+          <span className="text-sm font-medium text-slate-900">{nurseName}</span>
+        </div>
+      </td>
+      <td className="px-4 py-3 text-sm text-slate-600">
+        {availability.nurse_id}
+      </td>
+      <td className="px-4 py-3 text-sm">
+        <span
+          className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+            availability.status === "submitted"
+              ? "bg-green-100 text-green-700"
+              : availability.status === "approved"
+              ? "bg-blue-100 text-blue-700"
+              : "bg-slate-100 text-slate-700"
+          }`}
+        >
+          {availability.status === "draft"
+            ? "下書き"
+            : availability.status === "submitted"
+            ? "提出済み"
+            : "承認済み"}
+        </span>
+      </td>
+      <td className="px-4 py-3 text-sm text-slate-600">
+        {availability.submitted_at
+          ? new Date(availability.submitted_at).toLocaleString("ja-JP")
+          : "-"}
+      </td>
+      <td className="px-4 py-3 text-sm text-slate-600">
+        {availableDays} 日
+      </td>
+    </tr>
   );
 }
 

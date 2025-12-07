@@ -89,9 +89,14 @@ export function ViewFacilityShiftRequestsPage() {
     });
   };
 
-  // Get facility name
+  // Get facility name - normalize IDs to handle string/number and whitespace
   const getFacilityName = (facilityId: string) => {
-    const facility = facilities?.find((f) => f.facility_id === facilityId);
+    if (!facilities || !facilityId) return facilityId;
+    const normalizedId = String(facilityId).trim();
+    const facility = facilities.find((f) => {
+      if (!f.facility_id) return false;
+      return String(f.facility_id).trim() === normalizedId;
+    });
     return facility?.name || facilityId;
   };
 

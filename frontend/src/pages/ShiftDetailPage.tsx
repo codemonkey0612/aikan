@@ -38,8 +38,13 @@ export function ShiftDetailPage() {
   });
 
   const { data: facilities } = useFacilities();
+  // 施設を検索（数値と文字列の両方に対応）
   const facility = shift?.facility_id
-    ? facilities?.find((f) => f.facility_id === shift.facility_id)
+    ? facilities?.find((f) => {
+        if (!f.facility_id) return false;
+        // 両方を文字列に変換して比較（数値と文字列の両方に対応）
+        return String(f.facility_id).trim() === String(shift.facility_id).trim();
+      })
     : null;
 
   const { data: users } = useUsers();

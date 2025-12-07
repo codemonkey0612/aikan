@@ -21,7 +21,7 @@ export function ProfilePage() {
     first_name: "",
     last_name: "",
     email: "",
-    phone: "",
+    phone_number: "",
   });
   const [passwordData, setPasswordData] = useState({
     current_password: "",
@@ -49,7 +49,7 @@ export function ProfilePage() {
         first_name: profile.first_name || "",
         last_name: profile.last_name || "",
         email: profile.email || "",
-        phone: profile.phone || "",
+        phone_number: profile.phone_number || "",
       });
     }
   }, [profile]);
@@ -64,7 +64,7 @@ export function ProfilePage() {
         first_name: formData.first_name || null,
         last_name: formData.last_name || null,
         email: formData.email || null,
-        phone: formData.phone || null,
+        phone_number: formData.phone_number || null,
       });
       setSuccessMessage("プロフィールを更新しました");
       await refreshProfile();
@@ -346,15 +346,15 @@ export function ProfilePage() {
               </label>
               <input
                 type="tel"
-                value={formData.phone}
+                value={formData.phone_number}
                 onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
+                  setFormData({ ...formData, phone_number: e.target.value })
                 }
                 className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 placeholder="090-1234-5678"
               />
-              {errors.phone && (
-                <p className="mt-1 text-sm text-rose-600">{errors.phone}</p>
+              {errors.phone_number && (
+                <p className="mt-1 text-sm text-rose-600">{errors.phone_number}</p>
               )}
             </div>
 

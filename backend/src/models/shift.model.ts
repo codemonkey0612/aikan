@@ -36,7 +36,26 @@ export interface CreateShiftInput {
 export type UpdateShiftInput = Partial<CreateShiftInput>;
 
 export const getAllShifts = async () => {
-  const [rows] = await db.query<ShiftRow[]>("SELECT * FROM shifts");
+  const [rows] = await db.query<ShiftRow[]>(
+    `SELECT 
+      s.id, 
+      s.shift_period, 
+      s.route_no, 
+      CAST(s.facility_id AS CHAR) as facility_id, 
+      COALESCE(f.name, s.facility_name) as facility_name, 
+      s.facility_address, 
+      s.resident_count, 
+      s.capacity, 
+      s.required_time, 
+      s.start_datetime, 
+      s.end_datetime, 
+      CAST(s.nurse_id AS CHAR) as nurse_id, 
+      s.distance_km, 
+      s.created_at, 
+      s.updated_at 
+    FROM shifts s
+    LEFT JOIN facilities f ON TRIM(REPLACE(REPLACE(CAST(s.facility_id AS CHAR), '\r', ''), '\n', '')) = TRIM(REPLACE(REPLACE(CAST(f.facility_id AS CHAR), '\r', ''), '\n', ''))`
+  );
   return rows;
 };
 
@@ -92,8 +111,30 @@ export const getShiftsPaginated = async (
   }
 
   // データ取得
+  // facilitiesテーブルとJOINしてfacility_nameを取得
+  // TRIMとREPLACEで改行文字を除去してから比較
   const [rows] = await db.query<ShiftRow[]>(
-    `SELECT * FROM shifts WHERE ${whereClause} ORDER BY ${sortColumn} ${order} LIMIT ? OFFSET ?`,
+    `SELECT 
+      s.id, 
+      s.shift_period, 
+      s.route_no, 
+      CAST(s.facility_id AS CHAR) as facility_id, 
+      COALESCE(f.name, s.facility_name) as facility_name, 
+      s.facility_address, 
+      s.resident_count, 
+      s.capacity, 
+      s.required_time, 
+      s.start_datetime, 
+      s.end_datetime, 
+      CAST(s.nurse_id AS CHAR) as nurse_id, 
+      s.distance_km, 
+      s.created_at, 
+      s.updated_at 
+    FROM shifts s
+    LEFT JOIN facilities f ON TRIM(REPLACE(REPLACE(CAST(s.facility_id AS CHAR), '\r', ''), '\n', '')) = TRIM(REPLACE(REPLACE(CAST(f.facility_id AS CHAR), '\r', ''), '\n', ''))
+    WHERE ${whereClause} 
+    ORDER BY ${sortColumn} ${order} 
+    LIMIT ? OFFSET ?`,
     [...queryParams, limit, offset]
   );
 
@@ -109,7 +150,25 @@ export const getShiftsPaginated = async (
 
 export const getShiftById = async (id: number) => {
   const [rows] = await db.query<ShiftRow[]>(
-    "SELECT * FROM shifts WHERE id = ?",
+    `SELECT 
+      s.id, 
+      s.shift_period, 
+      s.route_no, 
+      CAST(s.facility_id AS CHAR) as facility_id, 
+      COALESCE(f.name, s.facility_name) as facility_name, 
+      s.facility_address, 
+      s.resident_count, 
+      s.capacity, 
+      s.required_time, 
+      s.start_datetime, 
+      s.end_datetime, 
+      CAST(s.nurse_id AS CHAR) as nurse_id, 
+      s.distance_km, 
+      s.created_at, 
+      s.updated_at 
+    FROM shifts s
+    LEFT JOIN facilities f ON TRIM(REPLACE(REPLACE(CAST(s.facility_id AS CHAR), '\r', ''), '\n', '')) = TRIM(REPLACE(REPLACE(CAST(f.facility_id AS CHAR), '\r', ''), '\n', ''))
+    WHERE s.id = ?`,
     [id]
   );
   return rows[0] ?? null;

@@ -181,15 +181,15 @@ export function UsersPage() {
         </div>
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {users.map((user) => (
-              <UserCard
-                key={user.id}
-                user={user}
-                onEdit={isAdmin ? handleEditUser : undefined}
-                onDelete={isAdmin ? handleDeleteUser : undefined}
-              />
-            ))}
+                <UserCard
+                  key={user.id}
+                  user={user}
+                  onEdit={isAdmin ? handleEditUser : undefined}
+                  onDelete={isAdmin ? handleDeleteUser : undefined}
+                />
+              ))}
           </div>
 
           {/* ページネーション */}
@@ -243,8 +243,8 @@ export function UsersPage() {
                   次へ
                   <ChevronRightIcon className="h-4 w-4" />
                 </button>
-              </div>
             </div>
+          </div>
           )}
         </>
       )}

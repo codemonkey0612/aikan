@@ -1,4 +1,6 @@
-import { Bars3Icon, BellIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Bars3Icon, BellIcon, MagnifyingGlassIcon, UserCircleIcon, ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../../hooks/useAuth";
 
 interface TopbarProps {
@@ -6,7 +8,37 @@ interface TopbarProps {
 }
 
 export function Topbar({ onMenuClick }: TopbarProps) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+    setIsMenuOpen(false);
+  };
+
+  const handleViewProfile = () => {
+    navigate("/profile");
+    setIsMenuOpen(false);
+  };
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm lg:px-6">
@@ -41,11 +73,37 @@ export function Topbar({ onMenuClick }: TopbarProps) {
             <span className="absolute top-1 right-1 flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-            </span>
+        </span>
           </button>
         </div>
-        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm shadow-md">
-          {user?.last_name?.charAt(0) || "U"}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm shadow-md hover:shadow-lg transition cursor-pointer"
+          >
+            {user?.last_name?.charAt(0) || "U"}
+          </button>
+          
+          {isMenuOpen && (
+            <div className="absolute right-0 mt-2 w-48 rounded-lg border border-slate-200 bg-white shadow-lg z-50">
+              <div className="py-1">
+                <button
+                  onClick={handleViewProfile}
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50"
+                >
+                  <UserCircleIcon className="h-5 w-5 text-slate-400" />
+                  プロフィール
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50"
+                >
+                  <ArrowRightOnRectangleIcon className="h-5 w-5 text-slate-400" />
+                  ログアウト
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>

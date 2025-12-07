@@ -3,17 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useFacilityShiftRequestByFacilityAndMonth } from "../hooks/useFacilityShiftRequests";
 import { useFacilities } from "../hooks/useFacilities";
 import { Card } from "../components/ui/Card";
+import { ModernCalendar } from "../components/calendar/ModernCalendar";
 import {
-  CalendarDaysIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   ArrowLeftIcon,
   ClockIcon,
   BuildingOffice2Icon,
   UserGroupIcon,
 } from "@heroicons/react/24/outline";
-
-const WEEK_DAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
 const formatKey = (date: Date) => date.toISOString().slice(0, 10);
 const formatYearMonth = (date: Date) => {
@@ -110,37 +106,10 @@ export function FacilityShiftRequestDetailPage() {
     month: "long",
   });
 
-  const calendarDays = useMemo(() => {
-    const days: (Date | null)[] = [];
-    const firstDay = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth(),
-      1
-    );
-    const startWeekday = firstDay.getDay();
-    const daysInMonth = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth() + 1,
-      0
-    ).getDate();
-
-    for (let i = 0; i < startWeekday; i++) {
-      days.push(null);
-    }
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(
-        new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
-      );
-    }
-    return days;
-  }, [currentMonth]);
-
-  const changeMonth = (delta: number) => {
-    const next = new Date(currentMonth);
-    next.setMonth(currentMonth.getMonth() + delta);
-    setCurrentMonth(next);
+  const handleMonthChange = (newMonth: Date) => {
+    setCurrentMonth(newMonth);
     // Update URL
-    const newYearMonth = formatYearMonth(next);
+    const newYearMonth = formatYearMonth(newMonth);
     navigate(`/view-facility-shift-requests/${actualFacilityId}/${newYearMonth}`);
   };
 
@@ -270,115 +239,53 @@ export function FacilityShiftRequestDetailPage() {
 
       {/* Calendar View */}
       <Card title={`${monthLabel} - シフト依頼`}>
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <button
-              onClick={() => changeMonth(-1)}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-            >
-              <ChevronLeftIcon className="h-4 w-4" />
-              前の月
-            </button>
-            <div className="flex items-center gap-2 text-lg font-semibold text-slate-800">
-              <CalendarDaysIcon className="h-6 w-6 text-brand-600" />
-              {monthLabel}
-            </div>
-            <button
-              onClick={() => changeMonth(1)}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-            >
-              次の月
-              <ChevronRightIcon className="h-4 w-4" />
-            </button>
-          </div>
+        <ModernCalendar
+          currentMonth={currentMonth}
+          onMonthChange={handleMonthChange}
+          renderDayContent={(day) => {
+            const key = formatKey(day.date);
+            const dayData = request.request_data[key] || {
+              time_slots: [],
+            };
+            const hasRequests =
+              dayData.time_slots && dayData.time_slots.length > 0;
 
-          <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-500">
-            {WEEK_DAYS.map((day) => (
-              <div key={day} className="uppercase tracking-wide">
-                {day}
-              </div>
-            ))}
-          </div>
+            if (!hasRequests) {
+              return <p className="text-xs text-slate-400">依頼なし</p>;
+            }
 
-          <div className="grid grid-cols-7 gap-2">
-            {calendarDays.map((day, index) => {
-              if (!day) {
-                return (
-                  <div
-                    key={`empty-${index}`}
-                    className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-3"
-                  />
-                );
-              }
-              const key = formatKey(day);
-              const dayData = request.request_data[key] || {
-                time_slots: [],
-              };
-              const isToday = formatKey(day) === formatKey(new Date());
-              const dayOfWeek = day.getDay();
-              const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-              const hasRequests =
-                dayData.time_slots && dayData.time_slots.length > 0;
-
-              return (
-                <div
-                  key={key}
-                  className={`flex flex-col rounded-2xl border p-3 text-sm ${
-                    isToday
-                      ? "border-brand-300 bg-brand-50"
-                      : isWeekend
-                      ? "border-slate-200 bg-slate-50"
-                      : hasRequests
-                      ? "border-blue-200 bg-blue-50"
-                      : "border-slate-200 bg-white"
-                  }`}
-                >
-                  <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-                    <span>{day.getDate()}</span>
-                    {hasRequests && (
-                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] text-blue-700">
-                        {dayData.time_slots.length}
+            return (
+              <div className="space-y-1">
+                <div className="space-y-1">
+                  {dayData.time_slots.map((slot, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-1 rounded bg-blue-100 px-2 py-1 text-xs"
+                    >
+                      <ClockIcon className="h-3 w-3 text-blue-600" />
+                      <span className="text-blue-700 font-medium">
+                        {slot}
                       </span>
-                    )}
-                  </div>
-                  {hasRequests && (
-                    <div className="mt-2 space-y-1">
-                      <div className="space-y-1">
-                        {dayData.time_slots.map((slot, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-center gap-1 rounded bg-blue-100 px-2 py-1 text-xs"
-                          >
-                            <ClockIcon className="h-3 w-3 text-blue-600" />
-                            <span className="text-blue-700 font-medium">
-                              {slot}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                      {dayData.required_nurses && (
-                        <div className="flex items-center gap-1 mt-1">
-                          <UserGroupIcon className="h-3 w-3 text-slate-500" />
-                          <span className="text-xs text-slate-600">
-                            必要: {dayData.required_nurses}名
-                          </span>
-                        </div>
-                      )}
-                      {dayData.notes && (
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                          {dayData.notes}
-                        </p>
-                      )}
                     </div>
-                  )}
-                  {!hasRequests && (
-                    <p className="text-xs text-slate-400 mt-2">依頼なし</p>
-                  )}
+                  ))}
                 </div>
-              );
-            })}
-          </div>
-        </div>
+                {dayData.required_nurses && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <UserGroupIcon className="h-3 w-3 text-slate-500" />
+                    <span className="text-xs text-slate-600">
+                      必要: {dayData.required_nurses}名
+                    </span>
+                  </div>
+                )}
+                {dayData.notes && (
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                    {dayData.notes}
+                  </p>
+                )}
+              </div>
+            );
+          }}
+        />
       </Card>
 
       {/* Additional Information */}

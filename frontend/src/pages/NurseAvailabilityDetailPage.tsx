@@ -3,17 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useNurseAvailabilityByNurseAndMonth } from "../hooks/useNurseAvailability";
 import { useUsers } from "../hooks/useUsers";
 import { Card } from "../components/ui/Card";
+import { ModernCalendar } from "../components/calendar/ModernCalendar";
 import {
-  CalendarDaysIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   ArrowLeftIcon,
   CheckCircleIcon,
   ClockIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
-
-const WEEK_DAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
 // Format date as YYYY-MM-DD in local timezone (not UTC)
 const formatKey = (date: Date) => {
@@ -112,37 +108,10 @@ export function NurseAvailabilityDetailPage() {
     month: "long",
   });
 
-  const calendarDays = useMemo(() => {
-    const days: (Date | null)[] = [];
-    const firstDay = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth(),
-      1
-    );
-    const startWeekday = firstDay.getDay();
-    const daysInMonth = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth() + 1,
-      0
-    ).getDate();
-
-    for (let i = 0; i < startWeekday; i++) {
-      days.push(null);
-    }
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(
-        new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
-      );
-    }
-    return days;
-  }, [currentMonth]);
-
-  const changeMonth = (delta: number) => {
-    const next = new Date(currentMonth);
-    next.setMonth(currentMonth.getMonth() + delta);
-    setCurrentMonth(next);
+  const handleMonthChange = (newMonth: Date) => {
+    setCurrentMonth(newMonth);
     // Update URL
-    const newYearMonth = formatYearMonth(next);
+    const newYearMonth = formatYearMonth(newMonth);
     navigate(`/view-nurse-availability/${actualNurseId}/${newYearMonth}`);
   };
 
@@ -286,130 +255,59 @@ export function NurseAvailabilityDetailPage() {
 
       {/* Calendar View */}
       <Card title={`${monthLabel} - 希望シフト`}>
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <button
-              onClick={() => changeMonth(-1)}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-            >
-              <ChevronLeftIcon className="h-4 w-4" />
-              前の月
-            </button>
-            <div className="flex items-center gap-2 text-lg font-semibold text-slate-800">
-              <CalendarDaysIcon className="h-6 w-6 text-brand-600" />
-              {monthLabel}
-            </div>
-            <button
-              onClick={() => changeMonth(1)}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-            >
-              次の月
-              <ChevronRightIcon className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-500">
-            {WEEK_DAYS.map((day) => (
-              <div key={day} className="uppercase tracking-wide">
-                {day}
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-7 gap-2">
-            {calendarDays.map((day, index) => {
-              if (!day) {
-                return (
-                  <div
-                    key={`empty-${index}`}
-                    className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-3"
-                  />
-                );
+        <ModernCalendar
+          currentMonth={currentMonth}
+          onMonthChange={handleMonthChange}
+          renderDayContent={(day) => {
+            const key = formatKey(day.date);
+            let dayData = availabilityData[key];
+            
+            // If not found, try to find similar key (in case of timezone issues)
+            if (!dayData && Object.keys(availabilityData).length > 0) {
+              const allKeys = Object.keys(availabilityData);
+              const similarKey = allKeys.find(k => {
+                const datePart = k.split('T')[0].split(' ')[0];
+                return datePart === key;
+              });
+              if (similarKey) {
+                dayData = availabilityData[similarKey];
               }
-              const key = formatKey(day);
-              // Try exact match first
-              let dayData = availabilityData[key];
-              
-              // Debug: Log first few days to see what's happening
-              if (index < 5 && day.getDate() <= 5) {
-                console.log(`Day ${day.getDate()}: key="${key}", found=${!!dayData}, allKeys=`, Object.keys(availabilityData).slice(0, 5));
-              }
-              
-              // If not found, log for debugging
-              if (!dayData && Object.keys(availabilityData).length > 0) {
-                // Check if there's a similar key (in case of timezone issues)
-                const allKeys = Object.keys(availabilityData);
-                const similarKey = allKeys.find(k => {
-                  // Try to match by date part only (ignore time if present)
-                  const datePart = k.split('T')[0].split(' ')[0];
-                  return datePart === key;
-                });
-                if (similarKey) {
-                  console.log(`Found similar key: "${similarKey}" for "${key}"`);
-                  dayData = availabilityData[similarKey];
-                }
-              }
-              
-              dayData = dayData || {
-                available: false,
-              };
-              const isToday = formatKey(day) === formatKey(new Date());
-              const dayOfWeek = day.getDay();
-              const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            }
+            
+            dayData = dayData || { available: false };
 
-              return (
-                <div
-                  key={key}
-                  className={`flex flex-col rounded-2xl border p-3 text-sm ${
-                    isToday
-                      ? "border-brand-300 bg-brand-50"
-                      : isWeekend
-                      ? "border-slate-200 bg-slate-50"
-                      : dayData.available
-                      ? "border-green-200 bg-green-50"
-                      : "border-slate-200 bg-white"
-                  }`}
-                >
-                  <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-                    <span>{day.getDate()}</span>
-                    {dayData.available && (
-                      <CheckCircleIcon className="h-4 w-4 text-green-500" />
-                    )}
+            if (!dayData.available) {
+              return <p className="text-xs text-slate-400">利用不可</p>;
+            }
+
+            return (
+              <div className="space-y-1">
+                {dayData.time_slots && dayData.time_slots.length > 0 ? (
+                  <div className="space-y-1">
+                    {dayData.time_slots.map((slot, idx) => (
+                      <div
+                        key={`${key}-slot-${idx}-${slot}`}
+                        className="flex items-center gap-1 rounded bg-green-100 px-2 py-1 text-xs"
+                      >
+                        <ClockIcon className="h-3 w-3 text-green-600" />
+                        <span className="text-green-700 font-medium">
+                          {slot}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                  {dayData.available && (
-                    <div className="mt-2 space-y-1">
-                      {dayData.time_slots && dayData.time_slots.length > 0 ? (
-                        <div className="space-y-1">
-                          {dayData.time_slots.map((slot, idx) => (
-                            <div
-                              key={`${key}-slot-${idx}-${slot}`}
-                              className="flex items-center gap-1 rounded bg-green-100 px-2 py-1 text-xs"
-                            >
-                              <ClockIcon className="h-3 w-3 text-green-600" />
-                              <span className="text-green-700 font-medium">
-                                {slot}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-xs text-green-600">利用可能</p>
-                      )}
-                      {dayData.notes && (
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                          {dayData.notes}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  {!dayData.available && (
-                    <p className="text-xs text-slate-400 mt-2">利用不可</p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+                ) : (
+                  <p className="text-xs text-green-600">利用可能</p>
+                )}
+                {dayData.notes && (
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                    {dayData.notes}
+                  </p>
+                )}
+              </div>
+            );
+          }}
+        />
       </Card>
 
       {/* Additional Information */}

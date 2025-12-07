@@ -5,16 +5,12 @@ import { useUsers } from "../hooks/useUsers";
 import { useFacilities } from "../hooks/useFacilities";
 import { useCreateShift } from "../hooks/useShifts";
 import { Card } from "../components/ui/Card";
+import { ModernCalendar } from "../components/calendar/ModernCalendar";
 import {
-  CalendarDaysIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   PlusIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import type { NurseAvailability, FacilityShiftRequest } from "../api/types";
-
-const WEEK_DAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
 // Helper function to format date key
 const formatKey = (date: Date) => date.toISOString().slice(0, 10);
@@ -231,39 +227,6 @@ export function ShiftPlanningPage() {
     month: "long",
   });
 
-  const calendarDays = useMemo(() => {
-    const days: (Date | null)[] = [];
-    const firstDay = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth(),
-      1
-    );
-    const startWeekday = firstDay.getDay();
-    const daysInMonth = new Date(
-      currentMonth.getFullYear(),
-      currentMonth.getMonth() + 1,
-      0
-    ).getDate();
-
-    for (let i = 0; i < startWeekday; i++) {
-      days.push(null);
-    }
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(
-        new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
-      );
-    }
-    return days;
-  }, [currentMonth]);
-
-  const changeMonth = (delta: number) => {
-    setCurrentMonth((prev) => {
-      const next = new Date(prev);
-      next.setMonth(prev.getMonth() + delta);
-      return next;
-    });
-  };
-
   const handleCreateShift = async (match: ShiftMatch) => {
     try {
       const [startTime, endTime] = match.time_slot.split("-");
@@ -360,95 +323,42 @@ export function ShiftPlanningPage() {
 
       {/* Calendar View */}
       <Card title={`${monthLabel} - マッチング候補`}>
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <button
-              onClick={() => changeMonth(-1)}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-            >
-              <ChevronLeftIcon className="h-4 w-4" />
-              前の月
-            </button>
-            <div className="flex items-center gap-2 text-lg font-semibold text-slate-800">
-              <CalendarDaysIcon className="h-6 w-6 text-brand-600" />
-              {monthLabel}
-            </div>
-            <button
-              onClick={() => changeMonth(1)}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
-            >
-              次の月
-              <ChevronRightIcon className="h-4 w-4" />
-            </button>
-          </div>
+        <ModernCalendar
+          currentMonth={currentMonth}
+          onMonthChange={setCurrentMonth}
+          renderDayContent={(day) => {
+            const key = formatKey(day.date);
+            const dayMatches = matchesByDate.get(key) ?? [];
 
-          <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-500">
-            {WEEK_DAYS.map((day) => (
-              <div key={day} className="uppercase tracking-wide">
-                {day}
-              </div>
-            ))}
-          </div>
+            if (dayMatches.length === 0) return null;
 
-          <div className="grid grid-cols-7 gap-2">
-            {calendarDays.map((day, index) => {
-              if (!day) {
-                return (
+            return (
+              <div className="space-y-1">
+                {dayMatches.slice(0, 2).map((match, idx) => (
                   <div
-                    key={`empty-${index}`}
-                    className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-3"
-                  />
-                );
-              }
-              const key = formatKey(day);
-              const dayMatches = matchesByDate.get(key) ?? [];
-              const isToday = formatKey(day) === formatKey(new Date());
-
-              return (
-                <div
-                  key={key}
-                  className={`flex flex-col rounded-2xl border p-3 text-sm ${
-                    isToday
-                      ? "border-brand-300 bg-brand-50"
-                      : "border-slate-200 bg-white"
-                  }`}
-                >
-                  <div className="flex items-center justify-between text-xs font-semibold text-slate-600">
-                    <span>{day.getDate()}</span>
-                    {dayMatches.length > 0 && (
-                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] text-green-700">
-                        {dayMatches.length} 件
-                      </span>
-                    )}
+                    key={idx}
+                    className="rounded-lg bg-green-50 px-2 py-1 text-xs"
+                  >
+                    <div className="font-medium text-green-700 truncate">
+                      {match.facility_name}
+                    </div>
+                    <div className="text-[10px] text-green-600 mt-0.5">
+                      {match.nurse_name}
+                    </div>
+                    <div className="text-[10px] text-green-500 mt-0.5">
+                      {match.time_slot}
+                    </div>
                   </div>
-                  <div className="mt-2 space-y-1">
-                    {dayMatches.slice(0, 2).map((match, idx) => (
-                      <div
-                        key={idx}
-                        className="rounded-lg bg-green-50 px-2 py-1 text-xs"
-                      >
-                        <div className="font-medium text-green-700 truncate">
-                          {match.facility_name}
-                        </div>
-                        <div className="text-[10px] text-green-600 mt-0.5">
-                          {match.nurse_name}
-                        </div>
-                        <div className="text-[10px] text-green-500 mt-0.5">
-                          {match.time_slot}
-                        </div>
-                      </div>
-                    ))}
-                    {dayMatches.length > 2 && (
-                      <p className="text-right text-[10px] text-slate-400">
-                        他 {dayMatches.length - 2} 件
-                      </p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+                ))}
+                {dayMatches.length > 2 && (
+                  <p className="text-right text-[10px] text-slate-400">
+                    他 {dayMatches.length - 2} 件
+                  </p>
+                )}
+              </div>
+            );
+          }}
+        />
       </Card>
 
       {/* Matches Table */}

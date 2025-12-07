@@ -3,18 +3,23 @@ import {
   BuildingOffice2Icon,
   ChartBarIcon,
   ClockIcon,
-  ClipboardDocumentIcon,
   CurrencyDollarIcon,
   MegaphoneIcon,
   UserGroupIcon,
   UsersIcon,
   HeartIcon,
-  MapPinIcon,
   CalendarIcon,
   XMarkIcon,
+  BuildingOfficeIcon,
+  BriefcaseIcon,
+  CalendarDaysIcon,
+  ClipboardDocumentCheckIcon,
+  DocumentTextIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useAuth } from "../../hooks/useAuth";
+import { useAvatar } from "../../hooks/useAvatar";
+import { getDefaultAvatar } from "../../utils/defaultAvatars";
 import type { UserRole } from "../../api/types";
 
 interface NavItem {
@@ -28,15 +33,15 @@ const allNavItems: NavItem[] = [
   { label: "ダッシュボード", to: "/", icon: ChartBarIcon, allowedRoles: ["admin", "nurse", "facility_manager"] },
   { label: "ユーザー", to: "/users", icon: UsersIcon, allowedRoles: ["admin"] },
   { label: "施設", to: "/facilities", icon: BuildingOffice2Icon, allowedRoles: ["admin"] },
-  { label: "法人", to: "/corporations", icon: BuildingOffice2Icon, allowedRoles: ["admin"] },
+  { label: "法人", to: "/corporations", icon: BriefcaseIcon, allowedRoles: ["admin"] },
   { label: "入居者", to: "/residents", icon: UserGroupIcon, allowedRoles: ["admin"] },
   { label: "バイタル", to: "/vitals", icon: HeartIcon, allowedRoles: ["admin"] },
   { label: "シフト", to: "/shifts", icon: ClockIcon, allowedRoles: ["admin", "nurse", "facility_manager"] },
-  { label: "シフト計画", to: "/shift-planning", icon: CalendarIcon, allowedRoles: ["admin"] },
-  { label: "看護師希望シフト確認", to: "/view-nurse-availability", icon: UserGroupIcon, allowedRoles: ["admin"] },
-  { label: "施設シフト依頼確認", to: "/view-facility-shift-requests", icon: BuildingOffice2Icon, allowedRoles: ["admin"] },
+  { label: "シフト計画", to: "/shift-planning", icon: CalendarDaysIcon, allowedRoles: ["admin"] },
+  { label: "看護師希望シフト確認", to: "/view-nurse-availability", icon: ClipboardDocumentCheckIcon, allowedRoles: ["admin"] },
+  { label: "施設シフト依頼確認", to: "/view-facility-shift-requests", icon: DocumentTextIcon, allowedRoles: ["admin"] },
   { label: "希望シフト提出", to: "/nurse-availability", icon: CalendarIcon, allowedRoles: ["nurse"] },
-  { label: "施設シフト依頼", to: "/facility-shift-requests", icon: BuildingOffice2Icon, allowedRoles: ["facility_manager"] },
+  { label: "施設シフト依頼", to: "/facility-shift-requests", icon: BuildingOfficeIcon, allowedRoles: ["facility_manager"] },
   { label: "給与", to: "/salaries", icon: CurrencyDollarIcon, allowedRoles: ["admin"] },
   { label: "お知らせ", to: "/notifications", icon: MegaphoneIcon, allowedRoles: ["admin", "nurse", "facility_manager"] },
 ];
@@ -50,6 +55,19 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   // On desktop (lg+), sidebar is always visible. On mobile, it's controlled by isOpen prop.
   const isDesktopOpen = isOpen === undefined ? true : isOpen;
   const { user } = useAuth();
+  const { data: avatarUrl } = useAvatar(user?.id);
+  
+  // Get user initials for fallback
+  const getUserInitials = () => {
+    if (!user) return "U";
+    if (user.last_name && user.first_name) {
+      return `${user.last_name.charAt(0)}${user.first_name.charAt(0)}`.toUpperCase();
+    }
+    if (user.last_name) return user.last_name.charAt(0).toUpperCase();
+    if (user.first_name) return user.first_name.charAt(0).toUpperCase();
+    if (user.email) return user.email.charAt(0).toUpperCase();
+    return "U";
+  };
 
   // ユーザーのロールに応じて表示可能なメニューをフィルタリング
   const navItems = allNavItems.filter((item) => {
@@ -82,8 +100,19 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {user && (
             <div className="mb-6 px-3 py-3 rounded-lg bg-white/10 backdrop-blur-sm">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold">
-                  {user.last_name?.charAt(0) || "U"}
+                <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold overflow-hidden">
+                  <img
+                    src={avatarUrl || getDefaultAvatar(user.role)}
+                    alt={`${user.last_name} ${user.first_name}`}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      // If image fails to load, show initials
+                      e.currentTarget.style.display = "none";
+                      const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = "flex";
+                    }}
+                  />
+                  <span className="hidden">{getUserInitials()}</span>
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">

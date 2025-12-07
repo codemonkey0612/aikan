@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bars3Icon, BellIcon, MagnifyingGlassIcon, UserCircleIcon, ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
 import { useAuth } from "../../hooks/useAuth";
+import { useAvatar } from "../../hooks/useAvatar";
+import { getDefaultAvatar } from "../../utils/defaultAvatars";
 
 interface TopbarProps {
   onMenuClick: () => void;
@@ -10,8 +12,21 @@ interface TopbarProps {
 export function Topbar({ onMenuClick }: TopbarProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { data: avatarUrl } = useAvatar(user?.id);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  
+  // Get user initials for fallback
+  const getUserInitials = () => {
+    if (!user) return "U";
+    if (user.last_name && user.first_name) {
+      return `${user.last_name.charAt(0)}${user.first_name.charAt(0)}`.toUpperCase();
+    }
+    if (user.last_name) return user.last_name.charAt(0).toUpperCase();
+    if (user.first_name) return user.first_name.charAt(0).toUpperCase();
+    if (user.email) return user.email.charAt(0).toUpperCase();
+    return "U";
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -79,9 +94,20 @@ export function Topbar({ onMenuClick }: TopbarProps) {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm shadow-md hover:shadow-lg transition cursor-pointer"
+            className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm shadow-md hover:shadow-lg transition cursor-pointer overflow-hidden"
           >
-            {user?.last_name?.charAt(0) || "U"}
+            <img
+              src={avatarUrl || getDefaultAvatar(user?.role)}
+              alt={`${user?.last_name} ${user?.first_name}`}
+              className="h-full w-full object-cover"
+              onError={(e) => {
+                // If image fails to load, show initials
+                e.currentTarget.style.display = "none";
+                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = "flex";
+              }}
+            />
+            <span className="hidden">{getUserInitials()}</span>
           </button>
           
           {isMenuOpen && (

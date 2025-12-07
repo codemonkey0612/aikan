@@ -7,16 +7,12 @@ import {
 } from "../hooks/useFacilityShiftRequests";
 import { Card } from "../components/ui/Card";
 import { TimeSlotPicker } from "../components/ui/TimeSlotPicker";
+import { ModernCalendar } from "../components/calendar/ModernCalendar";
 import {
-  CalendarDaysIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   ClockIcon,
   BuildingOffice2Icon,
 } from "@heroicons/react/24/outline";
 import type { FacilityShiftRequest } from "../api/types";
-
-const WEEK_DAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
 const formatKey = (date: Date) => date.toISOString().slice(0, 10);
 const formatYearMonth = (date: Date) => {
@@ -59,19 +55,6 @@ export function FacilityShiftRequestPage() {
       setRequestData({});
     }
   }, [existingRequest]);
-
-  // 月の日付を生成
-  const calendarDays = useMemo(() => {
-    const days: Date[] = [];
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(new Date(year, month, day));
-    }
-    return days;
-  }, [currentMonth]);
 
   const monthLabel = currentMonth.toLocaleDateString("ja-JP", {
     year: "numeric",
@@ -129,13 +112,6 @@ export function FacilityShiftRequestPage() {
     }
   };
 
-  const changeMonth = (delta: number) => {
-    setCurrentMonth((prev) => {
-      const next = new Date(prev);
-      next.setMonth(prev.getMonth() + delta);
-      return next;
-    });
-  };
 
   return (
     <div className="space-y-6">
@@ -174,98 +150,44 @@ export function FacilityShiftRequestPage() {
 
           {selectedFacilityId && (
             <>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <button
-                  onClick={() => changeMonth(-1)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-slate-600 hover:bg-slate-50"
-                >
-                  <ChevronLeftIcon className="h-4 w-4" />
-                  <span className="hidden sm:inline">前の月</span>
-                </button>
-                <div className="flex items-center gap-2 text-base sm:text-lg font-semibold text-slate-800">
-                  <CalendarDaysIcon className="h-5 w-5 sm:h-6 sm:w-6 text-brand-600" />
-                  <span className="whitespace-nowrap">{monthLabel}</span>
-                </div>
-                <button
-                  onClick={() => changeMonth(1)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-slate-600 hover:bg-slate-50"
-                >
-                  <span className="hidden sm:inline">次の月</span>
-                  <ChevronRightIcon className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="hidden md:grid grid-cols-7 gap-2 text-center text-xs font-semibold text-slate-500">
-                {WEEK_DAYS.map((day) => (
-                  <div key={day} className="uppercase tracking-wide">
-                    {day}
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-2 md:gap-2">
-                {calendarDays.map((day) => {
-                  const key = formatKey(day);
+              <ModernCalendar
+                currentMonth={currentMonth}
+                onMonthChange={setCurrentMonth}
+                renderDayContent={(day) => {
+                  const key = formatKey(day.date);
                   const dayData = requestData[key] || {
                     time_slots: [],
                   };
-                  const isToday = formatKey(day) === formatKey(new Date());
-                  const dayOfWeek = day.getDay();
-                  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-                  const dayName = WEEK_DAYS[dayOfWeek];
-                  const dateStr = day.toLocaleDateString("ja-JP", {
-                    month: "short",
-                    day: "numeric",
-                  });
 
                   return (
-                    <div
-                      key={key}
-                      className={`flex flex-col rounded-lg md:rounded-2xl border p-3 md:p-3 text-sm ${
-                        isToday
-                          ? "border-brand-300 bg-brand-50"
-                          : isWeekend
-                          ? "border-slate-200 bg-slate-50"
-                          : "border-slate-200 bg-white"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm md:text-xs font-semibold text-slate-600">
-                          {dateStr}
-                        </span>
-                        <span className="text-xs text-slate-400 md:hidden">
-                          ({dayName})
-                        </span>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-xs text-slate-500 flex items-center gap-1 mb-1">
+                          <ClockIcon className="h-3 w-3" />
+                          時間帯
+                        </label>
+                        <TimeSlotPicker
+                          value={dayData.time_slots || []}
+                          onChange={(slots) => handleTimeSlotChange(day.date, slots)}
+                          placeholder="時間帯を追加"
+                        />
                       </div>
-                      <div className="space-y-2">
-                        <div>
-                          <label className="text-xs text-slate-500 flex items-center gap-1 mb-1">
-                            <ClockIcon className="h-3 w-3" />
-                            時間帯
-                          </label>
-                          <TimeSlotPicker
-                            value={dayData.time_slots || []}
-                            onChange={(slots) => handleTimeSlotChange(day, slots)}
-                            placeholder="時間帯を追加"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-slate-500">備考</label>
-                          <textarea
-                            value={dayData.notes || ""}
-                            onChange={(e) =>
-                              handleNotesChange(day, e.target.value)
-                            }
-                            className="w-full rounded border border-slate-300 px-2 py-1 text-xs mt-1"
-                            rows={2}
-                          />
-                        </div>
+                      <div>
+                        <label className="text-xs text-slate-500">備考</label>
+                        <textarea
+                          value={dayData.notes || ""}
+                          onChange={(e) =>
+                            handleNotesChange(day.date, e.target.value)
+                          }
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-full rounded border border-slate-300 px-2 py-1 text-xs mt-1"
+                          rows={2}
+                        />
                       </div>
                     </div>
                   );
-                })}
-              </div>
+                }}
+              />
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 border-t border-slate-200">
                 <button

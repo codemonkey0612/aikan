@@ -4,7 +4,9 @@ import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { OverviewPage } from "./pages/OverviewPage";
 import { UsersPage } from "./pages/UsersPage";
 import { FacilitiesPage } from "./pages/FacilitiesPage";
+import { FacilityDetailPage } from "./pages/FacilityDetailPage";
 import { CorporationsPage } from "./pages/CorporationsPage";
+import { CorporationDetailPage } from "./pages/CorporationDetailPage";
 import { ResidentsPage } from "./pages/ResidentsPage";
 import { ResidentDetailPage } from "./pages/ResidentDetailPage";
 import { VitalsPage } from "./pages/VitalsPage";
@@ -73,10 +75,26 @@ function App() {
               }
             />
             <Route
+              path="facilities/:id"
+              element={
+                <RequireRole allowedRoles={["admin"]}>
+                  <FacilityDetailPage />
+                </RequireRole>
+              }
+            />
+            <Route
               path="corporations"
               element={
                 <RequireRole allowedRoles={["admin"]}>
                   <CorporationsPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="corporations/:id"
+              element={
+                <RequireRole allowedRoles={["admin"]}>
+                  <CorporationDetailPage />
                 </RequireRole>
               }
             />

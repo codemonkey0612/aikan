@@ -25,13 +25,17 @@ export const getNurseAvailabilityByNurseAndMonth = async (
   nurse_id: string,
   year_month: string
 ) => {
-  const cacheKey = `${CACHE_KEY}:${nurse_id}:${year_month}`;
-  return getOrSetCache(cacheKey, async () => {
-    return NurseAvailabilityModel.getNurseAvailabilityByNurseAndMonth(
-      nurse_id,
-      year_month
-    );
-  });
+  console.log("Service: getNurseAvailabilityByNurseAndMonth", { nurse_id, year_month });
+  
+  // Don't use cache for this query to avoid stale null values
+  // Directly call the model
+  const result = await NurseAvailabilityModel.getNurseAvailabilityByNurseAndMonth(
+    nurse_id,
+    year_month
+  );
+  
+  console.log("Service result:", result ? `Found data (id: ${result.id})` : "No data");
+  return result;
 };
 
 export const createNurseAvailability = async (

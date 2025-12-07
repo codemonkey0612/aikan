@@ -19,12 +19,11 @@ export function OverviewPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <p className="text-sm uppercase tracking-wide text-slate-500">ダッシュボード</p>
-        <h1 className="text-3xl font-semibold text-slate-900">
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">
           おかえりなさい 👋
         </h1>
-        <p className="text-slate-500">
+        <p className="text-slate-600">
           施設とケア状況のサマリーをご確認ください。
         </p>
       </header>
@@ -72,10 +71,12 @@ export function OverviewPage() {
             <TableBody>
               {shifts?.data.map((shift) => (
                 <TableRow key={shift.id}>
-                  <TableCell>#{shift.user_id}</TableCell>
-                  <TableCell>#{shift.facility_id}</TableCell>
+                  <TableCell>{shift.nurse_id || "未設定"}</TableCell>
+                  <TableCell>{shift.facility_name || shift.facility_id || "未設定"}</TableCell>
                   <TableCell className="text-right">
-                    {shift.date}
+                    {shift.start_datetime 
+                      ? new Date(shift.start_datetime).toLocaleDateString("ja-JP")
+                      : "未設定"}
                   </TableCell>
                 </TableRow>
               ))}

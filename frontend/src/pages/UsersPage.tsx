@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useUsers, useCreateUser, useUpdateUser, useDeleteUser } from "../hooks/useUsers";
 import { useAuth } from "../hooks/useAuth";
 import { UserCard } from "../components/users/UserCard";
@@ -7,59 +7,54 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
   PlusIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import type { User } from "../api/types";
 
+const ITEMS_PER_PAGE = 12;
+
 export function UsersPage() {
   const { user: currentUser } = useAuth();
-  const { data: users, isLoading } = useUsers();
-  const createUserMutation = useCreateUser();
-  const updateUserMutation = useUpdateUser();
-  const deleteUserMutation = useDeleteUser();
-
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<User["role"] | "ALL">("ALL");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
-  // フィルタリングと検索
-  const filteredUsers = useMemo(() => {
-    if (!users) return [];
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, roleFilter]);
 
-    return users.filter((user) => {
-      // ロールフィルター
-      if (roleFilter !== "ALL" && user.role !== roleFilter) {
-        return false;
-      }
+  const { data, isLoading } = useUsers({
+    page: currentPage,
+    limit: ITEMS_PER_PAGE,
+    search: searchQuery || undefined,
+    role: roleFilter !== "ALL" ? roleFilter : undefined,
+    sortBy: "created_at",
+    sortOrder: "desc",
+  });
 
-      // 検索クエリ
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const fullName = `${user.first_name || ""} ${user.last_name || ""}`.toLowerCase();
-        const email = (user.email || "").toLowerCase();
-        return (
-          fullName.includes(query) ||
-          email.includes(query) ||
-          user.role.toLowerCase().includes(query)
-        );
-      }
+  const users = useMemo(() => {
+    if (!data) return [];
+    // Check if data is paginated response
+    if ("data" in data && "pagination" in data) {
+      return data.data;
+    }
+    // Otherwise it's an array
+    return Array.isArray(data) ? data : [];
+  }, [data]);
 
-      return true;
-    });
-  }, [users, searchQuery, roleFilter]);
+  const pagination = useMemo(() => {
+    if (!data || !("pagination" in data)) return null;
+    return data.pagination;
+  }, [data]);
 
-  // ロール別にグループ化
-  const usersByRole = useMemo(() => {
-    const grouped: Record<string, User[]> = {};
-    filteredUsers.forEach((user) => {
-      if (!grouped[user.role]) {
-        grouped[user.role] = [];
-      }
-      grouped[user.role].push(user);
-    });
-    return grouped;
-  }, [filteredUsers]);
+  const createUserMutation = useCreateUser();
+  const updateUserMutation = useUpdateUser();
+  const deleteUserMutation = useDeleteUser();
 
   const handleCreateUser = async (data: any) => {
     await createUserMutation.mutateAsync(data);
@@ -171,12 +166,12 @@ export function UsersPage() {
         </div>
       </header>
 
-      {/* ロール別セクション */}
+      {/* ユーザー一覧 */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <p className="text-sm text-slate-500">ユーザーを読み込み中...</p>
         </div>
-      ) : Object.keys(usersByRole).length === 0 ? (
+      ) : users.length === 0 ? (
         <div className="flex items-center justify-center py-12">
           <p className="text-sm text-slate-500">
             {searchQuery || roleFilter !== "ALL"
@@ -185,21 +180,73 @@ export function UsersPage() {
           </p>
         </div>
       ) : (
-        Object.entries(usersByRole).map(([role, roleUsers]) => (
-          <div key={role} className="space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">{role}</h2>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {roleUsers.map((user) => (
-                <UserCard
-                  key={user.id}
-                  user={user}
-                  onEdit={isAdmin ? handleEditUser : undefined}
-                  onDelete={isAdmin ? handleDeleteUser : undefined}
-                />
-              ))}
-            </div>
+        <>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {users.map((user) => (
+              <UserCard
+                key={user.id}
+                user={user}
+                onEdit={isAdmin ? handleEditUser : undefined}
+                onDelete={isAdmin ? handleDeleteUser : undefined}
+              />
+            ))}
           </div>
-        ))
+
+          {/* ページネーション */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-slate-200 pt-4">
+              <div className="text-sm text-slate-600">
+                {pagination.total}件中 {((pagination.page - 1) * pagination.limit) + 1}-
+                {Math.min(pagination.page * pagination.limit, pagination.total)}件を表示
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={!pagination.hasPrev}
+                  className="flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeftIcon className="h-4 w-4" />
+                  前へ
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                    let pageNum: number;
+                    if (pagination.totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (pagination.page <= 3) {
+                      pageNum = i + 1;
+                    } else if (pagination.page >= pagination.totalPages - 2) {
+                      pageNum = pagination.totalPages - 4 + i;
+                    } else {
+                      pageNum = pagination.page - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-2 text-sm font-medium rounded-md transition ${
+                          pagination.page === pageNum
+                            ? "bg-blue-600 text-white"
+                            : "text-slate-700 hover:bg-slate-100"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(pagination.totalPages, p + 1))}
+                  disabled={!pagination.hasNext}
+                  className="flex items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  次へ
+                  <ChevronRightIcon className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* モーダル */}

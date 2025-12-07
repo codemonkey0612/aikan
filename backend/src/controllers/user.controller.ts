@@ -1,9 +1,42 @@
 import { Request, Response } from "express";
 import * as UserService from "../services/user.service";
+import { calculatePagination } from "../validations/pagination.validation";
 
 export const getAllUsers = async (req: Request, res: Response) => {
-  const users = await UserService.getAllUsers();
-  res.json(users);
+  // Check if pagination parameters are provided
+  const hasPagination = req.query.page || req.query.limit;
+  
+  if (hasPagination) {
+    // Paginated response
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 20;
+    const sortBy = (req.query.sortBy as string) || "created_at";
+    const sortOrder = (req.query.sortOrder as "asc" | "desc") || "desc";
+    
+    const filters = {
+      role: req.query.role as "admin" | "nurse" | "facility_manager" | "corporate_officer" | undefined,
+      search: req.query.search as string | undefined,
+    };
+    
+    const { data, total } = await UserService.getUsersPaginated(
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+      filters
+    );
+    
+    const pagination = calculatePagination(page, limit, total);
+    
+    res.json({
+      data,
+      pagination,
+    });
+  } else {
+    // Non-paginated response (for backward compatibility)
+    const users = await UserService.getAllUsers();
+    res.json(users);
+  }
 };
 
 export const getUserById = async (req: Request, res: Response) => {

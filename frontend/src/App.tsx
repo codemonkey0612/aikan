@@ -17,6 +17,11 @@ import { CarePlanPage } from "./pages/CarePlanPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { NurseAvailabilityPage } from "./pages/NurseAvailabilityPage";
 import { FacilityShiftRequestPage } from "./pages/FacilityShiftRequestPage";
+import { ShiftPlanningPage } from "./pages/ShiftPlanningPage";
+import { ViewNurseAvailabilityPage } from "./pages/ViewNurseAvailabilityPage";
+import { ViewFacilityShiftRequestsPage } from "./pages/ViewFacilityShiftRequestsPage";
+import { NurseAvailabilityDetailPage } from "./pages/NurseAvailabilityDetailPage";
+import { FacilityShiftRequestDetailPage } from "./pages/FacilityShiftRequestDetailPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { useAuth } from "./hooks/useAuth";
@@ -155,6 +160,49 @@ function App() {
               element={
                 <RequireRole allowedRoles={["admin", "facility_manager"]}>
                   <FacilityShiftRequestPage />
+                </RequireRole>
+              }
+            />
+            {/* Admin-only: Shift Planning */}
+            <Route
+              path="shift-planning"
+              element={
+                <RequireRole allowedRoles={["admin"]}>
+                  <ShiftPlanningPage />
+                </RequireRole>
+              }
+            />
+            {/* Admin-only: View Nurse Availability */}
+            <Route
+              path="view-nurse-availability"
+              element={
+                <RequireRole allowedRoles={["admin"]}>
+                  <ViewNurseAvailabilityPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="view-nurse-availability/:nurseId/:yearMonth"
+              element={
+                <RequireRole allowedRoles={["admin"]}>
+                  <NurseAvailabilityDetailPage />
+                </RequireRole>
+              }
+            />
+            {/* Admin-only: View Facility Shift Requests */}
+            <Route
+              path="view-facility-shift-requests"
+              element={
+                <RequireRole allowedRoles={["admin"]}>
+                  <ViewFacilityShiftRequestsPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="view-facility-shift-requests/:facilityId/:yearMonth"
+              element={
+                <RequireRole allowedRoles={["admin"]}>
+                  <FacilityShiftRequestDetailPage />
                 </RequireRole>
               }
             />

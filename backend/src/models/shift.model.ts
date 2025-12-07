@@ -28,7 +28,8 @@ export interface CreateShiftInput {
   resident_count?: number | null;
   capacity?: number | null;
   required_time?: number | null;
-  start_datetime: string; // DATE
+  start_datetime: string; // DATETIME
+  end_datetime?: string | null; // DATETIME - optional
   nurse_id?: string | null; // VARCHAR(100)
 }
 
@@ -125,6 +126,7 @@ export const createShift = async (data: CreateShiftInput) => {
     capacity,
     required_time,
     start_datetime,
+    end_datetime,
     nurse_id,
   } = data;
 
@@ -132,8 +134,8 @@ export const createShift = async (data: CreateShiftInput) => {
     `INSERT INTO shifts (
       shift_period, route_no, facility_id,
       facility_name, facility_address, resident_count, capacity,
-      required_time, start_datetime, nurse_id
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      required_time, start_datetime, end_datetime, nurse_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       shift_period ?? null,
       route_no ?? null,
@@ -144,6 +146,7 @@ export const createShift = async (data: CreateShiftInput) => {
       capacity ?? null,
       required_time ?? null,
       start_datetime,
+      end_datetime ?? null,
       nurse_id ?? null,
     ]
   );

@@ -91,9 +91,15 @@ export function NurseAvailabilityDetailPage() {
     console.log("================================");
   }, [availability, isLoading, error, actualNurseId, actualYearMonth]);
 
-  // Get nurse info
+  // Get nurse info - normalize IDs by trimming to handle carriage returns
   const nurse = useMemo(() => {
-    return users?.find((u) => u.nurse_id === actualNurseId);
+    if (!users || !actualNurseId) return undefined;
+    const normalizedNurseId = actualNurseId.trim();
+    return users.find((u) => {
+      const nurseId = u.nurse_id;
+      if (!nurseId || typeof nurseId !== 'string') return false;
+      return nurseId.trim() === normalizedNurseId;
+    });
   }, [users, actualNurseId]);
 
   const nurseName = nurse
@@ -220,7 +226,7 @@ export function NurseAvailabilityDetailPage() {
               {nurseName}
             </h1>
             <p className="text-sm text-slate-500">
-              看護師ID: {actualNurseId} | {monthLabel}
+              {monthLabel}
             </p>
           </div>
         </div>

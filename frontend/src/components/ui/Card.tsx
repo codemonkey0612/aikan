@@ -11,13 +11,13 @@ export function Card({ className, title, actions, children }: CardProps) {
   return (
     <div
       className={clsx(
-        "rounded-2xl border border-slate-200 bg-white shadow-card",
+        "rounded-xl border border-slate-200 bg-white shadow-lg transition-shadow duration-300 hover:shadow-xl",
         className
       )}
     >
       {(title || actions) && (
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-          {title && <h3 className="text-lg font-semibold text-slate-800">{title}</h3>}
+        <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white px-6 py-4">
+          {title && <h3 className="text-lg font-bold text-slate-800">{title}</h3>}
           {actions && <div className="flex items-center gap-2">{actions}</div>}
         </div>
       )}

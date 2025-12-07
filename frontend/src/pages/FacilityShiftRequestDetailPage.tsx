@@ -58,14 +58,51 @@ export function FacilityShiftRequestDetailPage() {
 
   const { data: request, isLoading } =
     useFacilityShiftRequestByFacilityAndMonth(actualFacilityId, actualYearMonth);
-  const { data: facilities } = useFacilities();
+  const { data: facilities, isLoading: isLoadingFacilities } = useFacilities();
 
-  // Get facility info
+  // Get facility info - normalize IDs by trimming to handle carriage returns
   const facility = useMemo(() => {
-    return facilities?.find((f) => f.facility_id === actualFacilityId);
+    if (!facilities || !actualFacilityId) return undefined;
+    const normalizedFacilityId = actualFacilityId.trim();
+    
+    // Debug logging
+    console.log("Looking for facility with ID:", normalizedFacilityId);
+    console.log("Available facilities:", facilities.map(f => ({ 
+      id: f.facility_id, 
+      name: f.name,
+      idType: typeof f.facility_id,
+      idLength: f.facility_id?.length 
+    })));
+    
+    const found = facilities.find((f) => {
+      const facilityId = f.facility_id;
+      if (!facilityId) return false;
+      // Handle both string and number types
+      const idStr = String(facilityId).trim();
+      const match = idStr === normalizedFacilityId;
+      if (match) {
+        console.log("Found matching facility:", { id: idStr, name: f.name });
+      }
+      return match;
+    });
+    
+    if (!found) {
+      console.log("No facility found matching ID:", normalizedFacilityId);
+    }
+    
+    return found;
   }, [facilities, actualFacilityId]);
 
-  const facilityName = facility?.name || actualFacilityId;
+  // Use facility name if found, otherwise show loading or ID
+  const facilityName = useMemo(() => {
+    if (isLoadingFacilities) return "読み込み中...";
+    if (facility?.name) {
+      console.log("Using facility name:", facility.name);
+      return facility.name;
+    }
+    console.log("Falling back to facility ID:", actualFacilityId);
+    return actualFacilityId;
+  }, [facility, actualFacilityId, isLoadingFacilities]);
 
   // Calendar setup
   const monthLabel = currentMonth.toLocaleDateString("ja-JP", {
@@ -175,7 +212,7 @@ export function FacilityShiftRequestDetailPage() {
               {facilityName}
             </h1>
             <p className="text-sm text-slate-500">
-              施設ID: {actualFacilityId} | {monthLabel}
+              {monthLabel}
             </p>
           </div>
         </div>

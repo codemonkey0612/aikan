@@ -1,14 +1,15 @@
-import { useParams, Link } from "react-router-dom";
-import { useShifts } from "../hooks/useShifts";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { ShiftsAPI } from "../api/endpoints";
 import { useFacilities } from "../hooks/useFacilities";
 import { useUsers } from "../hooks/useUsers";
 import { useResidents } from "../hooks/useResidents";
 import { useVitals } from "../hooks/useVitals";
 import { useAvatar } from "../hooks/useAvatar";
 import { FacilityImage } from "../components/shifts/FacilityImage";
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import {
   MagnifyingGlassIcon,
-  FunnelIcon,
   PlusIcon,
   PhoneIcon,
   EnvelopeIcon,
@@ -27,10 +28,14 @@ import type { Shift, Resident, VitalRecord } from "../api/types";
 
 export function ShiftDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const shiftId = id ? parseInt(id) : null;
 
-  const { data: shiftsData } = useShifts({ limit: 1000 });
-  const shift = shiftsData?.data?.find((s) => s.id === shiftId);
+  const { data: shift, isLoading } = useQuery({
+    queryKey: ["shift", shiftId],
+    queryFn: () => ShiftsAPI.get(shiftId!),
+    enabled: !!shiftId,
+  });
 
   const { data: facilities } = useFacilities();
   const facility = shift?.facility_id
@@ -74,10 +79,27 @@ export function ShiftDetailPage() {
     });
   };
 
-  if (!shift) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-slate-500">シフトが見つかりませんでした。</p>
+        <p className="text-sm text-slate-500">読み込み中...</p>
+      </div>
+    );
+  }
+
+  if (!shift) {
+    return (
+      <div className="space-y-6">
+        <button
+          onClick={() => navigate("/shifts")}
+          className="mb-4 inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900"
+        >
+          <ArrowLeftIcon className="h-4 w-4" />
+          シフト一覧に戻る
+        </button>
+        <div className="flex items-center justify-center py-12">
+          <p className="text-sm text-slate-500">シフトが見つかりませんでした。</p>
+        </div>
       </div>
     );
   }
@@ -88,20 +110,13 @@ export function ShiftDetailPage() {
   return (
     <div className="space-y-6">
       {/* ヘッダー */}
-      <div className="flex items-center gap-2 text-sm text-slate-500">
-        <Link to="/shifts/schedule" className="hover:text-brand-600">
-          シフト
-        </Link>
-        <span>/</span>
-        <Link
-          to={`/shifts/daily/${shift.start_datetime ? new Date(shift.start_datetime).toISOString().slice(0, 10) : ""}`}
-          className="hover:text-brand-600"
-        >
-          日別シフト
-        </Link>
-        <span>/</span>
-        <span>シフト詳細</span>
-      </div>
+      <button
+        onClick={() => navigate("/shifts")}
+        className="mb-4 inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900"
+      >
+        <ArrowLeftIcon className="h-4 w-4" />
+        シフト一覧に戻る
+      </button>
 
       {/* 施設情報ヘッダー */}
       <div className="flex items-start gap-4 rounded-lg border border-slate-200 bg-white p-6">
@@ -142,64 +157,6 @@ export function ShiftDetailPage() {
         </div>
         <div className="flex items-center justify-center py-12">
           <p className="text-sm text-slate-500">No data</p>
-        </div>
-      </Card>
-
-      {/* 入所者一覧 */}
-      <Card>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-slate-900">入所者一覧</h2>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-              <input
-                type="search"
-                placeholder="Search"
-                className="w-64 rounded-md border border-slate-300 bg-white py-2 pl-10 pr-4 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-              />
-            </div>
-            <button className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-              <FunnelIcon className="h-4 w-4" />
-              Filter
-            </button>
-            <button className="flex items-center gap-2 rounded-md bg-pink-500 px-4 py-2 text-sm font-semibold text-white hover:bg-pink-600">
-              <PlusIcon className="h-4 w-4" />
-              新規
-            </button>
-          </div>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {residents?.map((resident) => (
-            <Link
-              key={resident.resident_id}
-              to={`/residents/${resident.resident_id}`}
-              className="rounded-lg border border-slate-200 bg-white p-4 transition hover:shadow-md"
-            >
-              <div className="mb-2">
-                <span className="rounded-full bg-pink-100 px-2.5 py-0.5 text-xs font-medium text-pink-700">
-                  入所中
-                </span>
-              </div>
-              <h3 className="font-semibold text-slate-900">
-                {resident.last_name} {resident.first_name}
-              </h3>
-              {resident.last_name_kana && resident.first_name_kana && (
-                <p className="text-sm text-slate-500 mt-1">
-                  ({resident.last_name_kana} {resident.first_name_kana})
-                </p>
-              )}
-              {resident.notes && (
-                <p className="mt-2 text-xs text-slate-600 line-clamp-2">
-                  {resident.notes}
-                </p>
-              )}
-            </Link>
-          ))}
-          {(!residents || residents.length === 0) && (
-            <div className="col-span-full text-center py-8 text-sm text-slate-500">
-              入所者がまだ登録されていません。
-            </div>
-          )}
         </div>
       </Card>
 

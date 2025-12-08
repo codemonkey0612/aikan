@@ -4,7 +4,10 @@ import { validate } from "../middlewares/validation.middleware";
 import { z } from "zod";
 
 const createDiagnosisSchema = z.object({
-  resident_id: z.number().int().positive("入居者IDは正の整数である必要があります"),
+  resident_id: z
+    .string()
+    .trim()
+    .min(1, "入居者IDは必須です"),
   diagnosis_code: z.string().max(50).optional().or(z.literal("")),
   diagnosis_name: z.string().min(1, "診断名は必須です").max(255),
   diagnosis_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "有効な日付を入力してください (YYYY-MM-DD)").optional().or(z.literal("")),
@@ -48,7 +51,7 @@ export const getDiagnosisById = async (req: Request, res: Response) => {
 export const getDiagnosesByResident = async (req: Request, res: Response) => {
   try {
     const diagnoses = await DiagnosisService.getDiagnosesByResident(
-      Number(req.params.resident_id)
+      req.params.resident_id
     );
     res.json(diagnoses);
   } catch (error: any) {

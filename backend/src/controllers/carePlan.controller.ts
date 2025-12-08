@@ -4,7 +4,10 @@ import { validate } from "../middlewares/validation.middleware";
 import { z } from "zod";
 
 const createCarePlanSchema = z.object({
-  resident_id: z.number().int().positive("入居者IDは正の整数である必要があります"),
+  resident_id: z
+    .string()
+    .trim()
+    .min(1, "入居者IDは必須です"),
   title: z.string().min(1, "タイトルは必須です").max(255),
   description: z.string().optional().or(z.literal("")),
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "有効な日付を入力してください (YYYY-MM-DD)"),
@@ -64,7 +67,7 @@ export const getCarePlanById = async (req: Request, res: Response) => {
 export const getCarePlansByResident = async (req: Request, res: Response) => {
   try {
     const carePlans = await CarePlanService.getCarePlansByResident(
-      Number(req.params.resident_id)
+      req.params.resident_id
     );
     res.json(carePlans);
   } catch (error: any) {

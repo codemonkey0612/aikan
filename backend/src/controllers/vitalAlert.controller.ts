@@ -4,7 +4,10 @@ import { validate } from "../middlewares/validation.middleware";
 import { z } from "zod";
 
 const createVitalAlertSchema = z.object({
-  resident_id: z.number().int().positive("入居者IDは正の整数である必要があります"),
+  resident_id: z
+    .string()
+    .trim()
+    .min(1, "入居者IDは必須です"),
   alert_type: z.enum(["SYSTOLIC_BP", "DIASTOLIC_BP", "PULSE", "TEMPERATURE", "SPO2"], {
     message: "有効なアラートタイプを選択してください",
   }),
@@ -55,7 +58,7 @@ export const getVitalAlertsByResident = async (
 ) => {
   try {
     const alerts = await VitalAlertService.getVitalAlertsByResident(
-      Number(req.params.resident_id)
+      req.params.resident_id
     );
     res.json(alerts);
   } catch (error: any) {
@@ -132,7 +135,7 @@ export const deleteVitalAlert = async (req: Request, res: Response) => {
 export const getVitalAlertTriggers = async (req: Request, res: Response) => {
   try {
     const resident_id = req.query.resident_id
-      ? Number(req.query.resident_id)
+      ? String(req.query.resident_id)
       : undefined;
     const acknowledged =
       req.query.acknowledged === "true"

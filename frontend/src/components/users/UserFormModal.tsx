@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import type { User } from "../../api/types";
-import { registerSchema } from "../../validations/auth.validation";
 
 interface UserFormModalProps {
   isOpen: boolean;

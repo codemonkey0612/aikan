@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { ClockIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 interface TimeSlot {
   start: string;

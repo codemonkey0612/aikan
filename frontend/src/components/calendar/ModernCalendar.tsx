@@ -34,7 +34,6 @@ interface ModernCalendarProps {
   showAddButton?: boolean;
   onAddClick?: () => void;
   onSearchChange?: (query: string) => void;
-  title?: string;
 }
 
 export function ModernCalendar({
@@ -47,14 +46,8 @@ export function ModernCalendar({
   showAddButton = false,
   onAddClick,
   onSearchChange,
-  title,
 }: ModernCalendarProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-
   const today = new Date();
-  const isCurrentMonth = 
-    currentMonth.getMonth() === today.getMonth() &&
-    currentMonth.getFullYear() === today.getFullYear();
 
   const monthLabel = currentMonth.toLocaleDateString("en-US", {
     month: "long",
@@ -111,11 +104,6 @@ export function ModernCalendar({
 
   const goToToday = () => {
     onMonthChange(new Date());
-  };
-
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    onSearchChange?.(value);
   };
 
   const isToday = (date: Date) => {

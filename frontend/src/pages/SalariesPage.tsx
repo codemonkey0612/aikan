@@ -17,7 +17,9 @@ import {
 import {
   CalculatorIcon,
   UserIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
+import type { Salary } from "../api/types";
 
 export function SalariesPage() {
   const { user } = useAuth();
@@ -31,6 +33,7 @@ export function SalariesPage() {
     const month = String(now.getMonth() + 1).padStart(2, "0");
     return `${year}-${month}`;
   });
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const { data, isLoading } = useSalaries();
   const { data: calculation, isLoading: isCalculating } = useCalculateNurseSalary(
@@ -47,6 +50,46 @@ export function SalariesPage() {
   const nurses = useMemo(() => {
     return users?.filter((u) => u.nurse_id && u.role === "nurse") || [];
   }, [users]);
+
+  // Create a map of user_id to user for quick lookup
+  const userMap = useMemo(() => {
+    const map = new Map<number, (typeof users)[0]>();
+    users?.forEach((u) => {
+      if (u?.id) map.set(u.id, u);
+    });
+    return map;
+  }, [users]);
+
+  // Filter salaries based on search query
+  const filteredSalaries = useMemo(() => {
+    if (!data || !Array.isArray(data)) return [];
+    if (!searchQuery.trim()) return data;
+
+    const query = searchQuery.toLowerCase().trim();
+    return data.filter((salary: Salary) => {
+      // Search by nurse_id
+      if (salary.nurse_id?.toLowerCase().includes(query)) {
+        return true;
+      }
+
+      // Search by year_month
+      if (salary.year_month?.toLowerCase().includes(query)) {
+        return true;
+      }
+
+      // Search by nurse name
+      const nurseUser = userMap.get(salary.user_id);
+      if (nurseUser) {
+        const fullName = `${nurseUser.last_name} ${nurseUser.first_name}`.toLowerCase();
+        const fullNameKana = `${nurseUser.last_name_kana || ""} ${nurseUser.first_name_kana || ""}`.toLowerCase();
+        if (fullName.includes(query) || fullNameKana.includes(query)) {
+          return true;
+        }
+      }
+
+      return false;
+    });
+  }, [data, searchQuery, userMap]);
 
   const handleCalculateAndSave = async () => {
     if (!selectedNurseId) {
@@ -225,6 +268,33 @@ export function SalariesPage() {
 
       {/* 支給履歴 */}
       <Card title="支給履歴">
+        {/* Search Bar */}
+        <div className="mb-4">
+          <div className="relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="看護師名、看護師ID、または対象月で検索..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 bg-white pl-10 pr-4 py-2.5 text-sm placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <span className="text-sm">✕</span>
+              </button>
+            )}
+          </div>
+          {searchQuery && (
+            <p className="mt-2 text-xs text-slate-500">
+              {filteredSalaries.length}件の結果が見つかりました
+            </p>
+          )}
+        </div>
+
         <Table>
           <TableHeader>
             <TableRow>
@@ -244,11 +314,24 @@ export function SalariesPage() {
                 </TableCell>
               </TableRow>
             )}
-            {Array.isArray(data) && data.map((salary) => (
-              <TableRow key={salary.id}>
-                <TableCell>
-                  {salary.nurse_id || `#${salary.user_id}`}
-                </TableCell>
+            {filteredSalaries.map((salary: Salary) => {
+              const nurseUser = userMap.get(salary.user_id);
+              const nurseName = nurseUser 
+                ? `${nurseUser.last_name} ${nurseUser.first_name}`
+                : null;
+              
+              return (
+                <TableRow key={salary.id}>
+                  <TableCell>
+                    <div>
+                      {nurseName && (
+                        <div className="font-medium text-slate-900">{nurseName}</div>
+                      )}
+                      <div className="text-xs text-slate-500">
+                        {salary.nurse_id || `ID: ${salary.user_id}`}
+                      </div>
+                    </div>
+                  </TableCell>
                 <TableCell>{salary.year_month}</TableCell>
                 <TableCell className="text-right font-semibold">
                   ¥{salary.total_amount?.toLocaleString() ?? 0}
@@ -259,15 +342,23 @@ export function SalariesPage() {
                 <TableCell className="text-right">
                   ¥{salary.time_pay?.toLocaleString() ?? 0}
                 </TableCell>
-                <TableCell className="text-right">
-                  ¥{salary.vital_pay?.toLocaleString() ?? 0}
-                </TableCell>
-              </TableRow>
-            ))}
-            {!isLoading && !data?.length && (
+                  <TableCell className="text-right">
+                    ¥{salary.vital_pay?.toLocaleString() ?? 0}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+            {!isLoading && !searchQuery && !data?.length && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-slate-400">
                   給与データがありません。
+                </TableCell>
+              </TableRow>
+            )}
+            {!isLoading && searchQuery && filteredSalaries.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center text-slate-400">
+                  「{searchQuery}」に一致する給与データが見つかりませんでした。
                 </TableCell>
               </TableRow>
             )}

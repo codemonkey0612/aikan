@@ -1,7 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { AuthAPI } from "./endpoints";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 const ACCESS_TOKEN_KEY = "nursingSystem.accessToken";
 const REFRESH_TOKEN_KEY = "nursingSystem.refreshToken";
 

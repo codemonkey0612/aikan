@@ -7,7 +7,12 @@ const FACILITIES_QUERY_KEY = ["facilities"] as const;
 export function useFacilities() {
   return useQuery<Facility[]>({
     queryKey: FACILITIES_QUERY_KEY,
-    queryFn: () => api.getFacilities().then((res) => res.data),
+    queryFn: async () => {
+      const response = await api.getFacilities();
+      const data = response.data;
+      // Ensure we always return an array
+      return Array.isArray(data) ? data : [];
+    },
   });
 }
 

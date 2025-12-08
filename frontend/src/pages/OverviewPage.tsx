@@ -94,13 +94,13 @@ export function OverviewPage() {
         />
         <SummaryCard
           title="シフト充足率"
-          value={`${shifts?.data.length ?? 0}/42`}
+          value={`${shifts?.data?.length ?? 0}/42`}
           change="稼働率 96%"
           icon={<ClockIcon className="h-6 w-6" />}
         />
         <SummaryCard
           title="本日のバイタル"
-          value={vitals?.data.length ?? 0}
+          value={vitals?.data?.length ?? 0}
           change="本日 +8"
           icon={<HeartIcon className="h-6 w-6" />}
         />
@@ -173,7 +173,7 @@ export function OverviewPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {shifts?.data.map((shift) => (
+              {shifts?.data?.map((shift) => (
                 <TableRow key={shift.id}>
                     <TableCell>{shift.nurse_id || "未設定"}</TableCell>
                     <TableCell>{shift.facility_name || shift.facility_id || "未設定"}</TableCell>
@@ -184,7 +184,7 @@ export function OverviewPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              {!shifts?.data.length && (
+              {!shifts?.data?.length && (
                 <TableRow>
                   <TableCell className="text-center text-slate-400" colSpan={3}>
                     シフトはまだ登録されていません。
@@ -212,7 +212,7 @@ export function OverviewPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {vitals?.data.map((record) => (
+              {vitals?.data?.map((record) => (
                 <TableRow key={record.id}>
                   <TableCell>#{record.resident_id}</TableCell>
                   <TableCell>
@@ -223,7 +223,7 @@ export function OverviewPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              {!vitals?.data.length && (
+              {!vitals?.data?.length && (
                 <TableRow>
                   <TableCell className="text-center text-slate-400" colSpan={3}>
                     バイタルはまだ登録されていません。

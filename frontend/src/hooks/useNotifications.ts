@@ -9,7 +9,12 @@ const getNotificationsQueryKey = (params?: Record<string, unknown>) =>
 export function useNotifications(params?: Record<string, unknown>) {
   return useQuery<Notification[]>({
     queryKey: getNotificationsQueryKey(params),
-    queryFn: () => api.getNotifications(params).then((res) => res.data),
+    queryFn: async () => {
+      const response = await api.getNotifications(params);
+      const data = response.data;
+      // Ensure we always return an array
+      return Array.isArray(data) ? data : [];
+    },
   });
 }
 

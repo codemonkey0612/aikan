@@ -21,8 +21,12 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   // Calculate active notifications count
   const activeNotificationsCount = useMemo(() => {
     if (!notifications) return 0;
+    // Ensure notifications is an array
+    const notificationsArray = Array.isArray(notifications) ? notifications : [];
+    if (notificationsArray.length === 0) return 0;
+    
     const now = new Date();
-    return notifications.filter((notification) => {
+    return notificationsArray.filter((notification) => {
       const publishFrom = notification.publish_from
         ? new Date(notification.publish_from)
         : null;
@@ -116,7 +120,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
                 <span className="relative inline-flex rounded-full h-5 w-5 items-center justify-center bg-red-500 text-white text-xs font-semibold">
                   {activeNotificationsCount > 9 ? "9+" : activeNotificationsCount}
                 </span>
-              </span>
+        </span>
             )}
           </button>
         </div>

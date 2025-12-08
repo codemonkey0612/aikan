@@ -11,7 +11,12 @@ const getResidentsQueryKey = (facilityId?: string) =>
 export function useResidents(facilityId?: string) {
   return useQuery<Resident[]>({
     queryKey: getResidentsQueryKey(facilityId),
-    queryFn: () => api.getResidents(facilityId).then((res) => res.data),
+    queryFn: async () => {
+      const response = await api.getResidents(facilityId);
+      const data = response.data;
+      // Ensure we always return an array
+      return Array.isArray(data) ? data : [];
+    },
   });
 }
 

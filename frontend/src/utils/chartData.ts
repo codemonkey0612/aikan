@@ -20,6 +20,10 @@ const MONTHS = [
  */
 export function getMonthlyFacilityData(facilities: Facility[] | undefined) {
   if (!facilities) return [];
+  
+  // Ensure facilities is an array
+  const facilitiesArray = Array.isArray(facilities) ? facilities : [];
+  if (facilitiesArray.length === 0) return [];
 
   const now = new Date();
   const monthlyData: Record<string, number> = {};
@@ -32,7 +36,7 @@ export function getMonthlyFacilityData(facilities: Facility[] | undefined) {
   }
 
   // Count facilities by created_at month
-  facilities.forEach((facility) => {
+  facilitiesArray.forEach((facility) => {
     if (facility.created_at) {
       const date = new Date(facility.created_at);
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -60,6 +64,10 @@ export function getMonthlyFacilityData(facilities: Facility[] | undefined) {
  */
 export function getMonthlyResidentData(residents: Resident[] | undefined) {
   if (!residents) return [];
+  
+  // Ensure residents is an array
+  const residentsArray = Array.isArray(residents) ? residents : [];
+  if (residentsArray.length === 0) return [];
 
   const now = new Date();
   const monthlyData: Record<string, number> = {};
@@ -72,7 +80,7 @@ export function getMonthlyResidentData(residents: Resident[] | undefined) {
   }
 
   // Count residents by admission_date month (active residents)
-  residents.forEach((resident) => {
+  residentsArray.forEach((resident) => {
     if (resident.admission_date && !resident.is_excluded) {
       const date = new Date(resident.admission_date);
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -110,10 +118,21 @@ export function getOccupancyData(facilities: Facility[] | undefined) {
     };
   }
 
+  // Ensure facilities is an array
+  const facilitiesArray = Array.isArray(facilities) ? facilities : [];
+  if (facilitiesArray.length === 0) {
+    return {
+      occupied: 0,
+      available: 0,
+      total: 0,
+      percentage: 0,
+    };
+  }
+
   let totalCapacity = 0;
   let totalResidents = 0;
 
-  facilities.forEach((facility) => {
+  facilitiesArray.forEach((facility) => {
     const capacity = facility.capacity || 0;
     const residents = facility.current_residents || 0;
     totalCapacity += capacity;
@@ -140,9 +159,13 @@ export function getStatisticsData(
   residents: Resident[] | undefined,
   shifts: Shift[] | undefined
 ) {
-  const facilityCount = facilities?.length || 0;
-  const residentCount = residents?.length || 0;
-  const shiftCount = shifts?.data?.length || shifts?.length || 0;
+  const facilitiesArray = Array.isArray(facilities) ? facilities : [];
+  const residentsArray = Array.isArray(residents) ? residents : [];
+  const shiftArray = Array.isArray(shifts) ? shifts : shifts?.data || [];
+  
+  const facilityCount = facilitiesArray.length;
+  const residentCount = residentsArray.length;
+  const shiftCount = shiftArray.length;
 
   // Normalize to 0-100 scale
   const maxFacilities = 50;

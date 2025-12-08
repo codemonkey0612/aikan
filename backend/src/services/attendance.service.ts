@@ -45,7 +45,6 @@ export const checkIn = async (
   }
 
   if (String(shift.nurse_id) !== String(user_id)) {
-  if (String(shift.nurse_id) !== String(user_id)) {
     const error = new Error("このシフトはあなたのシフトではありません");
     (error as any).status = 403;
     throw error;

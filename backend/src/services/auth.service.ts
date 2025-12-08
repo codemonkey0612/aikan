@@ -145,7 +145,12 @@ export const updateProfile = async (
     }
   }
 
-  const updated = await UserService.updateUser(userId, data);
+  const updated = await UserService.updateUser(userId, {
+    first_name: data.first_name ?? undefined,
+    last_name: data.last_name ?? undefined,
+    email: data.email ?? undefined,
+    phone_number: data.phone_number ?? undefined,
+  });
   return sanitizeUser(updated);
 };
 

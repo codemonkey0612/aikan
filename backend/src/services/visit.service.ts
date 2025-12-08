@@ -17,7 +17,7 @@ export const getVisitsPaginated = (
   sortOrder: "asc" | "desc",
   filters?: {
     shift_id?: number;
-    resident_id?: number;
+    resident_id?: string;
     visited_from?: string;
     visited_to?: string;
   }

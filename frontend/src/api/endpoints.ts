@@ -138,7 +138,6 @@ export const ShiftsAPI = {
     if (params?.limit) queryParams.append("limit", String(params.limit));
     if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
     if (params?.sortOrder) queryParams.append("sortOrder", params.sortOrder);
-    if (params?.user_id) queryParams.append("user_id", String(params.user_id));
     if (params?.facility_id) queryParams.append("facility_id", String(params.facility_id));
     if (params?.date_from) queryParams.append("date_from", params.date_from);
     if (params?.date_to) queryParams.append("date_to", params.date_to);

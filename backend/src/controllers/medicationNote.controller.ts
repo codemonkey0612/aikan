@@ -4,7 +4,10 @@ import { validate } from "../middlewares/validation.middleware";
 import { z } from "zod";
 
 const createMedicationNoteSchema = z.object({
-  resident_id: z.number().int().positive("入居者IDは正の整数である必要があります"),
+  resident_id: z
+    .string()
+    .trim()
+    .min(1, "入居者IDは必須です"),
   medication_name: z.string().min(1, "薬剤名は必須です").max(255),
   dosage: z.string().max(100).optional().or(z.literal("")),
   frequency: z.string().max(100).optional().or(z.literal("")),
@@ -53,7 +56,7 @@ export const getMedicationNotesByResident = async (
 ) => {
   try {
     const notes = await MedicationNoteService.getMedicationNotesByResident(
-      Number(req.params.resident_id)
+      req.params.resident_id
     );
     res.json(notes);
   } catch (error: any) {
@@ -71,7 +74,7 @@ export const getActiveMedicationNotesByResident = async (
   try {
     const notes =
       await MedicationNoteService.getActiveMedicationNotesByResident(
-        Number(req.params.resident_id)
+        req.params.resident_id
       );
     res.json(notes);
   } catch (error: any) {

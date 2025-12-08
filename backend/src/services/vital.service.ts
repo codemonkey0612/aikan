@@ -30,7 +30,7 @@ export const getVitalsPaginated = (
   sortBy: string,
   sortOrder: "asc" | "desc",
   filters?: {
-    resident_id?: number;
+    resident_id?: string;
     measured_from?: string;
     measured_to?: string;
     created_by?: number;

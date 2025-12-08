@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const salarySetting_controller_1 = require("../controllers/salarySetting.controller");
+const auth_middleware_1 = require("../middlewares/auth.middleware");
+const rbac_middleware_1 = require("../middlewares/rbac.middleware");
+const router = (0, express_1.Router)();
+router.get("/", auth_middleware_1.authenticate, (0, rbac_middleware_1.requirePermission)("salaries:read"), salarySetting_controller_1.getAllSalarySettings);
+router.get("/:key", auth_middleware_1.authenticate, (0, rbac_middleware_1.requirePermission)("salaries:read"), salarySetting_controller_1.getSalarySettingByKey);
+router.post("/", auth_middleware_1.authenticate, (0, rbac_middleware_1.requirePermission)("salaries:write"), salarySetting_controller_1.createSalarySetting);
+router.put("/:key", auth_middleware_1.authenticate, (0, rbac_middleware_1.requirePermission)("salaries:write"), salarySetting_controller_1.updateSalarySetting);
+router.delete("/:key", auth_middleware_1.authenticate, (0, rbac_middleware_1.requirePermission)("salaries:write"), salarySetting_controller_1.deleteSalarySetting);
+exports.default = router;

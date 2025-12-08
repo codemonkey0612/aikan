@@ -25,15 +25,26 @@ export function GoogleMapComponent({
 }: GoogleMapProps) {
   const center = useMemo(() => ({ lat, lng }), [lat, lng]);
 
-  if (!GOOGLE_MAPS_API_KEY) {
+  // Debug: Log the API key status (only in development)
+  if (import.meta.env.DEV) {
+    console.log("Google Maps API Key:", GOOGLE_MAPS_API_KEY ? "Loaded" : "Missing");
+    console.log("Environment variable:", import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? "Set" : "Not set");
+  }
+
+  if (!GOOGLE_MAPS_API_KEY || GOOGLE_MAPS_API_KEY.trim() === "") {
     return (
       <div
         className="flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50"
         style={{ height }}
       >
-        <p className="text-sm text-slate-500">
-          Google Maps API key is not configured
-        </p>
+        <div className="text-center">
+          <p className="text-sm text-slate-500 mb-2">
+            Google Maps API key is not configured
+          </p>
+          <p className="text-xs text-slate-400">
+            Please set VITE_GOOGLE_MAPS_API_KEY in your .env file and restart the dev server
+          </p>
+        </div>
       </div>
     );
   }

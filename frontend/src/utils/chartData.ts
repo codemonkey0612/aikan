@@ -1,4 +1,4 @@
-import type { Facility, Resident, Shift } from "../api/types";
+import type { Facility, Resident, Shift, PaginatedResponse } from "../api/types";
 
 const MONTHS = [
   "1月",
@@ -157,7 +157,7 @@ export function getOccupancyData(facilities: Facility[] | undefined) {
 export function getStatisticsData(
   facilities: Facility[] | undefined,
   residents: Resident[] | undefined,
-  shifts: Shift[] | undefined
+  shifts: Shift[] | PaginatedResponse<Shift> | undefined
 ) {
   const facilitiesArray = Array.isArray(facilities) ? facilities : [];
   const residentsArray = Array.isArray(residents) ? residents : [];
@@ -203,10 +203,10 @@ export function getStatisticsData(
 /**
  * Get monthly shift counts
  */
-export function getMonthlyShiftData(shifts: Shift[] | undefined) {
+export function getMonthlyShiftData(shifts: Shift[] | PaginatedResponse<Shift> | undefined) {
   if (!shifts) return [];
   
-  const shiftArray = Array.isArray(shifts) ? shifts : shifts.data || [];
+  const shiftArray = Array.isArray(shifts) ? shifts : shifts?.data || [];
   if (shiftArray.length === 0) return [];
 
   const now = new Date();

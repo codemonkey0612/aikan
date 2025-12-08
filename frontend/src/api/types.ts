@@ -88,9 +88,13 @@ export interface Facility {
 
 export interface Resident {
   resident_id: string; // VARCHAR(50) PRIMARY KEY
+  id?: string; // alias for resident_id used by UI components
   user_id: Nullable<string>; // VARCHAR(50)
   status_id: Nullable<string>; // VARCHAR(50)
   facility_id: Nullable<string>; // VARCHAR(50)
+  status?: string;
+  gender?: string;
+  birth_date?: Nullable<string>;
   last_name: string;
   first_name: string;
   last_name_kana: Nullable<string>;

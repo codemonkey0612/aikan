@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getCorporationById } from "../api/corporations";
 import { useAuth } from "../hooks/useAuth";
-import { useAvatar } from "../hooks/useAvatar";
 import { getDefaultAvatar } from "../utils/defaultAvatars";
 import { Card } from "../components/ui/Card";
 import { GoogleMapComponent } from "../components/maps/GoogleMap";
@@ -106,7 +105,7 @@ export function CorporationDetailPage() {
     .join(" ");
 
   const [lat, lng] = corporation.latitude_longitude
-    ? corporation.latitude_longitude.split(",").map((s) => s.trim())
+    ? corporation.latitude_longitude.split(",").map((s: string) => s.trim())
     : [null, null];
 
   const formatDate = (dateString: string) => {

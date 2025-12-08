@@ -47,18 +47,22 @@ export function SalariesPage() {
     year_month: selectedYearMonth,
   });
 
-  const nurses = useMemo(() => {
-    return users?.filter((u) => u.nurse_id && u.role === "nurse") || [];
+  const userList = useMemo(() => {
+    return Array.isArray(users) ? users : users?.data || [];
   }, [users]);
+
+  const nurses = useMemo(() => {
+    return userList.filter((u) => u.nurse_id && u.role === "nurse");
+  }, [userList]);
 
   // Create a map of user_id to user for quick lookup
   const userMap = useMemo(() => {
-    const map = new Map<number, (typeof users)[0]>();
-    users?.forEach((u) => {
+    const map = new Map<number, (typeof userList)[0]>();
+    userList.forEach((u) => {
       if (u?.id) map.set(u.id, u);
     });
     return map;
-  }, [users]);
+  }, [userList]);
 
   // Filter salaries based on search query
   const filteredSalaries = useMemo(() => {

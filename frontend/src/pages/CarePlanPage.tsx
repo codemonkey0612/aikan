@@ -14,7 +14,8 @@ import { FileList } from "../components/files/FileList";
 
 export function CarePlanPage() {
   const { id } = useParams<{ id: string }>();
-  const residentId = id ? Number(id) : 0;
+  const residentId = id ?? "";
+  const residentIdNumber = id ? Number(id) : 0;
 
   const [activeTab, setActiveTab] = useState<"care-plans" | "diagnoses" | "medications" | "alerts">("care-plans");
   const [selectedCarePlan, setSelectedCarePlan] = useState<number | null>(null);
@@ -406,13 +407,13 @@ export function CarePlanPage() {
               <FileUpload
                 category="CARE_NOTE_ATTACHMENT"
                 entity_type="resident"
-                entity_id={residentId}
+                entity_id={residentIdNumber}
                 accept=".pdf,.doc,.docx,image/*"
               />
               <FileList
                 category="CARE_NOTE_ATTACHMENT"
                 entity_type="resident"
-                entity_id={residentId}
+                entity_id={residentIdNumber}
               />
             </div>
           </Card>

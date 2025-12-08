@@ -63,7 +63,7 @@ export function FacilityDetailPage() {
     .join(" ");
 
   const [lat, lng] = facility.latitude_longitude
-    ? facility.latitude_longitude.split(",").map((s) => s.trim())
+    ? facility.latitude_longitude.split(",").map((s: string) => s.trim())
     : [null, null];
 
   const copyAddressToClipboard = () => {

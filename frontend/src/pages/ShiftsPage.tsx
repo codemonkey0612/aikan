@@ -13,6 +13,7 @@ const formatKey = (date: Date) => date.toISOString().slice(0, 10);
 export function ShiftsPage() {
   const navigate = useNavigate();
   const { data: users } = useUsers();
+  const userList = useMemo(() => Array.isArray(users) ? users : users?.data || [], [users]);
   const { data: facilities, isLoading: facilitiesLoading } = useFacilities();
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
@@ -32,13 +33,13 @@ export function ShiftsPage() {
   // 看護師IDから看護師名へのマッピング
   const nurseMap = useMemo(() => {
     const map = new Map<string, string>();
-    users?.forEach((u) => {
+    userList.forEach((u) => {
       if (u.nurse_id) {
         map.set(u.nurse_id, `${u.last_name} ${u.first_name}`);
       }
     });
     return map;
-  }, [users]);
+  }, [userList]);
 
   // 施設IDを正規化するヘルパー関数（数値と文字列の両方に対応）
   const normalizeId = (id: string | number | null | undefined): string => {

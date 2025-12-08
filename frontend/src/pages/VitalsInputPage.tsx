@@ -6,7 +6,7 @@ import { Card } from "../components/ui/Card";
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from "../components/ui/Table";
 
 interface VitalFormState {
-  resident_id: number | null;
+  resident_id: string | null;
   measured_at: string;
   systolic_bp: string;
   diastolic_bp: string;
@@ -36,7 +36,7 @@ export function VitalsInputPage() {
     setForm((prev) => ({
       ...prev,
       [field]:
-        field === "resident_id" ? Number(value) || null : value,
+        field === "resident_id" ? (value || null) : value,
     }));
   };
 
@@ -95,8 +95,8 @@ export function VitalsInputPage() {
                   >
                     <option value="">選択してください</option>
                     {residents?.map((resident) => (
-                      <option key={resident.id} value={resident.id}>
-                        #{resident.id} {resident.first_name} {resident.last_name}
+                      <option key={resident.id ?? resident.resident_id} value={resident.id ?? resident.resident_id}>
+                        #{resident.id ?? resident.resident_id} {resident.first_name} {resident.last_name}
                       </option>
                     ))}
                   </select>

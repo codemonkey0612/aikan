@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -8,7 +8,7 @@ import {
 
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-interface CalendarEvent {
+export interface CalendarEvent {
   id?: string;
   title: string;
   time?: string;
@@ -33,7 +33,6 @@ interface ModernCalendarProps {
   showSearch?: boolean;
   showAddButton?: boolean;
   onAddClick?: () => void;
-  onSearchChange?: (query: string) => void;
 }
 
 export function ModernCalendar({
@@ -45,7 +44,6 @@ export function ModernCalendar({
   showSearch = false,
   showAddButton = false,
   onAddClick,
-  onSearchChange,
 }: ModernCalendarProps) {
   const today = new Date();
 

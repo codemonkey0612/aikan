@@ -5,12 +5,18 @@ import {
   UserGroupIcon,
   ClockIcon,
   ChevronRightIcon,
+  PencilIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import type { Notification } from "../../api/types";
 import { NotificationDetailModal } from "./NotificationDetailModal";
+import { useAuth } from "../../hooks/useAuth";
+import { useDeleteNotification } from "../../hooks/useNotifications";
+import toast from "react-hot-toast";
 
 interface NotificationCardProps {
   notification: Notification;
+  onEdit?: (notification: Notification) => void;
 }
 
 function getNotificationStatus(notification: Notification): {
@@ -80,9 +86,35 @@ function getRoleLabel(role: string | null | undefined): string {
   return roleMap[role] || role;
 }
 
-export function NotificationCard({ notification }: NotificationCardProps) {
+export function NotificationCard({ notification, onEdit }: NotificationCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { user } = useAuth();
+  const deleteMutation = useDeleteNotification();
   const status = getNotificationStatus(notification);
+
+  const canEdit = user && notification.created_by === user.id;
+  const canDelete = user && (notification.created_by === user.id || user.role === "admin");
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm("このお知らせを削除してもよろしいですか？")) {
+      return;
+    }
+
+    try {
+      await deleteMutation.mutateAsync(notification.id);
+      toast.success("お知らせを削除しました");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "削除に失敗しました");
+    }
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onEdit) {
+      onEdit(notification);
+    }
+  };
 
   return (
     <>
@@ -90,8 +122,8 @@ export function NotificationCard({ notification }: NotificationCardProps) {
         onClick={() => setIsModalOpen(true)}
         className="group relative bg-white rounded-xl border border-slate-200 p-6 hover:border-brand-300 hover:shadow-lg transition-all duration-200 cursor-pointer"
       >
-        {/* Status Badge */}
-        <div className="absolute top-4 right-4">
+        {/* Status Badge and Actions */}
+        <div className="absolute top-4 right-4 flex items-center gap-2">
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${status.color} ${status.bgColor}`}
           >
@@ -106,6 +138,29 @@ export function NotificationCard({ notification }: NotificationCardProps) {
             />
             {status.label}
           </span>
+          {(canEdit || canDelete) && (
+            <div className="flex items-center gap-1">
+              {canEdit && (
+                <button
+                  onClick={handleEdit}
+                  className="p-1.5 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                  title="編集"
+                >
+                  <PencilIcon className="h-4 w-4" />
+                </button>
+              )}
+              {canDelete && (
+                <button
+                  onClick={handleDelete}
+                  disabled={deleteMutation.isPending}
+                  className="p-1.5 rounded-lg bg-rose-100 text-rose-600 hover:bg-rose-200 transition-colors disabled:opacity-50"
+                  title="削除"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -131,6 +186,14 @@ export function NotificationCard({ notification }: NotificationCardProps) {
 
           {/* Metadata */}
           <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
+            {/* Category */}
+            {notification.category && (
+              <div className="flex items-center gap-1.5">
+                <span className="px-2 py-0.5 rounded bg-brand-100 text-brand-700 font-medium">
+                  {notification.category}
+                </span>
+              </div>
+            )}
             {/* Target Role */}
             <div className="flex items-center gap-1.5">
               <UserGroupIcon className="h-4 w-4" />

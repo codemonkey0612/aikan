@@ -2,11 +2,14 @@ import { useMemo, useState } from "react";
 import { useNotifications } from "../hooks/useNotifications";
 import { Card } from "../components/ui/Card";
 import { NotificationCard } from "../components/notifications/NotificationCard";
+import { NotificationFormModal } from "../components/notifications/NotificationFormModal";
 import {
   BellIcon,
   FunnelIcon,
   XMarkIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
+import type { Notification } from "../api/types";
 
 type FilterStatus = "all" | "active" | "upcoming" | "expired";
 
@@ -28,6 +31,8 @@ export function NotificationsPage() {
   const { data, isLoading } = useNotifications();
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingNotification, setEditingNotification] = useState<Notification | null>(null);
 
   const filteredNotifications = useMemo(() => {
     if (!data) return [];
@@ -71,15 +76,39 @@ export function NotificationsPage() {
     };
   }, [data]);
 
+  const handleCreate = () => {
+    setEditingNotification(null);
+    setIsFormOpen(true);
+  };
+
+  const handleEdit = (notification: Notification) => {
+    setEditingNotification(notification);
+    setIsFormOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setEditingNotification(null);
+  };
+
   return (
     <div className="space-y-6">
-      <header>
-        <p className="text-sm uppercase tracking-wide text-slate-500">
-          通知
-        </p>
-        <h1 className="text-3xl font-semibold text-slate-900">
-          お知らせ
-        </h1>
+      <header className="flex items-center justify-between">
+        <div>
+          <p className="text-sm uppercase tracking-wide text-slate-500">
+            通知
+          </p>
+          <h1 className="text-3xl font-semibold text-slate-900">
+            お知らせ
+          </h1>
+        </div>
+        <button
+          onClick={handleCreate}
+          className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 transition-colors"
+        >
+          <PlusIcon className="h-5 w-5" />
+          新規作成
+        </button>
       </header>
 
       {/* Stats Cards */}
@@ -231,11 +260,19 @@ export function NotificationsPage() {
               <NotificationCard
                 key={notification.id}
                 notification={notification}
+                onEdit={handleEdit}
               />
             ))}
           </div>
         )}
       </Card>
+
+      {/* Form Modal */}
+      <NotificationFormModal
+        isOpen={isFormOpen}
+        onClose={handleCloseForm}
+        notification={editingNotification}
+      />
     </div>
   );
 }

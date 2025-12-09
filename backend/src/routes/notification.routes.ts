@@ -12,12 +12,12 @@ router.use(authenticate);
 router.get("/", requirePermission("notifications:read"), NotificationController.getAllNotifications);
 router.get("/:id", requirePermission("notifications:read"), NotificationController.getNotificationById);
 
-// 通知作成・更新: ADMINまたはFACILITY_MANAGERのみ
-router.post("/", requirePermission("notifications:write"), NotificationController.createNotification);
-router.put("/:id", requirePermission("notifications:write"), NotificationController.updateNotification);
+// 通知作成: 誰でも作成可能（認証済みユーザー）
+router.post("/", NotificationController.createNotification);
 
-// 通知削除: ADMINのみ
-router.delete("/:id", requireAdminOrFacilityManager, NotificationController.deleteNotification);
+// 通知更新・削除: 所有者のみ更新可能、管理者は削除可能
+router.put("/:id", NotificationController.updateNotification);
+router.delete("/:id", NotificationController.deleteNotification);
 
 export default router;
 

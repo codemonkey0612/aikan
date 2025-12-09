@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "../hooks/useAuth";
 import {
@@ -10,8 +10,8 @@ import { Card } from "../components/ui/Card";
 import { TimeSlotPicker } from "../components/ui/TimeSlotPicker";
 import { ModernCalendar } from "../components/calendar/ModernCalendar";
 import {
-  CheckCircleIcon,
   ClockIcon,
+  CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import type { NurseAvailability } from "../api/types";
 
@@ -35,7 +35,7 @@ export function NurseAvailabilityPage() {
   const yearMonth = formatYearMonth(currentMonth);
   const nurseId = user?.nurse_id || "";
 
-  const { data: existingAvailability, isLoading } =
+  const { data: existingAvailability } =
     useNurseAvailabilityByNurseAndMonth(nurseId, yearMonth);
   const createMutation = useCreateNurseAvailability();
   const updateMutation = useUpdateNurseAvailability();

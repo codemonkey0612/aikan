@@ -103,12 +103,16 @@ export function ResidentDetailPage() {
         />
         <SummaryCard
           title="ステータス"
-          value={resident?.status ?? "不明"}
+          value={resident?.status_id ?? "不明"}
           icon={<HeartIcon className="h-6 w-6" />}
         />
         <SummaryCard
-          title="性別"
-          value={resident?.gender ?? "未設定"}
+          title="入所日"
+          value={
+            resident?.admission_date
+              ? new Date(resident.admission_date).toLocaleDateString("ja-JP")
+              : "未設定"
+          }
           icon={<HeartIcon className="h-6 w-6" />}
         />
         <SummaryCard
@@ -138,20 +142,24 @@ export function ResidentDetailPage() {
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell>誕生日</TableCell>
+              <TableCell>入所日</TableCell>
               <TableCell>
-                {resident?.birth_date
-                  ? new Date(resident.birth_date).toLocaleDateString("ja-JP")
+                {resident?.admission_date
+                  ? new Date(resident.admission_date).toLocaleDateString("ja-JP")
                   : "未登録"}
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell>性別</TableCell>
-              <TableCell>{resident?.gender ?? "未登録"}</TableCell>
+              <TableCell>退所日</TableCell>
+              <TableCell>
+                {resident?.discharge_date
+                  ? new Date(resident.discharge_date).toLocaleDateString("ja-JP")
+                  : "未登録"}
+              </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell>ステータス</TableCell>
-              <TableCell>{resident?.status ?? "未登録"}</TableCell>
+              <TableCell>ステータスID</TableCell>
+              <TableCell>{resident?.status_id ?? "未登録"}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>施設</TableCell>

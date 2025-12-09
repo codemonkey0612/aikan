@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from "react";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../hooks/useAuth";
 import { loginSchema } from "../validations/auth.validation";
@@ -204,19 +204,6 @@ export function LoginPage() {
               </span>
             </button>
           </form>
-
-          {/* Register Link */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-slate-600">
-              アカウントをお持ちでないですか？{" "}
-              <Link
-                to="/register"
-                className="font-semibold text-brand-600 transition hover:text-brand-700 hover:underline"
-              >
-                新規登録
-              </Link>
-            </p>
-          </div>
         </div>
 
         {/* Footer */}

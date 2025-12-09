@@ -225,6 +225,7 @@ export interface Notification {
   id: number;
   title: Nullable<string>;
   body: Nullable<string>;
+  category: Nullable<string>;
   target_role: Nullable<string>;
   publish_from: Nullable<string>;
   publish_to: Nullable<string>;

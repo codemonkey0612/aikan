@@ -5,6 +5,7 @@ export interface NotificationRow extends RowDataPacket {
   id: number;
   title: string | null;
   body: string | null;
+  category: string | null;
   target_role: string | null;
   publish_from: string | null;
   publish_to: string | null;
@@ -31,6 +32,7 @@ export const createNotification = async (data: NotificationInput) => {
   const {
     title,
     body,
+    category,
     target_role,
     publish_from,
     publish_to,
@@ -39,9 +41,9 @@ export const createNotification = async (data: NotificationInput) => {
 
   const [result] = await db.query<ResultSetHeader>(
     `INSERT INTO notifications
-    (title, body, target_role, publish_from, publish_to, created_by)
-    VALUES (?, ?, ?, ?, ?, ?)`,
-    [title, body, target_role, publish_from, publish_to, created_by]
+    (title, body, category, target_role, publish_from, publish_to, created_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [title, body, category, target_role, publish_from, publish_to, created_by]
   );
 
   return getNotificationById(result.insertId);

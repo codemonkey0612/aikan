@@ -384,6 +384,7 @@ CREATE TABLE IF NOT EXISTS shifts (
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS notifications (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    category VARCHAR(50) NULL,
     title VARCHAR(255) NULL,
     body TEXT NULL,
     target_role VARCHAR(50) NULL,
@@ -392,6 +393,7 @@ CREATE TABLE IF NOT EXISTS notifications (
     created_by BIGINT UNSIGNED NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_target_role (target_role),
+    INDEX idx_category (category),
     INDEX idx_publish_from (publish_from),
     INDEX idx_publish_to (publish_to),
     INDEX idx_created_by (created_by)

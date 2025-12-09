@@ -136,10 +136,18 @@ export function CorporationDetailPage() {
         </button>
 
         {/* Banner */}
-        <div className="relative h-32 w-full rounded-lg bg-gradient-to-r from-blue-100 to-indigo-100 mb-4 overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <p className="text-2xl font-handwriting text-slate-700">Thank you Nurses</p>
-          </div>
+        <div className="relative h-32 w-full rounded-lg mb-4 overflow-hidden">
+          {corporation.photo_url ? (
+            <img
+              src={corporation.photo_url}
+              alt={`${corporation.name} profit image`}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="h-full w-full bg-gradient-to-r from-blue-100 to-indigo-100 flex items-center justify-center">
+              <p className="text-2xl font-handwriting text-slate-700">Thank you Nurses</p>
+            </div>
+          )}
         </div>
 
         {/* Profile Section */}

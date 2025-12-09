@@ -172,6 +172,22 @@ export function NotificationDetailModal({
                   {/* Metadata */}
                   <div className="border-t border-slate-200 pt-6 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Category */}
+                      {notification.category && (
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 rounded-lg bg-brand-100">
+                            <BellIcon className="h-5 w-5 text-brand-600" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                              カテゴリ
+                            </p>
+                            <p className="text-sm font-medium text-slate-900">
+                              {notification.category}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                       {/* Target Role */}
                       <div className="flex items-start gap-3">
                         <div className="p-2 rounded-lg bg-slate-100">

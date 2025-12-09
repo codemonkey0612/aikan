@@ -1,13 +1,17 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCorporations } from "../hooks/useCorporations";
 import { Card } from "../components/ui/Card";
+import { Pagination } from "../components/ui/Pagination";
 import { BriefcaseIcon, MagnifyingGlassIcon, MapPinIcon } from "@heroicons/react/24/outline";
+
+const ITEMS_PER_PAGE = 20;
 
 export function CorporationsPage() {
   const navigate = useNavigate();
   const { data: corporations, isLoading } = useCorporations();
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
 
   const filteredCorporations = useMemo(() => {
     if (!corporations) return [];
@@ -27,6 +31,17 @@ export function CorporationsPage() {
         return haystack.includes(keyword);
       });
   }, [corporations, query]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
+
+  const paginatedCorporations = useMemo(() => {
+    const startIndex = (page - 1) * ITEMS_PER_PAGE;
+    return filteredCorporations.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredCorporations, page]);
+
+  const totalPages = Math.ceil(filteredCorporations.length / ITEMS_PER_PAGE) || 1;
 
   const handleCorporationClick = (corporationId: string) => {
     navigate(`/corporations/${corporationId}`);
@@ -78,7 +93,7 @@ export function CorporationsPage() {
               <p>条件に一致する法人が見つかりませんでした。</p>
             </div>
           ) : (
-            filteredCorporations.map((corporation) => {
+            paginatedCorporations.map((corporation) => {
               const address = [
                 corporation.address_prefecture,
                 corporation.address_city,
@@ -121,6 +136,20 @@ export function CorporationsPage() {
                       </div>
               );
             })
+          )}
+          {filteredCorporations.length > 0 && totalPages > 1 && (
+            <div className="mt-4 border-t border-slate-200 pt-4">
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+              <p className="mt-2 text-center text-sm text-slate-500">
+                {filteredCorporations.length} 件中{" "}
+                {((page - 1) * ITEMS_PER_PAGE + 1)}-
+                {Math.min(page * ITEMS_PER_PAGE, filteredCorporations.length)} 件を表示
+              </p>
+            </div>
           )}
           </div>
       </Card>

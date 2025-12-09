@@ -10,6 +10,7 @@ import { useFacilities } from "../hooks/useFacilities";
 import { useResidents } from "../hooks/useResidents";
 import { useShifts } from "../hooks/useShifts";
 import { useVitals } from "../hooks/useVitals";
+import { useUsers } from "../hooks/useUsers";
 import { Table, TableBody, TableHeader, TableHeaderCell, TableRow, TableCell } from "../components/ui/Table";
 import { MonthlyBarChart } from "../components/charts/MonthlyBarChart";
 import { LineAreaChart } from "../components/charts/LineAreaChart";
@@ -29,6 +30,22 @@ export function OverviewPage() {
   const { data: allShifts } = useShifts();
   const { data: shifts } = useShifts({ limit: 5 });
   const { data: vitals } = useVitals({ limit: 5 });
+  const { data: users } = useUsers();
+
+  const userList = useMemo(
+    () => (Array.isArray(users) ? users : users?.data || []),
+    [users]
+  );
+
+  const nurseMap = useMemo(() => {
+    const map = new Map<string, string>();
+    userList.forEach((u) => {
+      if (u.nurse_id) {
+        map.set(u.nurse_id, `${u.last_name} ${u.first_name}`);
+      }
+    });
+    return map;
+  }, [userList]);
 
   // Chart data
   const monthlyFacilityData = useMemo(() => {
@@ -175,7 +192,11 @@ export function OverviewPage() {
             <TableBody>
               {shifts?.data?.map((shift) => (
                 <TableRow key={shift.id}>
-                    <TableCell>{shift.nurse_id || "未設定"}</TableCell>
+                    <TableCell>
+                      {shift.nurse_id
+                        ? nurseMap.get(shift.nurse_id) || shift.nurse_id
+                        : "未設定"}
+                    </TableCell>
                     <TableCell>{shift.facility_name || shift.facility_id || "未設定"}</TableCell>
                   <TableCell className="text-right">
                       {shift.start_datetime 

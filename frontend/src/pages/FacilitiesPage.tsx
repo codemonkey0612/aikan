@@ -1,13 +1,17 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFacilities } from "../hooks/useFacilities";
 import { Card } from "../components/ui/Card";
 import { BuildingOffice2Icon, MagnifyingGlassIcon, MapPinIcon } from "@heroicons/react/24/outline";
+import { Pagination } from "../components/ui/Pagination";
+
+const ITEMS_PER_PAGE = 20;
 
 export function FacilitiesPage() {
   const navigate = useNavigate();
   const { data: facilities, isLoading } = useFacilities();
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
 
   const filteredFacilities = useMemo(() => {
     if (!facilities) return [];
@@ -27,6 +31,17 @@ export function FacilitiesPage() {
         return haystack.includes(keyword);
       });
   }, [facilities, query]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
+
+  const paginatedFacilities = useMemo(() => {
+    const startIndex = (page - 1) * ITEMS_PER_PAGE;
+    return filteredFacilities.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredFacilities, page]);
+
+  const totalPages = Math.ceil(filteredFacilities.length / ITEMS_PER_PAGE) || 1;
 
   const handleFacilityClick = (facilityId: string) => {
     navigate(`/facilities/${facilityId}`);
@@ -78,7 +93,7 @@ export function FacilitiesPage() {
               <p>条件に一致する施設が見つかりませんでした。</p>
             </div>
           ) : (
-            filteredFacilities.map((facility) => {
+            paginatedFacilities.map((facility) => {
               const address = [
                 facility.address_prefecture,
                 facility.address_city,
@@ -116,6 +131,20 @@ export function FacilitiesPage() {
                 </div>
               );
             })
+          )}
+          {filteredFacilities.length > 0 && totalPages > 1 && (
+            <div className="mt-4 border-t border-slate-200 pt-4">
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+              <p className="mt-2 text-center text-sm text-slate-500">
+                {filteredFacilities.length} 件中{" "}
+                {((page - 1) * ITEMS_PER_PAGE + 1)}-
+                {Math.min(page * ITEMS_PER_PAGE, filteredFacilities.length)} 件を表示
+              </p>
+            </div>
           )}
           </div>
       </Card>

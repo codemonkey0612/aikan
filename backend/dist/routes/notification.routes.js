@@ -43,9 +43,9 @@ router.use(auth_middleware_1.authenticate);
 // 通知一覧・詳細: 全ロール閲覧可能
 router.get("/", (0, rbac_middleware_1.requirePermission)("notifications:read"), NotificationController.getAllNotifications);
 router.get("/:id", (0, rbac_middleware_1.requirePermission)("notifications:read"), NotificationController.getNotificationById);
-// 通知作成・更新: ADMINまたはFACILITY_MANAGERのみ
-router.post("/", (0, rbac_middleware_1.requirePermission)("notifications:write"), NotificationController.createNotification);
-router.put("/:id", (0, rbac_middleware_1.requirePermission)("notifications:write"), NotificationController.updateNotification);
-// 通知削除: ADMINのみ
-router.delete("/:id", rbac_middleware_1.requireAdminOrFacilityManager, NotificationController.deleteNotification);
+// 通知作成: 誰でも作成可能（認証済みユーザー）
+router.post("/", NotificationController.createNotification);
+// 通知更新・削除: 所有者のみ更新可能、管理者は削除可能
+router.put("/:id", NotificationController.updateNotification);
+router.delete("/:id", NotificationController.deleteNotification);
 exports.default = router;

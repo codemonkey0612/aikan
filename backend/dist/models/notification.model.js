@@ -13,10 +13,10 @@ const getNotificationById = async (id) => {
 };
 exports.getNotificationById = getNotificationById;
 const createNotification = async (data) => {
-    const { title, body, target_role, publish_from, publish_to, created_by, } = data;
+    const { title, body, category, target_role, publish_from, publish_to, created_by, } = data;
     const [result] = await db_1.db.query(`INSERT INTO notifications
-    (title, body, target_role, publish_from, publish_to, created_by)
-    VALUES (?, ?, ?, ?, ?, ?)`, [title, body, target_role, publish_from, publish_to, created_by]);
+    (title, body, category, target_role, publish_from, publish_to, created_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?)`, [title, body, category, target_role, publish_from, publish_to, created_by]);
     return (0, exports.getNotificationById)(result.insertId);
 };
 exports.createNotification = createNotification;

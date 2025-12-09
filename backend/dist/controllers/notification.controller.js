@@ -46,17 +46,47 @@ const getNotificationById = async (req, res) => {
 };
 exports.getNotificationById = getNotificationById;
 const createNotification = async (req, res) => {
-    const created = await NotificationService.createNotification(req.body);
+    // Anyone can create, set created_by from authenticated user
+    const userId = req.user?.id;
+    const notificationData = {
+        ...req.body,
+        created_by: userId,
+    };
+    const created = await NotificationService.createNotification(notificationData);
     res.status(201).json(created);
 };
 exports.createNotification = createNotification;
 const updateNotification = async (req, res) => {
-    const updated = await NotificationService.updateNotification(Number(req.params.id), req.body);
+    const notificationId = Number(req.params.id);
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
+    // Check if notification exists and user owns it (or is admin)
+    const notification = await NotificationService.getNotificationById(notificationId);
+    if (!notification) {
+        return res.status(404).json({ message: "通知が見つかりません" });
+    }
+    // Only allow update if user is the creator or admin
+    if (notification.created_by !== userId && userRole !== "admin") {
+        return res.status(403).json({ message: "この通知を更新する権限がありません" });
+    }
+    const updated = await NotificationService.updateNotification(notificationId, req.body);
     res.json(updated);
 };
 exports.updateNotification = updateNotification;
 const deleteNotification = async (req, res) => {
-    await NotificationService.deleteNotification(Number(req.params.id));
+    const notificationId = Number(req.params.id);
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
+    // Check if notification exists
+    const notification = await NotificationService.getNotificationById(notificationId);
+    if (!notification) {
+        return res.status(404).json({ message: "通知が見つかりません" });
+    }
+    // Only allow delete if user is the creator or admin
+    if (notification.created_by !== userId && userRole !== "admin") {
+        return res.status(403).json({ message: "この通知を削除する権限がありません" });
+    }
+    await NotificationService.deleteNotification(notificationId);
     res.json({ message: "Deleted" });
 };
 exports.deleteNotification = deleteNotification;

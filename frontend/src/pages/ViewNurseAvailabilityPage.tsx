@@ -23,6 +23,7 @@ const formatYearMonth = (date: Date) => {
 export function ViewNurseAvailabilityPage() {
   const navigate = useNavigate();
   const { data: users } = useUsers();
+  const userList = useMemo(() => Array.isArray(users) ? users : users?.data || [], [users]);
   const [selectedNurseId, setSelectedNurseId] = useState<string>("");
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
@@ -42,8 +43,8 @@ export function ViewNurseAvailabilityPage() {
 
   // Get nurses with nurse_id
   const nurses = useMemo(() => {
-    return users?.filter((u) => u.nurse_id && u.role === "nurse") || [];
-  }, [users]);
+    return userList.filter((u) => u.nurse_id && u.role === "nurse");
+  }, [userList]);
 
   // Group availabilities by nurse
   const availabilitiesByNurse = useMemo(() => {
@@ -102,7 +103,10 @@ export function ViewNurseAvailabilityPage() {
           >
             <option value="">すべての看護師</option>
             {nurses.map((nurse) => (
-              <option key={nurse.id || nurse.nurse_id || `nurse-${nurse.email}`} value={nurse.nurse_id}>
+              <option
+                key={nurse.id || nurse.nurse_id || `nurse-${nurse.email}`}
+                value={nurse.nurse_id ?? ""}
+              >
                 {nurse.last_name} {nurse.first_name} ({nurse.nurse_id})
               </option>
             ))}

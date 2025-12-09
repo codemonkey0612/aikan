@@ -49,8 +49,9 @@ export function ShiftDetailPage() {
     : null;
 
   const { data: users } = useUsers();
+  const userList = Array.isArray(users) ? users : users?.data || [];
   const nurse = shift?.nurse_id
-    ? users?.find((u) => u.nurse_id === shift.nurse_id)
+    ? userList.find((u) => u.nurse_id === shift.nurse_id)
     : null;
 
   const { data: residents } = useResidents(shift?.facility_id || undefined);

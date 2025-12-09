@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useShifts } from "../hooks/useShifts";
 import { useFacilities } from "../hooks/useFacilities";
 import { useUsers } from "../hooks/useUsers";
@@ -30,6 +30,7 @@ export function ShiftDailyPage() {
 
   const { data: facilities } = useFacilities();
   const { data: users } = useUsers();
+  const userList = useMemo(() => Array.isArray(users) ? users : users?.data || [], [users]);
 
   const dateLabel = selectedDate.toLocaleDateString("ja-JP", {
     weekday: "long",
@@ -40,11 +41,11 @@ export function ShiftDailyPage() {
 
   const shiftsByNurse = useMemo(() => {
     const map = new Map<string, { nurse: User; shifts: Shift[] }>();
-    if (!shiftsData?.data || !users) return map;
+    if (!shiftsData?.data || userList.length === 0) return map;
 
     shiftsData.data.forEach((shift) => {
       if (!shift.nurse_id) return;
-      const nurse = users.find((u) => u.nurse_id === shift.nurse_id);
+      const nurse = userList.find((u) => u.nurse_id === shift.nurse_id);
       if (!nurse) return;
 
       const existing = map.get(shift.nurse_id);

@@ -59,6 +59,7 @@ export function ShiftPlanningPage() {
 
   // Fetch data
   const { data: users } = useUsers();
+  const userList = useMemo(() => Array.isArray(users) ? users : users?.data || [], [users]);
   const { data: facilities } = useFacilities();
   const { data: availabilities, isLoading: loadingAvailabilities } = useNurseAvailabilities({
     year_month: yearMonth,
@@ -79,13 +80,13 @@ export function ShiftPlanningPage() {
   // Create maps for quick lookup
   const nurseMap = useMemo(() => {
     const map = new Map<string, string>();
-    users?.forEach((u) => {
+    userList.forEach((u) => {
       if (u.nurse_id) {
         map.set(u.nurse_id, `${u.last_name} ${u.first_name}`);
       }
     });
     return map;
-  }, [users]);
+  }, [userList]);
 
   // 施設IDから施設名へのマッピング（正規化してマッチング、数値と文字列の両方に対応）
   const facilityMap = useMemo(() => {
@@ -365,7 +366,7 @@ export function ShiftPlanningPage() {
       {/* Matches Table */}
       <Card
         title="マッチング候補一覧"
-        action={
+        actions={
           matches.length > 0 && (
             <button
               onClick={handleCreateAllShifts}

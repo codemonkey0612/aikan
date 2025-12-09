@@ -10,6 +10,7 @@ import {
   ClockIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
+import type { User } from "../api/types";
 
 // Format date as YYYY-MM-DD in local timezone (not UTC)
 const formatKey = (date: Date) => {
@@ -90,10 +91,11 @@ export function NurseAvailabilityDetailPage() {
   // Get nurse info - normalize IDs by trimming to handle carriage returns
   const nurse = useMemo(() => {
     if (!users || !actualNurseId) return undefined;
+    const userList: User[] = Array.isArray(users) ? users : users?.data || [];
     const normalizedNurseId = actualNurseId.trim();
-    return users.find((u) => {
+    return userList.find((u: User) => {
       const nurseId = u.nurse_id;
-      if (!nurseId || typeof nurseId !== 'string') return false;
+      if (!nurseId || typeof nurseId !== "string") return false;
       return nurseId.trim() === normalizedNurseId;
     });
   }, [users, actualNurseId]);
@@ -162,9 +164,9 @@ export function NurseAvailabilityDetailPage() {
       return { totalDays: 0, availableDays: 0, unavailableDays: 0 };
     }
 
-    const data = availabilityData;
+    const data = availabilityData as Record<string, { available: boolean }>;
     const totalDays = Object.keys(data).length;
-    const availableDays = Object.values(data).filter((d) => d.available).length;
+    const availableDays = Object.values(data).filter((d) => (d as any).available).length;
     const unavailableDays = totalDays - availableDays;
 
     return { totalDays, availableDays, unavailableDays };
@@ -284,7 +286,7 @@ export function NurseAvailabilityDetailPage() {
               <div className="space-y-1">
                 {dayData.time_slots && dayData.time_slots.length > 0 ? (
                   <div className="space-y-1">
-                    {dayData.time_slots.map((slot, idx) => (
+                    {dayData.time_slots.map((slot: string, idx: number) => (
                       <div
                         key={`${key}-slot-${idx}-${slot}`}
                         className="flex items-center gap-1 rounded bg-green-100 px-2 py-1 text-xs"

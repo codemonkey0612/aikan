@@ -27,6 +27,7 @@ export function ShiftSchedulePage() {
   });
 
   const { data: users } = useUsers();
+  const userList = useMemo(() => Array.isArray(users) ? users : users?.data || [], [users]);
   const { data: facilities } = useFacilities();
   const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
   const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
@@ -159,8 +160,8 @@ export function ShiftSchedulePage() {
   };
 
   const nurses = useMemo(() => {
-    return users?.filter((u) => u.role === "nurse") || [];
-  }, [users]);
+    return userList.filter((u) => u.role === "nurse");
+  }, [userList]);
 
   return (
     <div className="space-y-6">

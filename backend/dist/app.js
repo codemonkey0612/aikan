@@ -32,9 +32,25 @@ const error_middleware_1 = require("./middlewares/error.middleware");
 const openapiDocument = yamljs_1.default.load("./openapi.yaml");
 const app = (0, express_1.default)();
 app.use("/docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(openapiDocument));
+// Configure CORS to allow multiple origins
+const allowedOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(",").map((url) => url.trim())
+    : ["http://localhost:5173", "https://aikan-system.com"];
 app.use((0, cors_1.default)({
-    origin: process.env.FRONTEND_URL,
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin)
+            return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        }
+        else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
 }));
 app.use(express_1.default.json());
 // Register routes

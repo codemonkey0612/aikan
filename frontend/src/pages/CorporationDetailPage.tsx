@@ -145,8 +145,8 @@ export function CorporationDetailPage() {
             />
           ) : (
             <div className="h-full w-full bg-gradient-to-r from-blue-100 to-indigo-100 flex items-center justify-center">
-              <p className="text-2xl font-handwriting text-slate-700">Thank you Nurses</p>
-            </div>
+            <p className="text-2xl font-handwriting text-slate-700">Thank you Nurses</p>
+          </div>
           )}
         </div>
 

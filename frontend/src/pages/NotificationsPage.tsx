@@ -95,12 +95,12 @@ export function NotificationsPage() {
     <div className="space-y-6">
       <header className="flex items-center justify-between">
         <div>
-          <p className="text-sm uppercase tracking-wide text-slate-500">
-            通知
-          </p>
-          <h1 className="text-3xl font-semibold text-slate-900">
-            お知らせ
-          </h1>
+        <p className="text-sm uppercase tracking-wide text-slate-500">
+          通知
+        </p>
+        <h1 className="text-3xl font-semibold text-slate-900">
+          お知らせ
+        </h1>
         </div>
         <button
           onClick={handleCreate}

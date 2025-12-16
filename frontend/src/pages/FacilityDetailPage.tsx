@@ -100,25 +100,25 @@ export function FacilityDetailPage() {
       </header>
 
       {/* Facility Information */}
-      <Card title="Facility information">
+      <Card title="施設情報">
         <div className="space-y-4">
           {corporation && (
             <div>
-              <p className="text-sm font-medium text-slate-700">Company name</p>
+              <p className="text-sm font-medium text-slate-700">法人名</p>
               <p className="text-sm text-slate-600 mt-1">{corporation.name}</p>
             </div>
           )}
           {facility.pl_support_id && (
             <div>
-              <p className="text-sm font-medium text-slate-700">PL compliant</p>
+              <p className="text-sm font-medium text-slate-700">PL対応</p>
               <p className="text-sm text-slate-600 mt-1">
-                {facility.pl_support_id === "completed" ? "PL completed" : facility.pl_support_id}
+                {facility.pl_support_id === "completed" ? "PL完了" : facility.pl_support_id}
               </p>
             </div>
           )}
           {facility.building_type_id && (
             <div>
-              <p className="text-sm font-medium text-slate-700">Building Type</p>
+              <p className="text-sm font-medium text-slate-700">建物タイプ</p>
               <p className="text-sm text-slate-600 mt-1">
                 {facility.building_type_id}
               </p>
@@ -126,16 +126,16 @@ export function FacilityDetailPage() {
           )}
           {facility.postal_code && (
             <div>
-              <p className="text-sm font-medium text-slate-700">Post code</p>
+              <p className="text-sm font-medium text-slate-700">郵便番号</p>
               <p className="text-sm text-slate-600 mt-1">
-                {facility.postal_code}
+                〒{facility.postal_code}
               </p>
             </div>
           )}
           {facility.address_prefecture && (
             <div>
               <p className="text-sm font-medium text-slate-700">
-                Address 1 (Prefecture)
+                都道府県
               </p>
               <p className="text-sm text-slate-600 mt-1">
                 {facility.address_prefecture}
@@ -145,21 +145,21 @@ export function FacilityDetailPage() {
           {address && (
             <div>
               <p className="text-sm font-medium text-slate-700">
-                Address 2 (city, ward, town, village, number)
+                市区町村・番地
               </p>
               <p className="text-sm text-slate-600 mt-1">{address}</p>
               <button
                 onClick={copyAddressToClipboard}
                 className="mt-2 text-sm text-brand-600 hover:text-brand-700"
               >
-                Copy address to clipboard
+                住所をクリップボードにコピー
               </button>
             </div>
           )}
           {facility.phone_number && (
             <div>
               <p className="text-sm font-medium text-slate-700">
-                Advance contact phone number
+                事前連絡電話番号
               </p>
               <div className="flex items-center gap-2 mt-1">
                 <PhoneIcon className="h-4 w-4 text-slate-400" />
@@ -175,7 +175,7 @@ export function FacilityDetailPage() {
           {facility.phone_number && (
             <div>
               <p className="text-sm font-medium text-slate-700">
-                Emergency Phone Number
+                緊急連絡先電話番号
               </p>
               <div className="flex items-center gap-2 mt-1">
                 <PhoneIcon className="h-4 w-4 text-slate-400" />
@@ -193,7 +193,7 @@ export function FacilityDetailPage() {
 
       {/* Map */}
       {lat && lng && (
-        <Card title="Map">
+        <Card title="地図">
           <div className="space-y-4">
             <div className="w-full rounded-lg border border-slate-200 overflow-hidden">
               <GoogleMapComponent
@@ -207,7 +207,7 @@ export function FacilityDetailPage() {
                 {lat}, {lng}
               </p>
               <button className="text-sm text-brand-600 hover:text-brand-700">
-                Coordinate correction
+                座標修正
               </button>
             </div>
           </div>
@@ -215,32 +215,36 @@ export function FacilityDetailPage() {
       )}
 
       {/* Billing Information */}
-      <Card title="Billing Information">
+      <Card title="請求情報">
         <div className="space-y-4">
           <div>
-            <p className="text-sm font-medium text-slate-700">Capacity</p>
-            <p className="text-sm text-slate-600 mt-1">-</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-slate-700">Number of users</p>
-            <p className="text-sm text-slate-600 mt-1">-</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-slate-700">Request method</p>
+            <p className="text-sm font-medium text-slate-700">定員</p>
             <p className="text-sm text-slate-600 mt-1">
-              {corporation ? "For each corporation" : "-"}
+              {facility.capacity ?? "-"}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-700">入居者数</p>
+            <p className="text-sm text-slate-600 mt-1">
+              {facility.current_residents ?? "-"}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-700">請求方法</p>
+            <p className="text-sm text-slate-600 mt-1">
+              {corporation ? "法人ごと" : "-"}
             </p>
           </div>
         </div>
       </Card>
 
       {/* Access Intelligence */}
-      <Card title="Access Intelligence">
+      <Card title="アクセス情報">
         <div className="space-y-4">
           {facility.pre_visit_contact_id && (
             <div>
               <p className="text-sm font-medium text-slate-700">
-                Contact before the visit
+                訪問前連絡
               </p>
               <p className="text-sm text-slate-600 mt-1">
                 {facility.pre_visit_contact_id}
@@ -249,7 +253,7 @@ export function FacilityDetailPage() {
           )}
           {facility.contact_type_id && (
             <div>
-              <p className="text-sm font-medium text-slate-700">Contact Type</p>
+              <p className="text-sm font-medium text-slate-700">連絡タイプ</p>
               <p className="text-sm text-slate-600 mt-1">
                 {facility.contact_type_id}
               </p>
@@ -258,7 +262,7 @@ export function FacilityDetailPage() {
           {facility.visit_notes && (
             <div>
               <p className="text-sm font-medium text-slate-700">
-                Preparation for the visit
+                訪問時の準備
               </p>
               <p className="text-sm text-slate-600 mt-1 whitespace-pre-line">
                 {facility.visit_notes}
@@ -269,7 +273,7 @@ export function FacilityDetailPage() {
       </Card>
 
       {/* Facility photos */}
-      <Card title="Facility photos">
+      <Card title="施設写真">
         <div className="h-64 w-full rounded-lg border border-slate-200 bg-slate-100 flex items-center justify-center">
           <div className="text-center text-slate-400">
             <ClipboardDocumentIcon className="h-12 w-12 mx-auto mb-2" />

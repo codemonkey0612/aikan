@@ -83,15 +83,15 @@ export function FacilitiesPage() {
     <div className="space-y-6">
       <header className="flex items-center justify-between">
         <div>
-          <p className="text-sm uppercase tracking-wide text-slate-500">
-            ネットワーク
-          </p>
-          <h1 className="text-3xl font-semibold text-slate-900">
-            施設リスト
-          </h1>
-          <p className="text-slate-500">
-            施設の詳細情報を確認できます。
-          </p>
+        <p className="text-sm uppercase tracking-wide text-slate-500">
+          ネットワーク
+        </p>
+        <h1 className="text-3xl font-semibold text-slate-900">
+          施設リスト
+        </h1>
+        <p className="text-slate-500">
+          施設の詳細情報を確認できます。
+        </p>
         </div>
         <button
           onClick={handleCreate}

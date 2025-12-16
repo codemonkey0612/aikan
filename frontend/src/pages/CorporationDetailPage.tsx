@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getCorporationById } from "../api/corporations";
 import { useAuth } from "../hooks/useAuth";
+import { useFacilities } from "../hooks/useFacilities";
 import { getDefaultAvatar } from "../utils/defaultAvatars";
 import { Card } from "../components/ui/Card";
 import { GoogleMapComponent } from "../components/maps/GoogleMap";
@@ -15,6 +16,8 @@ import {
   PencilIcon,
   PaperAirplaneIcon,
   EllipsisVerticalIcon,
+  BuildingOffice2Icon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import type { Corporation } from "../api/types";
 
@@ -38,6 +41,16 @@ export function CorporationDetailPage() {
     queryFn: () => getCorporationById(id!).then((res) => res.data),
     enabled: !!id,
   });
+
+  const { data: allFacilities } = useFacilities();
+
+  // Filter facilities by corporation_id
+  const facilities = useMemo(() => {
+    if (!allFacilities || !corporation) return [];
+    return allFacilities.filter(
+      (facility) => facility.corporation_id === corporation.corporation_id
+    );
+  }, [allFacilities, corporation]);
 
   // Mock comments - in a real app, these would come from an API
   const [comments, setComments] = useState<Comment[]>([
@@ -179,6 +192,59 @@ export function CorporationDetailPage() {
           </button>
         </div>
       </header>
+
+      {/* Facilities List */}
+      {facilities.length > 0 && (
+        <Card title={`関連施設 (${facilities.length}件)`}>
+          <div className="space-y-2">
+            {facilities.map((facility) => {
+              const facilityAddress = [
+                facility.address_prefecture,
+                facility.address_city,
+                facility.address_building,
+              ]
+                .filter(Boolean)
+                .join(" ");
+
+              return (
+                <div
+                  key={facility.facility_id}
+                  onClick={() => navigate(`/facilities/${facility.facility_id}`)}
+                  className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 transition hover:border-brand-300 hover:bg-brand-50/50 cursor-pointer group"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex-shrink-0">
+                    <BuildingOffice2Icon className="h-6 w-6" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold text-slate-900 group-hover:text-brand-600 transition">
+                      {facility.name || "名称未設定"}
+                    </h3>
+                    {facility.name_kana && (
+                      <p className="text-sm text-slate-500 mt-0.5">
+                        {facility.name_kana}
+                      </p>
+                    )}
+                    {facilityAddress && (
+                      <div className="flex items-center gap-1 mt-1 text-sm text-slate-500">
+                        <MapPinIcon className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">{facilityAddress}</span>
+                      </div>
+                    )}
+                    {facility.facility_number && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        施設コード: {facility.facility_number}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-sm text-slate-400 group-hover:text-brand-600 transition">
+                    <ChevronRightIcon className="h-5 w-5" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column */}

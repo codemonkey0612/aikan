@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -36,25 +37,46 @@ export function FacilityDetailPage() {
     enabled: !!id,
   });
 
-  // Get residents for this facility
-  const { data: residents, isLoading: isLoadingResidents } = useResidents(
-    facility?.facility_id || undefined
-  );
+  // Normalize facility ID for comparison (handle string/number mismatches)
+  const normalizeFacilityId = (id: string | number | null | undefined): string => {
+    if (id === null || id === undefined) return '';
+    return String(id).trim().replace(/\r\n/g, '').replace(/\n/g, '').replace(/\r/g, '');
+  };
 
-  // Filter to show only currently admitted residents
-  const currentResidents = residents?.filter((resident) => {
-    // Show residents who are admitted and not discharged
-    if (resident.is_excluded) return false;
-    if (resident.discharge_date) {
-      const dischargeDate = new Date(resident.discharge_date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      // Show if discharge date is in the future
-      return dischargeDate >= today;
-    }
-    // Show if they have an admission date (currently admitted)
-    return !!resident.admission_date;
-  }) || [];
+  // Get all residents (backend doesn't filter by facility_id, so we'll filter on frontend)
+  const { data: allResidents, isLoading: isLoadingResidents } = useResidents();
+
+  // Filter to show only currently admitted residents for this specific facility
+  const currentResidents = useMemo(() => {
+    if (!allResidents || !facility?.facility_id) return [];
+    
+    const normalizedFacilityId = normalizeFacilityId(facility.facility_id);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return allResidents.filter((resident) => {
+      // 1. Must match the facility_id (with normalization)
+      const residentFacilityId = normalizeFacilityId(resident.facility_id);
+      if (residentFacilityId !== normalizedFacilityId) return false;
+
+      // 2. Must not be excluded
+      if (resident.is_excluded) return false;
+
+      // 3. Must have an admission_date (currently or previously admitted)
+      if (!resident.admission_date) return false;
+
+      // 4. If discharge_date exists, it must be in the future (not today or past)
+      if (resident.discharge_date) {
+        const dischargeDate = new Date(resident.discharge_date);
+        dischargeDate.setHours(0, 0, 0, 0);
+        // Only show if discharge date is in the future (after today)
+        return dischargeDate > today;
+      }
+
+      // 5. If no discharge_date, they are currently admitted
+      return true;
+    });
+  }, [allResidents, facility?.facility_id]);
 
   if (isLoading) {
     return (

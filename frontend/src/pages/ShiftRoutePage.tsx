@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useShifts } from "../hooks/useShifts";
 import { useUsers } from "../hooks/useUsers";
@@ -7,7 +7,13 @@ import { FacilityImage } from "../components/shifts/FacilityImage";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
 import type { Shift } from "../api/types";
 
-const formatKey = (date: Date) => date.toISOString().slice(0, 10);
+// Format date as YYYY-MM-DD in local timezone (not UTC)
+const formatKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 /**
  * Shift Route Page
@@ -18,12 +24,29 @@ export function ShiftRoutePage() {
   const { date, nurseId } = useParams<{ date: string; nurseId: string }>();
   const navigate = useNavigate();
 
-  const selectedDate = date ? new Date(date) : new Date();
-  const dateKey = formatKey(selectedDate);
+  // Use date directly from URL parameter (format: YYYY-MM-DD)
+  // No need to parse and reformat - use it directly to avoid timezone issues
+  const dateKey = date || formatKey(new Date());
+  
+  // Parse date for display purposes only
+  const selectedDate = useMemo(() => {
+    if (!date) return new Date();
+    // Parse YYYY-MM-DD in local timezone (not UTC) for display
+    const [year, month, day] = date.split('-').map(Number);
+    if (year && month && day) {
+      const parsed = new Date(year, month - 1, day);
+      return isNaN(parsed.getTime()) ? new Date() : parsed;
+    }
+    return new Date();
+  }, [date]);
 
-  const { data: shiftsData, isLoading } = useShifts({
+  // For date filtering, we'll use just the date (YYYY-MM-DD) 
+  // The backend will use DATE() function for comparison
+  // No need to add time component since backend handles it
+
+  const { data: shiftsData, isLoading, error } = useShifts({
     date_from: dateKey,
-    date_to: dateKey,
+    date_to: dateKey, // Use same date for both - backend will handle date comparison
     nurse_id: nurseId || undefined,
   });
 
@@ -47,17 +70,36 @@ export function ShiftRoutePage() {
 
   // Get and sort shifts for this nurse on this date
   const shifts = useMemo(() => {
-    if (!shiftsData?.data || !nurseId) return [];
+    if (!shiftsData?.data) return [];
     
-    const nurseShifts = shiftsData.data.filter((shift) => shift.nurse_id === nurseId);
+    // If nurseId is provided, filter by nurse_id (API should already filter, but double-check)
+    let filteredShifts = shiftsData.data;
+    if (nurseId) {
+      filteredShifts = filteredShifts.filter((shift) => {
+        // Normalize both IDs for comparison (handle string/number mismatches)
+        const shiftNurseId = shift.nurse_id ? String(shift.nurse_id).trim() : null;
+        const targetNurseId = String(nurseId).trim();
+        return shiftNurseId === targetNurseId;
+      });
+    }
+    
+    // Also filter by date to ensure we only show shifts for the selected date
+    // Use DATE() comparison in local timezone
+    filteredShifts = filteredShifts.filter((shift) => {
+      if (!shift.start_datetime) return false;
+      // Parse the datetime and extract date in local timezone
+      const shiftDateObj = new Date(shift.start_datetime);
+      const shiftDate = formatKey(shiftDateObj);
+      return shiftDate === dateKey;
+    });
     
     // Sort by start time
-    return nurseShifts.sort((a, b) => {
+    return filteredShifts.sort((a, b) => {
       const timeA = a.start_datetime ? new Date(a.start_datetime).getTime() : 0;
       const timeB = b.start_datetime ? new Date(b.start_datetime).getTime() : 0;
       return timeA - timeB;
     });
-  }, [shiftsData, nurseId]);
+  }, [shiftsData, nurseId, dateKey]);
 
   // Format time range
   const formatTimeRange = (shift: Shift) => {
@@ -139,11 +181,32 @@ export function ShiftRoutePage() {
 
       {/* Shift List */}
       <div className="px-4 py-4 bg-slate-50 min-h-[calc(100vh-180px)]">
-        {shifts.length === 0 ? (
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
+            <p className="text-sm text-slate-500">読み込み中...</p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-12 space-y-2">
+            <p className="text-sm text-red-500">エラーが発生しました</p>
+            <p className="text-xs text-slate-400">{String(error)}</p>
+          </div>
+        ) : shifts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 space-y-2">
             <p className="text-sm text-slate-500">
               この日のシフトが見つかりませんでした。
             </p>
+            {shiftsData?.data && shiftsData.data.length > 0 && (
+              <p className="text-xs text-slate-400">
+                (全シフト数: {shiftsData.data.length}, フィルタ後: {shifts.length})
+              </p>
+            )}
+            {shiftsData?.data && shiftsData.data.length === 0 && (
+              <div className="text-xs text-slate-400 mt-2 text-center">
+                <p>検索条件:</p>
+                <p>日付: {dateKey}</p>
+                <p>看護師ID: {nurseId || "すべて"}</p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
@@ -159,7 +222,12 @@ export function ShiftRoutePage() {
                 <div
                   key={shift.id}
                   className="flex items-start gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-[0.98]"
-                  onClick={() => navigate(`/shifts/${shift.id}`)}
+                  onClick={() => {
+                    // Navigate to facility detail page showing facility info and residents
+                    if (shift.facility_id) {
+                      navigate(`/facilities/${shift.facility_id}`);
+                    }
+                  }}
                 >
                   {/* Facility Image - Square thumbnail */}
                   <div className="flex-shrink-0">

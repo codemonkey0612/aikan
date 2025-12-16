@@ -104,13 +104,27 @@ export const getShiftsPaginated = async (
     whereClause += " AND shift_period = ?";
     queryParams.push(filters.shift_period);
   }
-  if (filters?.date_from) {
-    whereClause += " AND start_datetime >= ?";
-    queryParams.push(filters.date_from);
-  }
-  if (filters?.date_to) {
-    whereClause += " AND start_datetime <= ?";
-    queryParams.push(filters.date_to);
+  // Handle date filtering - use DATE() function for simple date comparison
+  if (filters?.date_from && filters?.date_to) {
+    const dateFromOnly = filters.date_from.split(' ')[0];
+    const dateToOnly = filters.date_to.split(' ')[0];
+    
+    // If both dates are the same, use DATE() function for exact match
+    if (dateFromOnly === dateToOnly) {
+      whereClause += " AND DATE(s.start_datetime) = ?";
+      queryParams.push(dateFromOnly);
+    } else {
+      // Date range
+      whereClause += " AND DATE(s.start_datetime) >= ? AND DATE(s.start_datetime) <= ?";
+      queryParams.push(dateFromOnly);
+      queryParams.push(dateToOnly);
+    }
+  } else if (filters?.date_from) {
+    whereClause += " AND DATE(s.start_datetime) >= ?";
+    queryParams.push(filters.date_from.split(' ')[0]);
+  } else if (filters?.date_to) {
+    whereClause += " AND DATE(s.start_datetime) <= ?";
+    queryParams.push(filters.date_to.split(' ')[0]);
   }
 
   // データ取得
@@ -143,6 +157,7 @@ export const getShiftsPaginated = async (
 
   // 総件数取得
   // Replace s. prefix in whereClause for count query (since it doesn't use alias)
+  // Also replace DATE(s.start_datetime) with DATE(start_datetime) for count query
   const countWhereClause = whereClause.replace(/s\./g, '');
   const [countRows] = await db.query<RowDataPacket[]>(
     `SELECT COUNT(*) as count FROM shifts WHERE ${countWhereClause}`,

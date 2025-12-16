@@ -1,10 +1,19 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import { getFacilityById } from "../api/facilities";
 import { useCorporations } from "../hooks/useCorporations";
+import { useResidents } from "../hooks/useResidents";
 import { Card } from "../components/ui/Card";
 import { GoogleMapComponent } from "../components/maps/GoogleMap";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+} from "../components/ui/Table";
 import {
   ArrowLeftIcon,
   BuildingOffice2Icon,
@@ -12,6 +21,7 @@ import {
   PhoneIcon,
   ChatBubbleLeftRightIcon,
   ClipboardDocumentIcon,
+  UserGroupIcon,
 } from "@heroicons/react/24/outline";
 import type { Facility } from "../api/types";
 
@@ -25,6 +35,26 @@ export function FacilityDetailPage() {
     queryFn: () => getFacilityById(id!).then((res) => res.data),
     enabled: !!id,
   });
+
+  // Get residents for this facility
+  const { data: residents, isLoading: isLoadingResidents } = useResidents(
+    facility?.facility_id || undefined
+  );
+
+  // Filter to show only currently admitted residents
+  const currentResidents = residents?.filter((resident) => {
+    // Show residents who are admitted and not discharged
+    if (resident.is_excluded) return false;
+    if (resident.discharge_date) {
+      const dischargeDate = new Date(resident.discharge_date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      // Show if discharge date is in the future
+      return dischargeDate >= today;
+    }
+    // Show if they have an admission date (currently admitted)
+    return !!resident.admission_date;
+  }) || [];
 
   if (isLoading) {
     return (
@@ -267,6 +297,105 @@ export function FacilityDetailPage() {
               <p className="text-sm text-slate-600 mt-1 whitespace-pre-line">
                 {facility.visit_notes}
               </p>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* Residents List - Currently Admitted Patients */}
+      <Card title="入所者一覧">
+        <div className="space-y-4">
+          {isLoadingResidents ? (
+            <div className="flex items-center justify-center py-8">
+              <p className="text-sm text-slate-500">読み込み中...</p>
+            </div>
+          ) : currentResidents.length === 0 ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <UserGroupIcon className="h-12 w-12 mx-auto mb-2 text-slate-400" />
+                <p className="text-sm text-slate-500">現在入所している患者はいません</p>
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHeaderCell>入居者ID</TableHeaderCell>
+                    <TableHeaderCell>氏名</TableHeaderCell>
+                    <TableHeaderCell>氏名（カナ）</TableHeaderCell>
+                    <TableHeaderCell>入所日</TableHeaderCell>
+                    <TableHeaderCell>退所予定日</TableHeaderCell>
+                    <TableHeaderCell>ステータス</TableHeaderCell>
+                    <TableHeaderCell>操作</TableHeaderCell>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {currentResidents.map((resident) => {
+                    const getStatus = () => {
+                      if (resident.is_excluded) return "除外";
+                      if (resident.discharge_date) {
+                        const dischargeDate = new Date(resident.discharge_date);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        if (dischargeDate < today) return "退所済み";
+                        return "退所予定";
+                      }
+                      if (resident.admission_date) return "入所中";
+                      return "未設定";
+                    };
+
+                    const status = getStatus();
+                    const statusColor =
+                      status === "入所中"
+                        ? "bg-green-100 text-green-700"
+                        : status === "退所予定"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : status === "退所済み"
+                        ? "bg-slate-100 text-slate-700"
+                        : "bg-slate-100 text-slate-700";
+
+                    return (
+                      <TableRow key={resident.resident_id}>
+                        <TableCell className="font-mono text-sm">
+                          {resident.resident_id}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {resident.last_name} {resident.first_name}
+                        </TableCell>
+                        <TableCell className="text-slate-600">
+                          {resident.last_name_kana} {resident.first_name_kana}
+                        </TableCell>
+                        <TableCell>
+                          {resident.admission_date
+                            ? new Date(resident.admission_date).toLocaleDateString("ja-JP")
+                            : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {resident.discharge_date
+                            ? new Date(resident.discharge_date).toLocaleDateString("ja-JP")
+                            : "-"}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColor}`}
+                          >
+                            {status}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Link
+                            to={`/residents/${resident.resident_id}`}
+                            className="text-sm text-brand-600 hover:text-brand-700 hover:underline"
+                          >
+                            詳細を見る
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
           )}
         </div>

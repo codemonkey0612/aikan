@@ -14,6 +14,7 @@ import { VitalsPage } from "./pages/VitalsPage";
 import { VitalsInputPage } from "./pages/VitalsInputPage";
 import { ShiftsPage } from "./pages/ShiftsPage";
 import { ShiftDetailPage } from "./pages/ShiftDetailPage";
+import { ShiftRoutePage } from "./pages/ShiftRoutePage";
 import { SalariesPage } from "./pages/SalariesPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { CarePlanPage } from "./pages/CarePlanPage";
@@ -202,6 +203,14 @@ function App() {
               element={
                 <RequireRole allowedRoles={["admin", "nurse", "facility_manager"]}>
                   <ShiftDetailPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="shifts/daily/:date/:nurseId"
+              element={
+                <RequireRole allowedRoles={["admin", "nurse", "facility_manager"]}>
+                  <ShiftRoutePage />
                 </RequireRole>
               }
             />

@@ -149,6 +149,11 @@ export function ShiftsPage() {
     data.data.forEach((shift) => {
       if (!shift.start_datetime) return;
       
+      // 看護師でフィルタリング（選択されている場合）
+      if (selectedNurseId && shift.nurse_id !== selectedNurseId) {
+        return;
+      }
+      
       // 検索クエリでフィルタリング
       if (searchQuery) {
         const facilityName = shift.facility_name && shift.facility_name.trim()
@@ -191,7 +196,16 @@ export function ShiftsPage() {
         title: facilityName,
         time: timeDisplay,
         color: "bg-pink-100 text-pink-700",
-        onClick: () => navigate(`/shifts/${shift.id}`),
+        onClick: () => {
+          // Navigate to route page for this nurse on this date
+          if (shift.nurse_id && shift.start_datetime) {
+            const dateKey = formatKey(new Date(shift.start_datetime));
+            navigate(`/shifts/daily/${dateKey}/${shift.nurse_id}`);
+          } else {
+            // Fallback to detail page if nurse_id is missing
+            navigate(`/shifts/${shift.id}`);
+          }
+        },
       };
 
       const list = eventsMap.get(key) ?? [];
@@ -200,7 +214,7 @@ export function ShiftsPage() {
     });
 
     return eventsMap;
-  }, [data, nurseMap, navigate, searchQuery, facilityMap, facilities]);
+  }, [data, nurseMap, navigate, searchQuery, facilityMap, facilities, selectedNurseId]);
 
   return (
     <div className="space-y-6">

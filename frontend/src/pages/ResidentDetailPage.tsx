@@ -29,11 +29,35 @@ export function ResidentDetailPage() {
   const { data: resident, isLoading } = useResident(residentId);
   const { data: facilities } = useFacilities();
 
-  // 施設IDから施設名へのマッピング
+  // Normalize facility ID for comparison (handle string/number mismatches)
+  const normalizeFacilityId = (id: string | number | null | undefined): string => {
+    if (id === null || id === undefined) return '';
+    return String(id).trim().replace(/\r\n/g, '').replace(/\n/g, '').replace(/\r/g, '');
+  };
+
+  // 施設IDから施設名へのマッピング（正規化してマッチング、数値と文字列の両方に対応）
   const facilityName = useMemo(() => {
     if (!resident?.facility_id) return "未設定";
-    const facility = facilities?.find((f) => f.facility_id === resident.facility_id);
-    return facility?.name || "未設定";
+    
+    // Normalize the resident's facility_id
+    const normalizedResidentFacilityId = normalizeFacilityId(resident.facility_id);
+    if (!normalizedResidentFacilityId) return "未設定";
+    
+    // Try to find facility by normalized ID
+    const facility = facilities?.find((f) => {
+      if (!f.facility_id) return false;
+      const normalizedFacilityId = normalizeFacilityId(f.facility_id);
+      return normalizedFacilityId === normalizedResidentFacilityId;
+    });
+    
+    if (facility?.name) return facility.name;
+    
+    // Fallback: try direct comparison
+    const directMatch = facilities?.find((f) => 
+      String(f.facility_id) === String(resident.facility_id)
+    );
+    
+    return directMatch?.name || "未設定";
   }, [resident?.facility_id, facilities]);
 
   const handleBack = () => navigate("/residents");
@@ -102,9 +126,17 @@ export function ResidentDetailPage() {
           icon={<BuildingOffice2Icon className="h-6 w-6" />}
         />
         <SummaryCard
-          title="ステータス"
-          value={resident?.status_id ?? "不明"}
-          icon={<HeartIcon className="h-6 w-6" />}
+          title="退所日"
+          value={
+            resident?.discharge_date
+              ? new Date(resident.discharge_date).toLocaleDateString("ja-JP", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                })
+              : "未設定"
+          }
+          icon={<CalendarIcon className="h-6 w-6" />}
         />
         <SummaryCard
           title="入所日"
@@ -153,13 +185,13 @@ export function ResidentDetailPage() {
               <TableCell>退所日</TableCell>
               <TableCell>
                 {resident?.discharge_date
-                  ? new Date(resident.discharge_date).toLocaleDateString("ja-JP")
+                  ? new Date(resident.discharge_date).toLocaleDateString("ja-JP", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                    })
                   : "未登録"}
               </TableCell>
-            </TableRow>
-            <TableRow>
-              <TableCell>ステータスID</TableCell>
-              <TableCell>{resident?.status_id ?? "未登録"}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell>施設</TableCell>

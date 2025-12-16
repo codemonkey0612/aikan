@@ -41,12 +41,35 @@ export function ResidentsPage() {
   const [facilityFilter, setFacilityFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // 施設IDから施設名へのマッピング
+  // Normalize facility ID for comparison (handle string/number mismatches)
+  const normalizeFacilityId = (id: string | number | null | undefined): string => {
+    if (id === null || id === undefined) return '';
+    return String(id).trim().replace(/\r\n/g, '').replace(/\n/g, '').replace(/\r/g, '');
+  };
+
+  // 施設IDから施設名へのマッピング（正規化してマッチング、数値と文字列の両方に対応）
   const facilityMap = useMemo(() => {
     const map = new Map<string, string>();
-    facilities?.forEach((facility) => {
-      if (facility.facility_id) {
-        map.set(facility.facility_id, facility.name);
+    if (!facilities) return map;
+    
+    facilities.forEach((facility) => {
+      if (facility.facility_id && facility.name) {
+        // Normalize the facility_id
+        const normalizedId = normalizeFacilityId(facility.facility_id);
+        const originalId = String(facility.facility_id);
+        
+        // Store with normalized ID
+        map.set(normalizedId, facility.name);
+        
+        // Also store with original ID (as string)
+        map.set(originalId, facility.name);
+        
+        // Handle numeric IDs
+        const numericValue = Number(facility.facility_id);
+        if (!isNaN(numericValue)) {
+          map.set(String(numericValue), facility.name);
+          map.set(normalizeFacilityId(String(numericValue)), facility.name);
+        }
       }
     });
     return map;
@@ -265,9 +288,50 @@ export function ResidentsPage() {
               </TableRow>
             )}
             {paginatedResidents.map((resident) => {
-              const facilityName = resident.facility_id
-                ? facilityMap.get(resident.facility_id) || "未設定"
-                : "未設定";
+              // Get facility name by normalizing the facility_id for lookup
+              const getFacilityName = (facilityId: string | number | null | undefined): string => {
+                if (!facilityId) return "未設定";
+                
+                const normalizedId = normalizeFacilityId(facilityId);
+                const originalId = String(facilityId);
+                
+                // Try normalized ID first
+                let name = facilityMap.get(normalizedId);
+                if (name) return name;
+                
+                // Try original ID
+                name = facilityMap.get(originalId);
+                if (name) return name;
+                
+                // Try numeric value
+                const numericValue = Number(facilityId);
+                if (!isNaN(numericValue)) {
+                  name = facilityMap.get(String(numericValue));
+                  if (name) return name;
+                }
+                
+                // Fallback: search in facilities array directly
+                if (facilities) {
+                  const facility = facilities.find((f) => {
+                    if (!f.facility_id) return false;
+                    const fNormalized = normalizeFacilityId(f.facility_id);
+                    const fOriginal = String(f.facility_id);
+                    const fNumeric = Number(f.facility_id);
+                    const residentNumeric = numericValue;
+                    
+                    return fNormalized === normalizedId || 
+                           fOriginal === originalId ||
+                           (!isNaN(fNumeric) && !isNaN(residentNumeric) && fNumeric === residentNumeric);
+                  });
+                  if (facility?.name) {
+                    return facility.name;
+                  }
+                }
+                
+                return "未設定";
+              };
+              
+              const facilityName = getFacilityName(resident.facility_id);
               const status = getResidentStatus(resident);
 
               return (

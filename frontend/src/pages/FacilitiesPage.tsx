@@ -1,17 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useFacilities } from "../hooks/useFacilities";
+import { useFacilities, useCreateFacility } from "../hooks/useFacilities";
+import { FacilityFormModal } from "../components/facilities/FacilityFormModal";
 import { Card } from "../components/ui/Card";
-import { BuildingOffice2Icon, MagnifyingGlassIcon, MapPinIcon } from "@heroicons/react/24/outline";
+import { BuildingOffice2Icon, MagnifyingGlassIcon, MapPinIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { Pagination } from "../components/ui/Pagination";
+import toast from "react-hot-toast";
+import type { Facility } from "../api/types";
 
 const ITEMS_PER_PAGE = 20;
 
 export function FacilitiesPage() {
   const navigate = useNavigate();
   const { data: facilities, isLoading } = useFacilities();
+  const createFacilityMutation = useCreateFacility();
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const filteredFacilities = useMemo(() => {
     if (!facilities) return [];
@@ -47,6 +52,25 @@ export function FacilitiesPage() {
     navigate(`/facilities/${facilityId}`);
   };
 
+  const handleCreate = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleSubmit = async (data: any) => {
+    try {
+      await createFacilityMutation.mutateAsync(data);
+      toast.success("施設を作成しました");
+      setIsModalOpen(false);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "施設の作成に失敗しました");
+      throw error;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -57,16 +81,25 @@ export function FacilitiesPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <p className="text-sm uppercase tracking-wide text-slate-500">
-          ネットワーク
-        </p>
-        <h1 className="text-3xl font-semibold text-slate-900">
-          施設リスト
-        </h1>
-        <p className="text-slate-500">
-          施設の詳細情報を確認できます。
-        </p>
+      <header className="flex items-center justify-between">
+        <div>
+          <p className="text-sm uppercase tracking-wide text-slate-500">
+            ネットワーク
+          </p>
+          <h1 className="text-3xl font-semibold text-slate-900">
+            施設リスト
+          </h1>
+          <p className="text-slate-500">
+            施設の詳細情報を確認できます。
+          </p>
+        </div>
+        <button
+          onClick={handleCreate}
+          className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 transition-colors"
+        >
+          <PlusIcon className="h-5 w-5" />
+          新規作成
+        </button>
       </header>
 
       {/* Search */}
@@ -148,6 +181,14 @@ export function FacilitiesPage() {
           )}
           </div>
       </Card>
+
+      {/* Facility Form Modal */}
+      <FacilityFormModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSubmit={handleSubmit}
+        mode="create"
+      />
     </div>
   );
 }

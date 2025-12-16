@@ -7,6 +7,9 @@ import {
   MagnifyingGlassIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  UserGroupIcon,
+  FunnelIcon,
+  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import type { Shift, Facility } from "../api/types";
 
@@ -247,6 +250,85 @@ export function ShiftSchedulePage() {
 
       {/* カレンダー */}
       <div className="rounded-lg bg-white p-6 shadow-sm">
+        {/* カレンダー上部のフィルター */}
+        <div className="mb-6 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 p-5 shadow-sm">
+          <div className="space-y-4">
+            {/* 看護師選択 */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2 min-w-[120px]">
+                <div className="rounded-lg bg-white p-2 shadow-sm">
+                  <UserGroupIcon className="h-5 w-5 text-brand-600" />
+                </div>
+                <label className="text-sm font-semibold text-slate-700">看護師</label>
+              </div>
+              <div className="relative flex-1">
+                <select
+                  value={selectedNurseId}
+                  onChange={(e) => setSelectedNurseId(e.target.value)}
+                  className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-4 py-2.5 pr-10 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-brand-400 hover:shadow-md focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                >
+                  <option value="">すべての看護師</option>
+                  {nurses.map((nurse) => (
+                    <option key={nurse.id} value={nurse.nurse_id || ""}>
+                      {nurse.last_name} {nurse.first_name} {nurse.nurse_id ? `(${nurse.nurse_id})` : ""}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              </div>
+            </div>
+
+            {/* オプション選択 */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2 min-w-[120px]">
+                <div className="rounded-lg bg-white p-2 shadow-sm">
+                  <FunnelIcon className="h-5 w-5 text-brand-600" />
+                </div>
+                <label className="text-sm font-semibold text-slate-700">フィルター</label>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFilterAikan(!filterAikan)}
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                    filterAikan
+                      ? "bg-brand-600 text-white shadow-md hover:bg-brand-700"
+                      : "bg-white text-slate-700 shadow-sm hover:bg-slate-50 hover:shadow-md"
+                  }`}
+                >
+                  <span className={`h-2 w-2 rounded-full ${filterAikan ? "bg-white" : "bg-slate-400"}`}></span>
+                  訪問前連絡「あいかん」
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterJointVisit(!filterJointVisit)}
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                    filterJointVisit
+                      ? "bg-brand-600 text-white shadow-md hover:bg-brand-700"
+                      : "bg-white text-slate-700 shadow-sm hover:bg-slate-50 hover:shadow-md"
+                  }`}
+                >
+                  <span className={`h-2 w-2 rounded-full ${filterJointVisit ? "bg-white" : "bg-slate-400"}`}></span>
+                  同行訪問
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterFirstVisit(!filterFirstVisit)}
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                    filterFirstVisit
+                      ? "bg-brand-600 text-white shadow-md hover:bg-brand-700"
+                      : "bg-white text-slate-700 shadow-sm hover:bg-slate-50 hover:shadow-md"
+                  }`}
+                >
+                  <span className={`h-2 w-2 rounded-full ${filterFirstVisit ? "bg-white" : "bg-slate-400"}`}></span>
+                  初回訪問
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* カレンダーヘッダー */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold text-slate-900">
             {monthLabel}
@@ -258,13 +340,10 @@ export function ShiftSchedulePage() {
                 type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search"
+                placeholder="施設名で検索..."
                 className="w-64 rounded-md border border-slate-300 bg-white py-2 pl-10 pr-4 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
             </div>
-            <select className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
-              <option>Month</option>
-            </select>
             <button
               onClick={() => changeMonth(-1)}
               className="rounded-md border border-slate-300 bg-white p-2 hover:bg-slate-50"

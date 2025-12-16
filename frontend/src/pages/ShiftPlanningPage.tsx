@@ -10,6 +10,10 @@ import { ModernCalendar } from "../components/calendar/ModernCalendar";
 import {
   PlusIcon,
   CheckCircleIcon,
+  UserGroupIcon,
+  FunnelIcon,
+  ChevronDownIcon,
+  BuildingOfficeIcon,
 } from "@heroicons/react/24/outline";
 import type { NurseAvailability, FacilityShiftRequest } from "../api/types";
 
@@ -47,6 +51,8 @@ interface ShiftMatch {
 }
 
 export function ShiftPlanningPage() {
+  const [selectedNurseId, setSelectedNurseId] = useState<string>("");
+  const [selectedFacilityId, setSelectedFacilityId] = useState<string>("");
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
     // Default to next month
@@ -167,6 +173,11 @@ export function ShiftPlanningPage() {
     return idStr;
   };
 
+  // 看護師リスト
+  const nurses = useMemo(() => {
+    return userList.filter((u) => u.role === "nurse");
+  }, [userList]);
+
   // Find matches between availability and requests
   const matches = useMemo<ShiftMatch[]>(() => {
     if (!availabilities || !requests) return [];
@@ -175,9 +186,15 @@ export function ShiftPlanningPage() {
 
     availabilities.forEach((availability: NurseAvailability) => {
       if (!availability.availability_data || availability.status !== "submitted") return;
+      
+      // 看護師フィルター
+      if (selectedNurseId && availability.nurse_id !== selectedNurseId) return;
 
       requests.forEach((request: FacilityShiftRequest) => {
         if (!request.request_data || request.status !== "submitted") return;
+        
+        // 施設フィルター
+        if (selectedFacilityId && String(request.facility_id) !== selectedFacilityId) return;
 
         // Check each date in availability
         Object.keys(availability.availability_data).forEach((date) => {
@@ -210,7 +227,7 @@ export function ShiftPlanningPage() {
     });
 
     return matchesList;
-  }, [availabilities, requests, nurseMap, facilityMap]);
+  }, [availabilities, requests, nurseMap, facilityMap, selectedNurseId, selectedFacilityId]);
 
   // Group matches by date
   const matchesByDate = useMemo(() => {
@@ -325,6 +342,61 @@ export function ShiftPlanningPage() {
 
       {/* Calendar View */}
       <Card title={`${monthLabel} - マッチング候補`}>
+        {/* カレンダー上部のフィルター */}
+        <div className="mb-6 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 p-5 shadow-sm">
+          <div className="space-y-4">
+            {/* 看護師選択 */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2 min-w-[120px]">
+                <div className="rounded-lg bg-white p-2 shadow-sm">
+                  <UserGroupIcon className="h-5 w-5 text-brand-600" />
+                </div>
+                <label className="text-sm font-semibold text-slate-700">看護師</label>
+              </div>
+              <div className="relative flex-1">
+                <select
+                  value={selectedNurseId}
+                  onChange={(e) => setSelectedNurseId(e.target.value)}
+                  className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-4 py-2.5 pr-10 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-brand-400 hover:shadow-md focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                >
+                  <option value="">すべての看護師</option>
+                  {nurses.map((nurse) => (
+                    <option key={nurse.id} value={nurse.nurse_id || ""}>
+                      {nurse.last_name} {nurse.first_name} {nurse.nurse_id ? `(${nurse.nurse_id})` : ""}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              </div>
+            </div>
+
+            {/* 施設選択 */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2 min-w-[120px]">
+                <div className="rounded-lg bg-white p-2 shadow-sm">
+                  <BuildingOfficeIcon className="h-5 w-5 text-brand-600" />
+                </div>
+                <label className="text-sm font-semibold text-slate-700">施設</label>
+              </div>
+              <div className="relative flex-1">
+                <select
+                  value={selectedFacilityId}
+                  onChange={(e) => setSelectedFacilityId(e.target.value)}
+                  className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-4 py-2.5 pr-10 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-brand-400 hover:shadow-md focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                >
+                  <option value="">すべての施設</option>
+                  {facilities?.map((facility) => (
+                    <option key={facility.facility_id} value={String(facility.facility_id)}>
+                      {facility.name || facility.facility_id}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <ModernCalendar
           currentMonth={currentMonth}
           onMonthChange={setCurrentMonth}

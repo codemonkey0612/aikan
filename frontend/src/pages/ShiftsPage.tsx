@@ -7,6 +7,12 @@ import type { Shift } from "../api/types";
 import { Card } from "../components/ui/Card";
 import { ModernCalendar } from "../components/calendar/ModernCalendar";
 import type { CalendarEvent } from "../components/calendar/ModernCalendar";
+import {
+  UserGroupIcon,
+  FunnelIcon,
+  ChevronDownIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
 
 const formatKey = (date: Date) => date.toISOString().slice(0, 10);
 
@@ -15,6 +21,8 @@ export function ShiftsPage() {
   const { data: users } = useUsers();
   const userList = useMemo(() => Array.isArray(users) ? users : users?.data || [], [users]);
   const { data: facilities, isLoading: facilitiesLoading } = useFacilities();
+  const [selectedNurseId, setSelectedNurseId] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
     now.setDate(1);
@@ -28,6 +36,7 @@ export function ShiftsPage() {
   const { data, isLoading } = useShifts({
     date_from: monthStart.toISOString().slice(0, 10),
     date_to: monthEnd.toISOString().slice(0, 10),
+    nurse_id: selectedNurseId || undefined,
   });
 
   // 看護師IDから看護師名へのマッピング
@@ -127,6 +136,11 @@ export function ShiftsPage() {
     return idStr;
   };
 
+  // 看護師リスト
+  const nurses = useMemo(() => {
+    return userList.filter((u) => u.role === "nurse");
+  }, [userList]);
+
   // 日付ごとにシフトをグループ化してイベントに変換
   const calendarEvents = useMemo(() => {
     const eventsMap = new Map<string, CalendarEvent[]>();
@@ -134,6 +148,18 @@ export function ShiftsPage() {
 
     data.data.forEach((shift) => {
       if (!shift.start_datetime) return;
+      
+      // 検索クエリでフィルタリング
+      if (searchQuery) {
+        const facilityName = shift.facility_name && shift.facility_name.trim()
+          ? shift.facility_name.trim()
+          : getFacilityNameById(shift.facility_id);
+        const query = searchQuery.toLowerCase();
+        if (!facilityName.toLowerCase().includes(query)) {
+          return;
+        }
+      }
+
       const date = new Date(shift.start_datetime);
       const key = formatKey(date);
       
@@ -174,7 +200,7 @@ export function ShiftsPage() {
     });
 
     return eventsMap;
-  }, [data, nurseMap, navigate]);
+  }, [data, nurseMap, navigate, searchQuery, facilityMap, facilities]);
 
   return (
     <div className="space-y-6">
@@ -186,11 +212,61 @@ export function ShiftsPage() {
       </header>
 
       <Card>
+        {/* カレンダー上部のフィルター */}
+        <div className="mb-6 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 p-5 shadow-sm">
+          <div className="space-y-4">
+            {/* 看護師選択 */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2 min-w-[120px]">
+                <div className="rounded-lg bg-white p-2 shadow-sm">
+                  <UserGroupIcon className="h-5 w-5 text-brand-600" />
+                </div>
+                <label className="text-sm font-semibold text-slate-700">看護師</label>
+              </div>
+              <div className="relative flex-1">
+                <select
+                  value={selectedNurseId}
+                  onChange={(e) => setSelectedNurseId(e.target.value)}
+                  className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-4 py-2.5 pr-10 text-sm font-medium text-slate-700 shadow-sm transition-all hover:border-brand-400 hover:shadow-md focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                >
+                  <option value="">すべての看護師</option>
+                  {nurses.map((nurse) => (
+                    <option key={nurse.id} value={nurse.nurse_id || ""}>
+                      {nurse.last_name} {nurse.first_name} {nurse.nurse_id ? `(${nurse.nurse_id})` : ""}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              </div>
+            </div>
+
+            {/* 施設名検索 */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2 min-w-[120px]">
+                <div className="rounded-lg bg-white p-2 shadow-sm">
+                  <FunnelIcon className="h-5 w-5 text-brand-600" />
+                </div>
+                <label className="text-sm font-semibold text-slate-700">施設名検索</label>
+              </div>
+              <div className="relative flex-1">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="施設名で検索..."
+                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 pl-10 pr-4 text-sm font-medium text-slate-700 shadow-sm transition-all placeholder:text-slate-400 hover:border-brand-400 hover:shadow-md focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <ModernCalendar
           currentMonth={currentMonth}
           onMonthChange={setCurrentMonth}
           events={calendarEvents}
-          showSearch={true}
+          showSearch={false}
           showAddButton={false}
         />
       </Card>

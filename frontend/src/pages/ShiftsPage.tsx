@@ -14,7 +14,13 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 
-const formatKey = (date: Date) => date.toISOString().slice(0, 10);
+// Format date as YYYY-MM-DD in local timezone (not UTC)
+const formatKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export function ShiftsPage() {
   const navigate = useNavigate();
@@ -165,8 +171,24 @@ export function ShiftsPage() {
         }
       }
 
-      const date = new Date(shift.start_datetime);
-      const key = formatKey(date);
+      // Extract date from start_datetime string directly to avoid timezone issues
+      // start_datetime format: "YYYY-MM-DD HH:mm:ss" or "YYYY-MM-DD HH:mm:0"
+      // Extract just the date part (YYYY-MM-DD) from the string
+      let key: string;
+      if (shift.start_datetime) {
+        // Extract date part from datetime string (first 10 characters: YYYY-MM-DD)
+        const datePart = shift.start_datetime.substring(0, 10);
+        // Validate it's in YYYY-MM-DD format
+        if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+          key = datePart;
+        } else {
+          // Fallback to parsing if format is unexpected
+          const date = new Date(shift.start_datetime);
+          key = formatKey(date);
+        }
+      } else {
+        key = formatKey(new Date());
+      }
       
       const facilityName = shift.facility_name && shift.facility_name.trim()
         ? shift.facility_name.trim()
@@ -199,7 +221,9 @@ export function ShiftsPage() {
         onClick: () => {
           // Navigate to route page for this nurse on this date
           if (shift.nurse_id && shift.start_datetime) {
-            const dateKey = formatKey(new Date(shift.start_datetime));
+            // Parse the datetime string and format in local timezone
+            const shiftDate = new Date(shift.start_datetime);
+            const dateKey = formatKey(shiftDate);
             navigate(`/shifts/daily/${dateKey}/${shift.nurse_id}`);
           } else {
             // Fallback to detail page if nurse_id is missing

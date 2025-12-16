@@ -120,7 +120,7 @@ function App() {
             <Route
               path="facilities/:id"
               element={
-                <RequireRole allowedRoles={["admin"]}>
+                <RequireRole allowedRoles={["admin", "nurse", "facility_manager"]}>
                   <FacilityDetailPage />
                 </RequireRole>
               }

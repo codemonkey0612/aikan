@@ -52,8 +52,17 @@ const getAllShifts = async (req, res) => {
         date_from: req.query.date_from,
         date_to: req.query.date_to,
     };
+    // Debug logging
+    console.log('[Shift Controller] Request query params:', req.query);
+    console.log('[Shift Controller] Filters:', filters);
     const { data, total } = await ShiftService.getShiftsPaginated(page, limit, sortBy, sortOrder, filters);
     const pagination = (0, pagination_validation_1.calculatePagination)(page, limit, total);
+    // Debug logging
+    console.log('[Shift Controller] Response:', {
+        dataCount: data.length,
+        total,
+        pagination
+    });
     res.json({
         data,
         pagination,

@@ -105,26 +105,40 @@ export const getShiftsPaginated = async (
     queryParams.push(filters.shift_period);
   }
   // Handle date filtering - use DATE() function for simple date comparison
+  // Ensure we only use the date part (YYYY-MM-DD) and handle timezone correctly
   if (filters?.date_from && filters?.date_to) {
-    const dateFromOnly = filters.date_from.split(' ')[0];
-    const dateToOnly = filters.date_to.split(' ')[0];
+    // Extract only the date part (YYYY-MM-DD) from the filter strings
+    const dateFromOnly = filters.date_from.split(' ')[0].split('T')[0];
+    const dateToOnly = filters.date_to.split(' ')[0].split('T')[0];
+    
+    // Validate date format (YYYY-MM-DD)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateFromOnly) || !/^\d{4}-\d{2}-\d{2}$/.test(dateToOnly)) {
+      console.error('Invalid date format in filters:', { date_from: filters.date_from, date_to: filters.date_to });
+    }
     
     // If both dates are the same, use DATE() function for exact match
+    // DATE() function extracts the date part from DATETIME in the server's timezone
     if (dateFromOnly === dateToOnly) {
       whereClause += " AND DATE(s.start_datetime) = ?";
       queryParams.push(dateFromOnly);
+      console.log('Date filter (exact match):', dateFromOnly);
     } else {
       // Date range
       whereClause += " AND DATE(s.start_datetime) >= ? AND DATE(s.start_datetime) <= ?";
       queryParams.push(dateFromOnly);
       queryParams.push(dateToOnly);
+      console.log('Date filter (range):', dateFromOnly, 'to', dateToOnly);
     }
   } else if (filters?.date_from) {
+    const dateFromOnly = filters.date_from.split(' ')[0].split('T')[0];
     whereClause += " AND DATE(s.start_datetime) >= ?";
-    queryParams.push(filters.date_from.split(' ')[0]);
+    queryParams.push(dateFromOnly);
+    console.log('Date filter (from):', dateFromOnly);
   } else if (filters?.date_to) {
+    const dateToOnly = filters.date_to.split(' ')[0].split('T')[0];
     whereClause += " AND DATE(s.start_datetime) <= ?";
-    queryParams.push(filters.date_to.split(' ')[0]);
+    queryParams.push(dateToOnly);
+    console.log('Date filter (to):', dateToOnly);
   }
 
   // データ取得

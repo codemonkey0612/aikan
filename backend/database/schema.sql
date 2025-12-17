@@ -240,18 +240,24 @@ CREATE TABLE files (
 CREATE TABLE vital_records (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     resident_id VARCHAR(50) NOT NULL,
-    measured_at DATETIME,
-    systolic_bp INT,
-    diastolic_bp INT,
-    pulse INT,
-    temperature DECIMAL(4,1),
-    spo2 INT,
-    note TEXT,
-    created_by BIGINT UNSIGNED,
+    body_temperature DECIMAL(4,1) COMMENT 'Body temperature',
+    pulse_measurement INT COMMENT 'Pulse measurement',
+    highest_blood_pressure INT COMMENT 'Highest blood pressure (systolic)',
+    lowest_blood_pressure INT COMMENT 'Lowest blood pressure (diastolic)',
+    oxidant_saturation INT COMMENT 'Oxidant saturation (SpO2)',
+    climax ENUM('very_good', 'good', 'average', 'not_very_good', 'very_bad') 
+        COMMENT 'Climax: very good, good, average, not very good, very bad',
+    food ENUM('sufficient', 'almost_sufficient', 'half_sufficient', 'not_much', 'almost_none')
+        COMMENT 'Food: sufficient, almost sufficient, half sufficient, not much, almost none',
+    sleep ENUM('sufficient', 'almost_sufficient', 'slightly_insufficient', 'considerably_insufficient', 'very_insufficient')
+        COMMENT 'Sleep: sufficient (more than 7 hours), almost sufficient (6-7 hours), slightly insufficient (5-6 hours), considerably insufficient (4-5 hours), very insufficient (less than 4 hours)',
+    notes TEXT COMMENT 'Notes',
+    nurse_id VARCHAR(100) COMMENT 'Nurse ID',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_resident_id (resident_id),
-    INDEX idx_measured_at (measured_at),
-    INDEX idx_created_by (created_by)
+    INDEX idx_nurse_id (nurse_id),
+    INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;

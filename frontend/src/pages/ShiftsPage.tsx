@@ -7,20 +7,13 @@ import type { Shift } from "../api/types";
 import { Card } from "../components/ui/Card";
 import { ModernCalendar } from "../components/calendar/ModernCalendar";
 import type { CalendarEvent } from "../components/calendar/ModernCalendar";
+import { formatDateKey, extractDateFromDatetime } from "../utils/dateFormat";
 import {
   UserGroupIcon,
   FunnelIcon,
   ChevronDownIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
-
-// Format date as YYYY-MM-DD in local timezone (not UTC)
-const formatKey = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
 
 export function ShiftsPage() {
   const navigate = useNavigate();
@@ -40,8 +33,8 @@ export function ShiftsPage() {
   const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
 
   const { data, isLoading } = useShifts({
-    date_from: monthStart.toISOString().slice(0, 10),
-    date_to: monthEnd.toISOString().slice(0, 10),
+    date_from: formatDateKey(monthStart),
+    date_to: formatDateKey(monthEnd),
     nurse_id: selectedNurseId || undefined,
   });
 
@@ -172,23 +165,9 @@ export function ShiftsPage() {
       }
 
       // Extract date from start_datetime string directly to avoid timezone issues
-      // start_datetime format: "YYYY-MM-DD HH:mm:ss" or "YYYY-MM-DD HH:mm:0"
-      // Extract just the date part (YYYY-MM-DD) from the string
-      let key: string;
-      if (shift.start_datetime) {
-        // Extract date part from datetime string (first 10 characters: YYYY-MM-DD)
-        const datePart = shift.start_datetime.substring(0, 10);
-        // Validate it's in YYYY-MM-DD format
-        if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
-          key = datePart;
-        } else {
-          // Fallback to parsing if format is unexpected
-          const date = new Date(shift.start_datetime);
-          key = formatKey(date);
-        }
-      } else {
-        key = formatKey(new Date());
-      }
+      // Use utility function to handle various datetime formats safely
+      const extractedDate = extractDateFromDatetime(shift.start_datetime);
+      const key = extractedDate || formatDateKey(new Date());
       
       const facilityName = shift.facility_name && shift.facility_name.trim()
         ? shift.facility_name.trim()
@@ -220,13 +199,12 @@ export function ShiftsPage() {
         color: "bg-pink-100 text-pink-700",
         onClick: () => {
           // Navigate to route page for this nurse on this date
-          if (shift.nurse_id && shift.start_datetime) {
-            // Parse the datetime string and format in local timezone
-            const shiftDate = new Date(shift.start_datetime);
-            const dateKey = formatKey(shiftDate);
-            navigate(`/shifts/daily/${dateKey}/${shift.nurse_id}`);
+          // Use the same date key that was used to group this shift in the calendar
+          // This ensures consistency between calendar display and navigation
+          if (shift.nurse_id && key) {
+            navigate(`/shifts/daily/${key}/${shift.nurse_id}`);
           } else {
-            // Fallback to detail page if nurse_id is missing
+            // Fallback to detail page if nurse_id or date key is missing
             navigate(`/shifts/${shift.id}`);
           }
         },
@@ -306,6 +284,14 @@ export function ShiftsPage() {
           events={calendarEvents}
           showSearch={false}
           showAddButton={false}
+          onDayClick={(date) => {
+            // When clicking on a day cell, navigate to that day's route page
+            // Only navigate if a nurse is selected
+            if (selectedNurseId) {
+              const dateKey = formatDateKey(date);
+              navigate(`/shifts/daily/${dateKey}/${selectedNurseId}`);
+            }
+          }}
         />
       </Card>
     </div>

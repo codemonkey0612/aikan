@@ -112,8 +112,14 @@ export function ModernCalendar({
     );
   };
 
+  // Import date formatting utility
+  // Note: We'll keep formatKey here for backward compatibility with this component
+  // but it should use local timezone formatting
   const formatKey = (date: Date) => {
-    return date.toISOString().slice(0, 10);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   return (

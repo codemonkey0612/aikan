@@ -4,16 +4,9 @@ import { useShifts } from "../hooks/useShifts";
 import { useUsers } from "../hooks/useUsers";
 import { useFacilities } from "../hooks/useFacilities";
 import { FacilityImage } from "../components/shifts/FacilityImage";
+import { formatDateKey, extractDateFromDatetime } from "../utils/dateFormat";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
 import type { Shift } from "../api/types";
-
-// Format date as YYYY-MM-DD in local timezone (not UTC)
-const formatKey = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
 
 /**
  * Shift Route Page
@@ -26,7 +19,7 @@ export function ShiftRoutePage() {
 
   // Use date directly from URL parameter (format: YYYY-MM-DD)
   // No need to parse and reformat - use it directly to avoid timezone issues
-  const dateKey = date || formatKey(new Date());
+  const dateKey = date || formatDateKey(new Date());
   
   // Parse date for display purposes only
   const selectedDate = useMemo(() => {
@@ -49,6 +42,27 @@ export function ShiftRoutePage() {
     date_to: dateKey, // Use same date for both - backend will handle date comparison
     nurse_id: nurseId || undefined,
   });
+
+  // Debug logging
+  useEffect(() => {
+    console.log('ShiftRoutePage Debug:', {
+      dateParam: date,
+      dateKey,
+      nurseId,
+      shiftsCount: shiftsData?.data?.length || 0,
+      shifts: shiftsData?.data?.map(s => ({
+        id: s.id,
+        start_datetime: s.start_datetime,
+        datePart: s.start_datetime ? s.start_datetime.substring(0, 10) : null,
+        nurse_id: s.nurse_id,
+      })),
+      apiParams: {
+        date_from: dateKey,
+        date_to: dateKey,
+        nurse_id: nurseId,
+      },
+    });
+  }, [date, dateKey, nurseId, shiftsData]);
 
   const { data: facilities } = useFacilities();
   const { data: users } = useUsers();
@@ -84,13 +98,13 @@ export function ShiftRoutePage() {
     }
     
     // Also filter by date to ensure we only show shifts for the selected date
-    // Use DATE() comparison in local timezone
+    // Extract date part directly from string to avoid timezone issues
     filteredShifts = filteredShifts.filter((shift) => {
       if (!shift.start_datetime) return false;
-      // Parse the datetime and extract date in local timezone
-      const shiftDateObj = new Date(shift.start_datetime);
-      const shiftDate = formatKey(shiftDateObj);
-      return shiftDate === dateKey;
+      
+      // Use utility function to extract date part safely
+      const extractedDate = extractDateFromDatetime(shift.start_datetime);
+      return extractedDate === dateKey;
     });
     
     // Sort by start time

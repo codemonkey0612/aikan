@@ -89,10 +89,23 @@ export const getAllFacilities = async () => {
 };
 
 export const getFacilityById = async (facility_id: string) => {
-  const [rows] = await db.query<FacilityRow[]>(
-    "SELECT * FROM facilities WHERE facility_id = ?",
-    [facility_id]
+  // Normalize facility_id for comparison (handle string/number mismatches and whitespace)
+  const normalizedId = String(facility_id).trim().replace(/\r\n/g, '').replace(/\n/g, '').replace(/\r/g, '');
+  
+  // Try exact match first
+  let [rows] = await db.query<FacilityRow[]>(
+    "SELECT * FROM facilities WHERE TRIM(REPLACE(REPLACE(CAST(facility_id AS CHAR), '\r', ''), '\n', '')) = ?",
+    [normalizedId]
   );
+  
+  // If no match, try with CAST to handle numeric facility_id
+  if (rows.length === 0) {
+    [rows] = await db.query<FacilityRow[]>(
+      "SELECT * FROM facilities WHERE CAST(facility_id AS CHAR) = ?",
+      [normalizedId]
+    );
+  }
+  
   return rows[0] ?? null;
 };
 

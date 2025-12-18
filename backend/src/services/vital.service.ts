@@ -5,9 +5,14 @@ export const getAllVitals = () => VitalModel.getAllVitals();
 export const getVitalById = (id: number) => VitalModel.getVitalById(id);
 export const createVital = async (data: VitalModel.VitalInput) => {
   const vital = await VitalModel.createVital(data);
-  // バイタル記録作成後、アラートをチェック
+  // バイタル記録作成後、アラートをチェック（テーブルが存在しない場合はスキップ）
   if (vital) {
-    await VitalAlertService.checkVitalAlerts(vital.id);
+    try {
+      await VitalAlertService.checkVitalAlerts(vital.id);
+    } catch (error: any) {
+      // vital_alerts テーブルが存在しない場合など、エラーを無視して続行
+      console.warn("Vital alert check failed (table may not exist):", error?.message);
+    }
   }
   return vital;
 };
@@ -16,9 +21,14 @@ export const updateVital = async (
   data: Partial<VitalModel.VitalInput>
 ) => {
   const vital = await VitalModel.updateVital(id, data);
-  // バイタル記録更新後、アラートをチェック
+  // バイタル記録更新後、アラートをチェック（テーブルが存在しない場合はスキップ）
   if (vital) {
-    await VitalAlertService.checkVitalAlerts(vital.id);
+    try {
+      await VitalAlertService.checkVitalAlerts(vital.id);
+    } catch (error: any) {
+      // vital_alerts テーブルが存在しない場合など、エラーを無視して続行
+      console.warn("Vital alert check failed (table may not exist):", error?.message);
+    }
   }
   return vital;
 };

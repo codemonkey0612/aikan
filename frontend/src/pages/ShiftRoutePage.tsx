@@ -237,9 +237,9 @@ export function ShiftRoutePage() {
                   key={shift.id}
                   className="flex items-start gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition-all cursor-pointer active:scale-[0.98]"
                   onClick={() => {
-                    // Navigate to facility detail page showing facility info and residents
+                    // Navigate to facility visit page showing vitals and facility info
                     if (shift.facility_id) {
-                      navigate(`/facilities/${shift.facility_id}`);
+                      navigate(`/facilities/${shift.facility_id}/visit/${dateKey}/${shift.nurse_id || ""}`);
                     }
                   }}
                 >

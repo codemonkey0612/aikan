@@ -1,4 +1,4 @@
-import { type PropsWithChildren, type TdHTMLAttributes, type ThHTMLAttributes } from "react";
+import { type PropsWithChildren, type TdHTMLAttributes, type ThHTMLAttributes, type TrHTMLAttributes } from "react";
 import clsx from "clsx";
 
 interface TableProps extends PropsWithChildren {
@@ -39,9 +39,9 @@ export function TableBody({ className, children }: TableBodyProps) {
   );
 }
 
-export function TableRow({ className, children }: TableProps) {
+export function TableRow({ className, children, ...rest }: TrHTMLAttributes<HTMLTableRowElement>) {
   return (
-    <tr className={clsx("hover:bg-slate-50 transition", className)}>{children}</tr>
+    <tr className={clsx("hover:bg-slate-50 transition", className)} {...rest}>{children}</tr>
   );
 }
 

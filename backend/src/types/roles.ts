@@ -69,6 +69,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "corporations:write",
     "residents:read",
     "vitals:read",
+    "vitals:write",
     "shifts:read",
     "notifications:read",
     "files:read",

@@ -118,6 +118,9 @@ export interface VitalRecord {
   pulse: Nullable<number>;
   temperature: Nullable<number>;
   spo2: Nullable<number>;
+  climax: Nullable<"very_good" | "good" | "average" | "not_very_good" | "very_bad">;
+  food: Nullable<"sufficient" | "almost_sufficient" | "half_sufficient" | "not_much" | "almost_none">;
+  sleep: Nullable<"sufficient" | "almost_sufficient" | "slightly_insufficient" | "considerably_insufficient" | "very_insufficient">;
   note: Nullable<string>;
   created_by: Nullable<number>;
   created_at: string;

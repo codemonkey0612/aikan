@@ -15,7 +15,7 @@ export const paginationQuerySchema = z.object({
     .regex(/^\d+$/, "件数は数値である必要があります")
     .default("20")
     .transform(Number)
-    .pipe(z.number().int().min(1).max(100, "件数は100件以下である必要があります")),
+    .pipe(z.number().int().min(1).max(10000, "件数は10000件以下である必要があります")),
   sortBy: z.string().optional(),
   sortOrder: z.enum(["asc", "desc"]).default("desc").optional(),
 });

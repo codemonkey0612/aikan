@@ -10,11 +10,10 @@ import { CorporationsPage } from "./pages/CorporationsPage";
 import { CorporationDetailPage } from "./pages/CorporationDetailPage";
 import { ResidentsPage } from "./pages/ResidentsPage";
 import { ResidentDetailPage } from "./pages/ResidentDetailPage";
-import { VitalsPage } from "./pages/VitalsPage";
-import { VitalsInputPage } from "./pages/VitalsInputPage";
 import { ShiftsPage } from "./pages/ShiftsPage";
 import { ShiftDetailPage } from "./pages/ShiftDetailPage";
 import { ShiftRoutePage } from "./pages/ShiftRoutePage";
+import { FacilityVisitPage } from "./pages/FacilityVisitPage";
 import { SalariesPage } from "./pages/SalariesPage";
 import { NotificationsPage } from "./pages/NotificationsPage";
 import { CarePlanPage } from "./pages/CarePlanPage";
@@ -126,6 +125,14 @@ function App() {
               }
             />
             <Route
+              path="facilities/:facilityId/visit/:date/:nurseId"
+              element={
+                <RequireRole allowedRoles={["admin", "nurse", "facility_manager"]}>
+                  <FacilityVisitPage />
+                </RequireRole>
+              }
+            />
+            <Route
               path="corporations"
               element={
                 <RequireRole allowedRoles={["admin"]}>
@@ -162,22 +169,6 @@ function App() {
               element={
                 <RequireRole allowedRoles={["admin"]}>
                   <CarePlanPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="vitals"
-              element={
-                <RequireRole allowedRoles={["admin"]}>
-                  <VitalsPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="vitals/new"
-              element={
-                <RequireRole allowedRoles={["admin"]}>
-                  <VitalsInputPage />
                 </RequireRole>
               }
             />

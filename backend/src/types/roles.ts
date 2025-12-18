@@ -50,6 +50,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "alcohol_checks:write",
   ],
   nurse: [
+    "facilities:read",
+    "users:read",
     "corporations:read",
     "residents:read",
     "vitals:read",

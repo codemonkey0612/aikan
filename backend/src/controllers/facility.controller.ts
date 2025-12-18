@@ -7,9 +7,17 @@ export const getAllFacilities = async (req: Request, res: Response) => {
 };
 
 export const getFacilityById = async (req: Request, res: Response) => {
-  const facility = await FacilityService.getFacilityById(
-    req.params.id // VARCHAR(50) - no conversion needed
-  );
+  const facilityId = req.params.id; // VARCHAR(50) - no conversion needed
+  console.log("[getFacilityById] Requested facility_id:", facilityId, "Type:", typeof facilityId);
+  
+  const facility = await FacilityService.getFacilityById(facilityId);
+  
+  console.log("[getFacilityById] Found facility:", facility ? { facility_id: facility.facility_id, name: facility.name } : null);
+  
+  if (!facility) {
+    console.log("[getFacilityById] Facility not found for ID:", facilityId);
+  }
+  
   res.json(facility);
 };
 
